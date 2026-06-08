@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Controller</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="staff-body">
+    <div class="staff-layout">
+        <!-- Left Panel: Status & Branding -->
+        <div class="staff-status-panel">
+            <div class="staff-header">
+                <div class="staff-title">Controller Panel</div>
+                <div class="staff-subtitle">NBI Queue Management System</div>
+            </div>
+
+            <div class="status-card">
+                <div class="status-label">Currently Serving</div>
+                <div class="status-number" id="current-number">000</div>
+            </div>
+            
+            <div class="staff-footer-note">
+                Ensure the display screen is visible to the waiting area.
+            </div>
+        </div>
+
+        <!-- Right Panel: Controls -->
+        <div class="staff-controls-panel">
+            <div class="controls-wrapper">
+                <button class="btn btn-next" id="btn-next">
+                    <span class="btn-icon">➔</span>
+                    <span class="btn-text">Next Number</span>
+                    <span class="btn-subtext">Advance queue & play chime</span>
+                </button>
+                
+                <div class="secondary-controls">
+                    <button class="btn btn-recall" id="btn-recall">
+                        <span class="btn-icon">↺</span>
+                        <span class="btn-text">Recall</span>
+                    </button>
+                    <button class="btn btn-skip" id="btn-skip">
+                        <span class="btn-icon">⏭</span>
+                        <span class="btn-text">Skip</span>
+                    </button>
+                    <button class="btn btn-reset" id="btn-reset">
+                        <span class="btn-icon">⚠</span>
+                        <span class="btn-text">Reset</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const currentNumberEl = document.getElementById('current-number');
+        
+        function formatNumber(num) {
+            if (num === 0) return '000';
+            return num.toString().padStart(3, '0');
+        }
+
+        socket.on('init', (data) => {
+            currentNumberEl.textContent = formatNumber(data.number);
+        });
+
+        socket.on('next', (data) => {
+            currentNumberEl.textContent = formatNumber(data.number);
+        });
+
+        socket.on('skip', (data) => {
+            currentNumberEl.textContent = formatNumber(data.newNumber);
+        });
+        
+        socket.on('recall', (data) => {
+            currentNumberEl.textContent = formatNumber(data.number);
+        });
+
+        socket.on('reset', (data) => {
+            currentNumberEl.textContent = formatNumber(data.number);
+        });
+
+        document.getElementById('btn-next').addEventListener('click', () => {
+            socket.emit('next');
+        });
+
+        document.getElementById('btn-recall').addEventListener('click', () => {
+            if (currentNumberEl.textContent !== '000') {
+                socket.emit('recall');
+            }
+        });
+
+        document.getElementById('btn-skip').addEventListener('click', () => {
+            if (confirm('Are you sure you want to skip the current number?')) {
+                socket.emit('skip');
+            }
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset the queue back to 0?')) {
+                socket.emit('reset');
+            }
+        });
+    </script>
+</body>
+</html>

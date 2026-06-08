@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBI Queue Display</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="display-container" id="fullscreen-container">
+        <header class="header">
+            <div class="brand">
+                <div class="brand-text">
+                    <div class="brand-title">NBI Cybercrime Division</div>
+                    <div class="brand-subtitle">Queue Management System</div>
+                </div>
+            </div>
+            <div class="datetime-container">
+                <div class="time" id="time">00:00:00</div>
+                <div class="date" id="date">January 1, 2026</div>
+            </div>
+        </header>
+
+        <button class="fullscreen-btn" id="btn-fullscreen" title="Toggle Fullscreen">
+            ⛶
+        </button>
+
+        <main class="main-content">
+            <div class="serving-label">Now Serving</div>
+            <div class="queue-number-box" id="queue-box">
+                <div class="queue-number" id="queue-number">000</div>
+            </div>
+            <div class="skip-message" id="skip-message"></div>
+        </main>
+
+        <div class="recent-container" id="recent-container">
+            <div class="recent-label">Previously Served</div>
+            <div class="recent-list" id="recent-list">
+                <!-- Populated via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const queueNumberEl = document.getElementById('queue-number');
+        const queueBoxEl = document.getElementById('queue-box');
+        const timeEl = document.getElementById('time');
+        const dateEl = document.getElementById('date');
+        const skipMessageEl = document.getElementById('skip-message');
+        const recentListEl = document.getElementById('recent-list');
+        const btnFullscreen = document.getElementById('btn-fullscreen');
+
+        let skipTimeout;
+
+        function formatNumber(num) {
+            if (num === 0) return '000';
+            return num.toString().padStart(3, '0');
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            timeEl.textContent = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            dateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playChimeSound() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const playNote = (frequency, startTime, duration) => {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime + startTime);
+                
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime + startTime);
+                gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + startTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + startTime + duration);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start(audioCtx.currentTime + startTime);
+                oscillator.stop(audioCtx.currentTime + startTime + duration);
+            };
+
+            playNote(880, 0, 0.5); // A5
+            playNote(659.25, 0.4, 0.8); // E5
+        }
+
+        function playChimeAndFlash() {
+            playChimeSound();
+            document.body.classList.remove('flash-active');
+            void document.body.offsetWidth;
+            document.body.classList.add('flash-active');
+        }
+
+        function setQueueNumber(num) {
+            queueNumberEl.textContent = formatNumber(num);
+        }
+
+        function updateRecent(recentNumbers) {
+            if (!recentNumbers || recentNumbers.length === 0) {
+                recentListEl.innerHTML = '<div class="recent-item">---</div>';
+                return;
+            }
+            recentListEl.innerHTML = recentNumbers.map(n => `<div class="recent-item">#${formatNumber(n)}</div>`).join('');
+        }
+
+        socket.on('init', (data) => {
+            setQueueNumber(data.number);
+            updateRecent(data.recentNumbers);
+        });
+
+        socket.on('next', (data) => {
+            setQueueNumber(data.number);
+            updateRecent(data.recentNumbers);
+            playChimeAndFlash();
+            
+            clearTimeout(skipTimeout);
+            skipMessageEl.classList.remove('visible');
+        });
+
+        socket.on('recall', (data) => {
+            setQueueNumber(data.number);
+            playChimeAndFlash();
+        });
+
+        socket.on('skip', (data) => {
+            setQueueNumber(data.newNumber);
+            updateRecent(data.recentNumbers);
+            
+            skipMessageEl.textContent = `#${formatNumber(data.skippedNumber)} Skipped — Now Serving #${formatNumber(data.newNumber)}`;
+            skipMessageEl.classList.add('visible');
+            
+            clearTimeout(skipTimeout);
+            skipTimeout = setTimeout(() => {
+                skipMessageEl.classList.remove('visible');
+            }, 3000);
+        });
+
+        socket.on('reset', (data) => {
+            setQueueNumber(data.number);
+            updateRecent(data.recentNumbers);
+            clearTimeout(skipTimeout);
+            skipMessageEl.classList.remove('visible');
+        });
+
+        // Fullscreen Toggle
+        btnFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // Heartbeat to keep Render free tier awake during the day
+        setInterval(() => {
+            fetch('/ping').catch(err => console.log('Heartbeat failed', err));
+        }, 5 * 60 * 1000); // 5 minutes
+    </script>
+</body>
+</html>
