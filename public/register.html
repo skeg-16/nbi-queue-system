@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Registration | NBI QMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .register-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a0aec0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 1.1rem;
+            transition: border-color 0.3s ease;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+        .form-control[readonly] {
+            background: rgba(255,255,255,0.05);
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+        select.form-control option {
+            background: var(--primary-color);
+            color: white;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(241, 196, 15, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(241, 196, 15, 0.3);
+            cursor: pointer;
+        }
+        .checkbox-group input {
+            width: 24px;
+            height: 24px;
+            accent-color: var(--secondary-color);
+            cursor: pointer;
+        }
+        .checkbox-group label {
+            margin: 0;
+            color: var(--secondary-color);
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: none;
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--secondary-color), #f39c12);
+            color: var(--primary-color);
+            padding: 1.2rem;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 1rem;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(241, 196, 15, 0.4);
+        }
+        
+        /* Success Overlay */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(5, 14, 29, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        .overlay.active {
+            display: flex;
+        }
+        .success-icon {
+            font-size: 5rem;
+            color: var(--success-color);
+            margin-bottom: 1rem;
+        }
+        .ticket-box {
+            background: var(--card-bg);
+            border: 2px dashed var(--secondary-color);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 2rem 0;
+        }
+        .ticket-label {
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+        }
+        .ticket-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--secondary-color);
+        }
+        .ticket-queue {
+            font-size: 1.2rem;
+            color: white;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="staff-header" style="position: relative; top: 0; margin-top: 2rem;">
+        <div class="staff-title">NBI Cybercrime Division</div>
+        <div class="staff-subtitle">Digital Registration</div>
+    </div>
+
+    <div class="register-container">
+        <form id="regForm">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="text" class="form-control" id="regDate" readonly>
+            </div>
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" class="form-control" id="fullName" required placeholder="Enter full name">
+            </div>
+            <div class="form-group">
+                <label>Contact Details *</label>
+                <input type="tel" class="form-control" id="contact" required placeholder="Mobile Number">
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Age *</label>
+                    <input type="number" class="form-control" id="age" required min="1" max="150" placeholder="Age">
+                </div>
+                <div class="form-group" style="flex: 2;">
+                    <label>Email (Optional)</label>
+                    <input type="email" class="form-control" id="email" placeholder="Email Address">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Civil Status</label>
+                <select class="form-control" id="civilStatus">
+                    <option value="Single">Single</option>
+                    <option value="Married">Married</option>
+                    <option value="Widowed">Widowed</option>
+                    <option value="Separated">Separated</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Gender</label>
+                <select class="form-control" id="gender">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+            </div>
+            
+            <label class="checkbox-group">
+                <input type="checkbox" id="isPriority">
+                <label for="isPriority">I am a PWD / Senior Citizen (Priority Lane)</label>
+            </label>
+
+            <button type="submit" class="btn-submit">Submit Registration</button>
+        </form>
+    </div>
+
+    <div class="overlay" id="successOverlay">
+        <div class="success-icon">✓</div>
+        <h2>Registration Successful!</h2>
+        <div class="ticket-box">
+            <div class="ticket-label">Your Queue Number</div>
+            <div class="ticket-number" id="successCcd">CCD-0000</div>
+            <div class="ticket-queue" id="successQueue">Please wait to be called...</div>
+        </div>
+        <p style="color: #a0aec0; max-width: 400px; line-height: 1.5;">Please take a screenshot or note down your number. Please be attentive to the display screen in the waiting area.</p>
+        <button class="btn-submit" style="max-width: 300px; margin-top: 2rem;" onclick="location.reload()">Register Another</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        // Auto-fill date
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        document.getElementById('regDate').value = dateStr;
+
+        document.getElementById('regForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Processing...";
+
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                contact: document.getElementById('contact').value,
+                age: document.getElementById('age').value,
+                email: document.getElementById('email').value,
+                civilStatus: document.getElementById('civilStatus').value,
+                gender: document.getElementById('gender').value,
+                isPriority: document.getElementById('isPriority').checked
+            };
+
+            socket.emit('submit_registration', formData, (response) => {
+                if (response.success) {
+                    document.getElementById('successCcd').textContent = response.ccdNo;
+                    
+                    let queueText = "";
+                    if (response.position === 0) {
+                        queueText = "You are next in line!";
+                    } else {
+                        queueText = `There are ${response.position} people ahead of you in the queue.`;
+                    }
+                    document.getElementById('successQueue').textContent = queueText;
+                    
+                    document.getElementById('successOverlay').classList.add('active');
+                } else {
+                    alert('Registration failed. Please try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Submit Registration";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

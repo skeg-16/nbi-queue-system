@@ -6,8 +6,9 @@
     <title>NBI Queue Display</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-    <div class="display-container" id="fullscreen-container">
+<body class="display-body">
+    <div class="display-container">
+        <!-- Header Section -->
         <header class="header">
             <div class="brand">
                 <div class="brand-text">
@@ -17,48 +18,44 @@
             </div>
             <div class="datetime-container">
                 <div class="time" id="time">00:00:00</div>
-                <div class="date" id="date">January 1, 2026</div>
+                <div class="date" id="date">Loading...</div>
             </div>
+            <button class="fullscreen-btn" id="btn-fullscreen" title="Toggle Fullscreen">⛶</button>
         </header>
 
-        <button class="fullscreen-btn" id="btn-fullscreen" title="Toggle Fullscreen">
-            ⛶
-        </button>
-
+        <!-- Main Display Section -->
         <main class="main-content">
             <div class="serving-label">Now Serving</div>
+            <div class="serving-priority-badge" id="priority-badge" style="display: none;">PRIORITY</div>
             <div class="queue-number-box" id="queue-box">
-                <div class="queue-number" id="queue-number">000</div>
+                <div class="queue-number" id="queue-number">---</div>
             </div>
-            <div class="skip-message" id="skip-message"></div>
         </main>
 
-        <div class="recent-container" id="recent-container">
+        <!-- Footer / Recently Served -->
+        <div class="recent-container">
             <div class="recent-label">Previously Served</div>
-            <div class="recent-list" id="recent-list">
-                <!-- Populated via JS -->
-            </div>
+            <ul class="recent-list" id="recent-list">
+                <li class="recent-item">---</li>
+            </ul>
         </div>
     </div>
+
+    <!-- Audio for chime -->
+    <audio id="chime" src="assets/chime.mp3" preload="auto"></audio>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const queueNumberEl = document.getElementById('queue-number');
         const queueBoxEl = document.getElementById('queue-box');
+        const priorityBadgeEl = document.getElementById('priority-badge');
         const timeEl = document.getElementById('time');
         const dateEl = document.getElementById('date');
-        const skipMessageEl = document.getElementById('skip-message');
         const recentListEl = document.getElementById('recent-list');
         const btnFullscreen = document.getElementById('btn-fullscreen');
 
-        let skipTimeout;
-
-        function formatNumber(num) {
-            if (num === 0) return '000';
-            return num.toString().padStart(3, '0');
-        }
-
+        // Clock Update
         function updateDateTime() {
             const now = new Date();
             timeEl.textContent = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -67,7 +64,7 @@
         setInterval(updateDateTime, 1000);
         updateDateTime();
 
-        // Web Audio API
+        // Web Audio API for Chime Sound
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playChimeSound() {
@@ -93,66 +90,56 @@
                 oscillator.stop(audioCtx.currentTime + startTime + duration);
             };
 
-            playNote(880, 0, 0.5); // A5
-            playNote(659.25, 0.4, 0.8); // E5
+            // Double chime (Ding-Dong)
+            playNote(880, 0, 1);    // A5
+            playNote(700, 0.4, 1.5); // F5
         }
 
-        function playChimeAndFlash() {
-            playChimeSound();
-            document.body.classList.remove('flash-active');
-            void document.body.offsetWidth;
-            document.body.classList.add('flash-active');
-        }
+        socket.on('display_update', (data) => {
+            if (data.skipMessage) {
+                // Show temporary skip message
+                queueNumberEl.classList.add('is-text');
+                queueNumberEl.textContent = data.skipMessage;
+                
+                setTimeout(() => {
+                    queueNumberEl.classList.remove('is-text');
+                    queueNumberEl.textContent = data.currentlyServing;
+                }, 3000);
+            } else {
+                queueNumberEl.classList.remove('is-text');
+                queueNumberEl.textContent = data.currentlyServing;
+                
+                if (data.isPriority) {
+                    priorityBadgeEl.style.display = 'inline-block';
+                } else {
+                    priorityBadgeEl.style.display = 'none';
+                }
 
-        function setQueueNumber(num) {
-            queueNumberEl.textContent = formatNumber(num);
-        }
-
-        function updateRecent(recentNumbers) {
-            if (!recentNumbers || recentNumbers.length === 0) {
-                recentListEl.innerHTML = '<div class="recent-item">---</div>';
-                return;
+                if (data.triggerChime) {
+                    playChimeSound();
+                    
+                    // Flash effect
+                    queueBoxEl.style.transform = 'scale(1.05)';
+                    queueBoxEl.style.boxShadow = '0 30px 80px rgba(241, 196, 15, 0.8)';
+                    setTimeout(() => {
+                        queueBoxEl.style.transform = 'scale(1)';
+                        queueBoxEl.style.boxShadow = '';
+                    }, 500);
+                }
             }
-            recentListEl.innerHTML = recentNumbers.map(n => `<div class="recent-item">#${formatNumber(n)}</div>`).join('');
-        }
 
-        socket.on('init', (data) => {
-            setQueueNumber(data.number);
-            updateRecent(data.recentNumbers);
-        });
-
-        socket.on('next', (data) => {
-            setQueueNumber(data.number);
-            updateRecent(data.recentNumbers);
-            playChimeAndFlash();
-            
-            clearTimeout(skipTimeout);
-            skipMessageEl.classList.remove('visible');
-        });
-
-        socket.on('recall', (data) => {
-            setQueueNumber(data.number);
-            playChimeAndFlash();
-        });
-
-        socket.on('skip', (data) => {
-            setQueueNumber(data.newNumber);
-            updateRecent(data.recentNumbers);
-            
-            skipMessageEl.textContent = `#${formatNumber(data.skippedNumber)} Skipped — Now Serving #${formatNumber(data.newNumber)}`;
-            skipMessageEl.classList.add('visible');
-            
-            clearTimeout(skipTimeout);
-            skipTimeout = setTimeout(() => {
-                skipMessageEl.classList.remove('visible');
-            }, 3000);
-        });
-
-        socket.on('reset', (data) => {
-            setQueueNumber(data.number);
-            updateRecent(data.recentNumbers);
-            clearTimeout(skipTimeout);
-            skipMessageEl.classList.remove('visible');
+            // Update recent list
+            recentListEl.innerHTML = '';
+            if (data.recentNumbers.length === 0) {
+                recentListEl.innerHTML = '<li class="recent-item">---</li>';
+            } else {
+                data.recentNumbers.forEach(num => {
+                    const li = document.createElement('li');
+                    li.className = 'recent-item';
+                    li.textContent = num;
+                    recentListEl.appendChild(li);
+                });
+            }
         });
 
         // Fullscreen Toggle
@@ -166,7 +153,7 @@
             }
         });
 
-        // Heartbeat to keep Render free tier awake during the day
+        // Heartbeat to keep Render awake
         setInterval(() => {
             fetch('/ping').catch(err => console.log('Heartbeat failed', err));
         }, 5 * 60 * 1000); // 5 minutes
