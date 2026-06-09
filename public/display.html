@@ -66,7 +66,7 @@
         // Web Audio API for Chime Sound
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        function playChimeSound() {
+        function playChimeSound(isPriority = false) {
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
@@ -89,9 +89,14 @@
                 oscillator.stop(audioCtx.currentTime + startTime + duration);
             };
 
-            // Double chime (Ding-Dong)
-            playNote(880, 0, 1);    // A5
-            playNote(700, 0.4, 1.5); // F5
+            if (isPriority) {
+                // Priority tone: two quick tones (around 1000 Hz), 0.4s each with gap
+                playNote(1000, 0, 0.4);
+                playNote(1000, 0.5, 0.4);
+            } else {
+                // Regular tone: single tone 700 Hz, 0.8s
+                playNote(700, 0, 0.8);
+            }
         }
 
         function shortenCcd(ccd) {
@@ -120,21 +125,24 @@
                 if (data.isPriority) {
                     priorityBadgeEl.style.display = 'inline-block';
                     queueNumberEl.classList.add('priority');
+                    queueBoxEl.classList.add('priority');
                     queueNumberEl.style.color = '';
                     queueNumberEl.style.textShadow = '';
                 } else {
                     priorityBadgeEl.style.display = 'none';
                     queueNumberEl.classList.remove('priority');
+                    queueBoxEl.classList.remove('priority');
                     queueNumberEl.style.color = '';
                     queueNumberEl.style.textShadow = '';
                 }
 
                 if (data.triggerChime) {
-                    playChimeSound();
+                    playChimeSound(data.isPriority);
                     
                     // Flash effect
+                    const glowColor = data.isPriority ? 'rgba(204, 34, 34, 0.8)' : 'rgba(241, 196, 15, 0.8)';
                     queueBoxEl.style.transform = 'scale(1.05)';
-                    queueBoxEl.style.boxShadow = '0 30px 80px rgba(241, 196, 15, 0.8)';
+                    queueBoxEl.style.boxShadow = `0 30px 80px ${glowColor}`;
                     setTimeout(() => {
                         queueBoxEl.style.transform = 'scale(1)';
                         queueBoxEl.style.boxShadow = '';

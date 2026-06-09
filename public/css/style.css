@@ -143,24 +143,27 @@ body {
 }
 
 .serving-priority-badge {
-    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    background: #CC2222;
     color: white;
-    padding: 0.5rem 2rem;
+    padding: 0.6rem 2.5rem;
     border-radius: 50px;
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: 1.8rem;
+    font-weight: 900;
     letter-spacing: 4px;
     margin-bottom: 2rem;
-    box-shadow: 0 5px 20px rgba(243, 156, 18, 0.4);
+    box-shadow: 0 5px 20px rgba(204, 34, 34, 0.5);
     text-shadow: none;
     display: inline-block;
+    text-transform: uppercase;
 }
 
 .queue-number.priority {
-    background: linear-gradient(to bottom, #f1c40f, #f39c12);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 40px rgba(243, 156, 18, 0.3);
+    text-shadow: 0 0 40px rgba(204, 34, 34, 0.4);
+}
+
+.queue-number-box.priority {
+    border-top: 6px solid #CC2222;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(204, 34, 34, 0.1);
 }
 
 
