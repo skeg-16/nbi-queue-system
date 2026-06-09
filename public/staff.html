@@ -27,21 +27,37 @@
         }
 
         .staff-container {
-            max-width: 1000px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 4rem 2rem 3rem; /* Increased top padding to 4rem to clear the nav bar */
+            padding: 4rem 2rem 3rem;
+        }
+
+        .staff-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .staff-title { font-size: 2.5rem; color: var(--secondary-color); font-weight: 800; letter-spacing: 2px; text-transform: uppercase;}
+
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .left-column {
             display: flex;
             flex-direction: column;
             gap: 2rem;
         }
 
-        .staff-header {
-            text-align: center;
-            margin-bottom: 1rem;
-            margin-top: 1.5rem; /* Extra margin to prevent nav bar overlap */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
-
-        .staff-title { font-size: 2.5rem; color: var(--secondary-color); font-weight: 800; letter-spacing: 2px; text-transform: uppercase;}
 
         .dashboard-card {
             background: rgba(255, 255, 255, 0.03);
@@ -128,7 +144,7 @@
         .btn .btn-icon { font-size: 1.8rem; margin-bottom: 0; }
 
         /* Bottom: Waiting List */
-        .waiting-card { padding: 2rem 3rem; }
+        .waiting-card { padding: 2rem 3rem; height: 100%; display: flex; flex-direction: column; }
         .waiting-header {
             display: flex; justify-content: space-between; align-items: center;
             padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);
@@ -136,7 +152,7 @@
         }
         .waiting-count-badge { background: rgba(255,255,255,0.1); padding: 0.4rem 1.2rem; border-radius: 50px; color: white; font-weight: bold; }
         
-        .waiting-list { list-style: none; padding: 0; margin: 0; max-height: 500px; overflow-y: auto; padding-right: 1rem; }
+        .waiting-list { list-style: none; padding: 0; margin: 0; max-height: 700px; overflow-y: auto; padding-right: 1rem; flex-grow: 1; }
         .waiting-item {
             background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
             padding: 1.2rem 2rem; border-radius: 12px; margin-bottom: 1rem;
@@ -156,13 +172,19 @@
         }
 
         /* Responsive Overrides */
+        @media (max-width: 1024px) {
+            .dashboard-layout { grid-template-columns: 1fr; }
+            .staff-container { max-width: 900px; }
+            .waiting-list { max-height: 500px; }
+        }
         @media (max-width: 768px) {
             .secondary-controls { grid-template-columns: 1fr; }
             .status-number { font-size: 4rem; }
             .status-name { font-size: 2rem; }
-            .staff-container { padding: 1.5rem; }
+            .staff-container { padding: 5rem 1.5rem 2rem; }
             .controls-card { padding: 1.5rem; }
             .waiting-card { padding: 1.5rem; }
+            .serving-card { padding: 1.5rem; }
         }
     </style>
 </head>
@@ -177,49 +199,55 @@
             <div class="staff-title">Controller Panel</div>
         </div>
 
-        <!-- Currently Serving -->
-        <div class="dashboard-card serving-card">
-            <div class="card-label">Currently Serving</div>
-            <div class="status-display">
-                <div id="priority-badge-container"></div>
-                <div class="status-number" id="current-ccd">---</div>
-                <div class="status-name" id="current-name">Waiting...</div>
-            </div>
-        </div>
+        <div class="dashboard-layout">
+            <div class="left-column">
+                <!-- Currently Serving -->
+                <div class="dashboard-card serving-card">
+                    <div class="card-label">Currently Serving</div>
+                    <div class="status-display">
+                        <div id="priority-badge-container"></div>
+                        <div class="status-number" id="current-ccd">---</div>
+                        <div class="status-name" id="current-name">Waiting...</div>
+                    </div>
+                </div>
 
-        <!-- Controls -->
-        <div class="dashboard-card controls-card">
-            <button class="btn btn-next" id="btn-next">
-                <span class="btn-icon">➔</span>
-                <span class="btn-text">Call Next Number</span>
-                <span class="btn-subtext">Auto-pulls 2 Regulars : 1 Priority</span>
-            </button>
-            
-            <div class="secondary-controls">
-                <button class="btn btn-recall" id="btn-recall">
-                    <span class="btn-icon">↺</span>
-                    <span class="btn-text">Recall</span>
-                </button>
-                <button class="btn btn-skip" id="btn-skip">
-                    <span class="btn-icon">⏭</span>
-                    <span class="btn-text">Skip</span>
-                </button>
-                <button class="btn btn-reset" id="btn-reset">
-                    <span class="btn-icon">⚠</span>
-                    <span class="btn-text">Reset</span>
-                </button>
+                <!-- Controls -->
+                <div class="dashboard-card controls-card">
+                    <button class="btn btn-next" id="btn-next">
+                        <span class="btn-icon">➔</span>
+                        <span class="btn-text">Call Next Number</span>
+                        <span class="btn-subtext">Auto-pulls 2 Regulars : 1 Priority</span>
+                    </button>
+                    
+                    <div class="secondary-controls">
+                        <button class="btn btn-recall" id="btn-recall">
+                            <span class="btn-icon">↺</span>
+                            <span class="btn-text">Recall</span>
+                        </button>
+                        <button class="btn btn-skip" id="btn-skip">
+                            <span class="btn-icon">⏭</span>
+                            <span class="btn-text">Skip</span>
+                        </button>
+                        <button class="btn btn-reset" id="btn-reset">
+                            <span class="btn-icon">⚠</span>
+                            <span class="btn-text">Reset</span>
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Waiting List -->
-        <div class="dashboard-card waiting-card">
-            <div class="waiting-header">
-                <span>Live Waiting List</span>
-                <span id="waiting-count" class="waiting-count-badge">0 waiting</span>
+            <div class="right-column">
+                <!-- Waiting List -->
+                <div class="dashboard-card waiting-card">
+                    <div class="waiting-header">
+                        <span>Live Waiting List</span>
+                        <span id="waiting-count" class="waiting-count-badge">0 waiting</span>
+                    </div>
+                    <ul class="waiting-list" id="waiting-list">
+                        <!-- Populated via JS -->
+                    </ul>
+                </div>
             </div>
-            <ul class="waiting-list" id="waiting-list">
-                <!-- Populated via JS -->
-            </ul>
         </div>
     </div>
 
