@@ -7,239 +7,154 @@
     <link rel="stylesheet" href="css/style.css">
     <style>
         .staff-body {
-            background: var(--background-color);
-            overflow-y: auto;
-            overflow-x: hidden;
+            background: radial-gradient(circle at top, #11284d 0%, #050e1d 100%);
+            overflow: hidden; /* Prevent page scroll on desktop */
         }
-
-        .staff-layout {
-            display: flex;
-            width: 100vw;
-            min-height: calc(100vh - 65px);
-        }
-
-        .staff-status-panel {
-            flex: 1.5;
-            background: radial-gradient(circle at top left, #11284d 0%, #050e1d 100%);
+        .staff-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            height: calc(100vh - 65px);
             display: flex;
             flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            padding: 3rem;
-            position: relative;
         }
-
         .staff-header {
             text-align: center;
             margin-bottom: 2rem;
         }
-
-        .staff-title {
-            font-size: 2.2rem;
-            color: var(--secondary-color);
-            font-weight: 800;
-            letter-spacing: 1px;
+        .staff-title { font-size: 2.2rem; color: var(--secondary-color); font-weight: 800; letter-spacing: 1px; }
+        .staff-subtitle { font-size: 1.1rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 2px; margin-top: 0.5rem; }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            grid-template-rows: auto 1fr;
+            gap: 2rem;
+            flex: 1;
+            min-height: 0;
         }
-
-        .staff-subtitle {
-            font-size: 1.1rem;
-            color: #a0aec0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: 0.5rem;
-        }
-
-        .status-card {
-            background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(0,0,0,0.3));
-            border-radius: 30px;
-            padding: 3rem;
-            text-align: center;
+        
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-color);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-            margin-bottom: 2rem;
-            flex-grow: 1;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px);
             display: flex;
             flex-direction: column;
+        }
+        
+        /* Currently Serving Card */
+        .serving-card {
+            align-items: center;
             justify-content: center;
+            text-align: center;
         }
-
-        .status-label {
-            font-size: 1.2rem;
-            color: #a0aec0;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
+        .card-label {
+            font-size: 1.2rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 1rem;
         }
-
         .status-number {
-            font-size: 4.5rem;
-            font-weight: 800;
-            color: var(--secondary-color);
-            text-shadow: 0 0 30px rgba(241, 196, 15, 0.3);
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
+            font-size: 6rem; font-weight: 800; color: var(--secondary-color);
+            text-shadow: 0 0 30px rgba(241, 196, 15, 0.3); margin-bottom: 0.5rem; line-height: 1;
         }
-
-        .status-name {
-            font-size: 2.5rem;
-            font-weight: 600;
-            color: white;
-            min-height: 3rem;
-        }
-
+        .status-name { font-size: 2.5rem; font-weight: 600; color: white; min-height: 3rem; text-align: center; }
+        
         .priority-badge {
-            display: inline-block;
-            background: var(--secondary-color);
-            color: var(--primary-color);
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
-            font-weight: 800;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 1rem;
+            display: inline-block; background: var(--secondary-color); color: var(--primary-color);
+            padding: 0.5rem 1.5rem; border-radius: 50px; font-weight: 800; font-size: 1rem;
+            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1rem;
             box-shadow: 0 0 15px rgba(241, 196, 15, 0.5);
         }
 
-        .staff-controls-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 3rem;
-            background: #030812;
-        }
-
-        .controls-wrapper {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .btn {
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
+        /* Controls Card */
+        .controls-card {
             justify-content: center;
-            color: white;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-            padding: 1.5rem;
+            gap: 1.5rem;
         }
-
-        .btn:active { transform: scale(0.97); }
-
-        .btn-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-        .btn-text { font-weight: 600; font-size: 1.3rem; }
-        .btn-subtext { font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem; font-weight: 400; }
-
+        .btn {
+            border-radius: 15px; cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center;
+            color: white; border: 1px solid rgba(255,255,255,0.1);
+        }
         .btn-next {
-            background: linear-gradient(135deg, var(--success-color), var(--success-hover));
-            padding: 3rem;
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.1));
+            border: 1px solid rgba(46, 204, 113, 0.5);
+            padding: 2.5rem;
             flex-direction: column;
-            box-shadow: 0 10px 30px rgba(46, 204, 113, 0.2), inset 0 1px 1px rgba(255,255,255,0.3);
-        }
-
-        .btn-next .btn-icon { font-size: 3.5rem; }
-        .btn-next .btn-text { font-size: 2.5rem; font-weight: 800; }
-        .btn-next:hover { box-shadow: 0 15px 40px rgba(46, 204, 113, 0.4), inset 0 1px 1px rgba(255,255,255,0.3); transform: translateY(-3px); }
-
-        .secondary-controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
             gap: 1rem;
         }
-
-        .secondary-controls .btn { flex-direction: column; padding: 1.5rem 1rem; }
-
-        .btn-recall { background: linear-gradient(135deg, var(--recall-color), var(--recall-hover)); }
-        .btn-skip { background: linear-gradient(135deg, var(--skip-color), var(--skip-hover)); }
-        .btn-reset { background: linear-gradient(135deg, var(--danger-color), var(--danger-hover)); }
-
-        .waiting-list-panel {
-            flex-grow: 1;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
+        .btn-next:hover {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.4), rgba(39, 174, 96, 0.2));
+            box-shadow: 0 10px 40px rgba(46, 204, 113, 0.4);
+            transform: translateY(-3px);
         }
+        .btn-next .btn-icon { font-size: 3.5rem; color: var(--success-color); margin-bottom: 0; }
+        .btn-next .btn-text { font-size: 2.5rem; font-weight: 800; color: var(--success-color); }
+        .btn-next .btn-subtext { font-size: 1rem; color: #a0aec0; margin-top: 0; }
+        
+        .secondary-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .secondary-controls .btn { padding: 1.5rem; flex-direction: column; gap: 0.5rem; background: rgba(255,255,255,0.05); }
+        
+        .btn-recall { border: 1px solid rgba(155, 89, 182, 0.4); }
+        .btn-recall .btn-icon, .btn-recall .btn-text { color: var(--recall-color); }
+        .btn-recall:hover { background: rgba(155, 89, 182, 0.2); box-shadow: 0 5px 20px rgba(155, 89, 182, 0.3); transform: translateY(-2px); }
+        
+        .btn-skip { border: 1px solid rgba(149, 165, 166, 0.4); }
+        .btn-skip .btn-icon, .btn-skip .btn-text { color: var(--skip-color); }
+        .btn-skip:hover { background: rgba(149, 165, 166, 0.2); box-shadow: 0 5px 20px rgba(149, 165, 166, 0.3); transform: translateY(-2px); }
+        
+        .btn-reset { border: 1px solid rgba(231, 76, 60, 0.4); }
+        .btn-reset .btn-icon, .btn-reset .btn-text { color: var(--danger-color); }
+        .btn-reset:hover { background: rgba(231, 76, 60, 0.2); box-shadow: 0 5px 20px rgba(231, 76, 60, 0.3); transform: translateY(-2px); }
+        
+        .btn .btn-text { font-size: 1.2rem; font-weight: 600; }
+        .btn .btn-icon { font-size: 2rem; margin-bottom: 0; }
 
-        .waiting-title {
-            font-size: 1.2rem;
-            color: #a0aec0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
+        /* Waiting List */
+        .waiting-card { grid-column: 1 / -1; padding: 1.5rem 2.5rem; }
+        .waiting-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);
+            font-size: 1.2rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 2px;
         }
-
-        .waiting-list {
-            list-style: none;
+        .waiting-count-badge { background: rgba(255,255,255,0.1); padding: 0.3rem 1rem; border-radius: 50px; color: white; font-weight: bold; }
+        
+        .waiting-list-container {
+            flex: 1;
             overflow-y: auto;
-            flex-grow: 1;
-            max-height: 400px;
+            margin-top: 1rem;
             padding-right: 1rem;
         }
-
+        .waiting-list { list-style: none; }
         .waiting-item {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+            padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 0.8rem;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
         .waiting-item.is-priority {
             border-left: 5px solid var(--secondary-color);
             background: linear-gradient(90deg, rgba(241,196,15,0.1) 0%, rgba(0,0,0,0.3) 100%);
         }
-
-        .waiting-info {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-        }
-
-        .waiting-ccd {
-            color: var(--secondary-color);
-            font-weight: 800;
-            font-size: 1.1rem;
-        }
-
-        .waiting-name {
-            color: white;
-            font-weight: 500;
-        }
-
+        .waiting-info { display: flex; flex-direction: column; gap: 0.3rem; }
+        .waiting-ccd { color: var(--secondary-color); font-weight: 800; font-size: 1.1rem; }
+        .waiting-name { color: white; font-weight: 500; font-size: 1.2rem; }
         .waiting-badge {
-            background: rgba(241, 196, 15, 0.2);
-            color: var(--secondary-color);
-            padding: 0.3rem 0.8rem;
-            border-radius: 5px;
-            font-size: 0.8rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            background: rgba(241, 196, 15, 0.2); color: var(--secondary-color);
+            padding: 0.3rem 0.8rem; border-radius: 5px; font-size: 0.8rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1px;
         }
 
+        /* Responsive Overrides */
         @media (max-width: 1024px) {
-            .staff-layout { flex-direction: column; }
-            .staff-status-panel { padding: 2rem 1rem; border-right: none; border-bottom: 1px solid var(--border-color); }
-            .status-card { padding: 2rem; }
-            .status-number { font-size: 3rem; }
-            .status-name { font-size: 1.8rem; }
-            .staff-controls-panel { padding: 2rem 1rem; }
+            .staff-body { overflow-y: auto; }
+            .staff-container { height: auto; min-height: calc(100vh - 65px); }
+            .dashboard-grid { grid-template-columns: 1fr; grid-template-rows: auto auto 500px; }
+            .waiting-card { grid-column: 1 / -1; }
+        }
+        @media (max-width: 600px) {
+            .secondary-controls { grid-template-columns: 1fr; }
+            .secondary-controls .btn { flex-direction: row; justify-content: center; gap: 1rem; }
         }
     </style>
 </head>
@@ -249,25 +164,23 @@
         <a href="/records" class="nav-link">Database Records</a>
     </div>
     
-    <div class="staff-layout">
-        <!-- Left Panel: Status & Branding -->
-        <div class="staff-status-panel">
-            <div class="staff-header">
-                <div class="staff-title">Controller Panel</div>
-                <div class="staff-subtitle">NBI Queue Management System</div>
-            </div>
+    <div class="staff-container">
+        <div class="staff-header">
+            <div class="staff-title">Controller Panel</div>
+            <div class="staff-subtitle">NBI Queue Management System</div>
+        </div>
 
-            <div class="status-card">
-                <div class="status-label">Currently Serving</div>
+        <div class="dashboard-grid">
+            <!-- Currently Serving -->
+            <div class="dashboard-card serving-card">
+                <div class="card-label">Currently Serving</div>
                 <div id="priority-badge-container"></div>
                 <div class="status-number" id="current-ccd">---</div>
                 <div class="status-name" id="current-name">Waiting...</div>
             </div>
-        </div>
 
-        <!-- Right Panel: Controls -->
-        <div class="staff-controls-panel">
-            <div class="controls-wrapper">
+            <!-- Controls -->
+            <div class="dashboard-card controls-card">
                 <button class="btn btn-next" id="btn-next">
                     <span class="btn-icon">➔</span>
                     <span class="btn-text">Call Next Number</span>
@@ -291,14 +204,16 @@
             </div>
 
             <!-- Waiting List -->
-            <div class="waiting-list-panel">
-                <div class="waiting-title">
+            <div class="dashboard-card waiting-card">
+                <div class="waiting-header">
                     <span>Live Waiting List</span>
-                    <span id="waiting-count" style="color: white; font-weight: bold;">0 waiting</span>
+                    <span id="waiting-count" class="waiting-count-badge">0 waiting</span>
                 </div>
-                <ul class="waiting-list" id="waiting-list">
-                    <!-- Populated via JS -->
-                </ul>
+                <div class="waiting-list-container">
+                    <ul class="waiting-list" id="waiting-list">
+                        <!-- Populated via JS -->
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
