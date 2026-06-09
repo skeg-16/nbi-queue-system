@@ -712,7 +712,12 @@
         });
         
         function showSuccessScreen(response, isPriority) {
-            document.getElementById('successCcd').textContent = response.ccdNo;
+            let shortCcd = response.ccdNo;
+            if (shortCcd && shortCcd.includes('-')) {
+                const parts = shortCcd.split('-');
+                shortCcd = '#' + parts[parts.length - 1];
+            }
+            document.getElementById('successCcd').textContent = shortCcd;
             
             if (isPriority) {
                 document.getElementById('successPriorityBadge').style.display = 'block';

@@ -41,7 +41,7 @@ function saveAgentRemarks(remarksObj) {
     fs.writeFileSync(agentRemarksFile, JSON.stringify(remarksObj, null, 2));
 }
 
-function getCycleSortedList(waitingList, initialPriorityCount) {
+function getSortedList(waitingList) {
     let priorityQueue = [];
     let regularQueue = [];
     
@@ -52,26 +52,7 @@ function getCycleSortedList(waitingList, initialPriorityCount) {
         else regularQueue.push(r);
     });
 
-    let result = [];
-    let currentPriorityCount = initialPriorityCount;
-    
-    while (priorityQueue.length > 0 || regularQueue.length > 0) {
-        if (currentPriorityCount < 2 && priorityQueue.length > 0) {
-            result.push(priorityQueue.shift());
-            currentPriorityCount++;
-        } else if (currentPriorityCount === 2 && regularQueue.length > 0) {
-            result.push(regularQueue.shift());
-            currentPriorityCount = 0;
-        } else if (currentPriorityCount === 2 && regularQueue.length === 0) {
-            result.push(priorityQueue.shift());
-            currentPriorityCount = 1; 
-        } else if (currentPriorityCount < 2 && priorityQueue.length === 0) {
-            result.push(regularQueue.shift());
-            currentPriorityCount = 0; 
-        }
-    }
-    
-    return result;
+    return [...priorityQueue, ...regularQueue];
 }
 
 function getTodayDateStr() {
@@ -291,9 +272,11 @@ app.delete('/api/records/:id', async (req, res) => {
 });
 
 async function broadcastStaffUpdate() {
+    const todayStr = getTodayDateStr();
     const { data: allRegistrations } = await supabase
         .from('registrations')
-        .select('status, is_priority, id, ccd_no, full_name, created_at');
+        .select('status, is_priority, id, ccd_no, full_name, created_at')
+        .like('ccd_no', `CCD-${todayStr}-%`);
         
     const waitingList = (allRegistrations || []).filter(r => r.status === 'Waiting');
     const stats = {
@@ -303,7 +286,7 @@ async function broadcastStaffUpdate() {
         skipped: (allRegistrations || []).filter(r => r.status === 'Skipped').length
     };
 
-    const sortedList = getCycleSortedList(waitingList, state.priorityServedCount);
+    const sortedList = getSortedList(waitingList);
         
     const formattedList = sortedList.map(r => ({
         id: r.id,
@@ -389,7 +372,7 @@ io.on('connection', async (socket) => {
             .select('*')
             .eq('status', 'Waiting');
             
-        const sortedList = getCycleSortedList(waitingList || [], state.priorityServedCount);
+        const sortedList = getSortedList(waitingList || []);
         
         let position = sortedList.findIndex(r => r.id === data[0].id);
         if (position === -1) position = sortedList.length - 1;
@@ -432,7 +415,7 @@ io.on('connection', async (socket) => {
             return;
         }
 
-        const sortedWaiting = getCycleSortedList(waiting, state.priorityServedCount);
+        const sortedWaiting = getSortedList(waiting);
         const nextPerson = sortedWaiting[0];
 
         if (nextPerson.is_priority) {
@@ -483,7 +466,7 @@ io.on('connection', async (socket) => {
                 return;
             }
 
-            const sortedWaiting = getCycleSortedList(waiting, state.priorityServedCount);
+            const sortedWaiting = getSortedList(waiting);
             const nextPerson = sortedWaiting[0];
 
             if (nextPerson.is_priority) {

@@ -64,7 +64,7 @@
         }
 
         .staff-body {
-            background: var(--bg-color);
+            background: var(--bg-color) !important;
             font-family: 'Inter', sans-serif;
             color: var(--text-main);
             transition: background 0.3s ease, color 0.3s ease;
@@ -74,7 +74,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: var(--bg-color);
+            background: var(--bg-color) !important;
             border-bottom: 1px solid var(--border-color);
             padding: 1rem 0;
             position: sticky;
@@ -84,7 +84,7 @@
         }
         
         body.light-mode .staff-nav {
-            background: #E8E4DC;
+            background: #E8E4DC !important;
         }
         
         .staff-nav .nav-link {
@@ -363,12 +363,16 @@
         .toast.warning { background: #e67e22; }
 
         @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; color: black !important;}
-            .records-table th, .records-table td { border: 1px solid #ccc; color: black !important; }
-            .no-print { display: none !important; }
-            .staff-body { background: white; }
+            body { background: white !important; color: black !important; }
+            .no-print, .staff-nav, .ledger-nav, .summary-bar, .stats-context, .toolbar-container, .pagination-container, .theme-toggle { display: none !important; }
+            .staff-container { padding: 0; margin: 0; max-width: 100%; }
+            .page-header { margin-bottom: 20px; }
+            .records-table th, .records-table td { border: 1px solid #ccc; color: black !important; padding: 0.5rem; font-size: 10pt; }
+            .records-table th { background-color: #f2f2f2 !important; color: black !important; }
+            .table-container { border: none; box-shadow: none; background: white !important; }
+            .badge-priority { border: 1px solid black; color: black !important; background: white !important; }
+            .status-badge { border: 1px solid black; color: black !important; background: white !important; }
+            .print-only { display: block !important; }
         }
     </style>
 </head>
