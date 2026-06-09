@@ -95,9 +95,26 @@ app.use(express.json());
 app.get('/display', (req, res) => res.sendFile(path.join(__dirname, 'public', 'display.html')));
 app.get('/staff', (req, res) => res.sendFile(path.join(__dirname, 'public', 'staff.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
+app.get('/records', (req, res) => res.sendFile(path.join(__dirname, 'public', 'records.html')));
 app.get('/', (req, res) => res.redirect('/register'));
 
 app.get('/ping', (req, res) => res.status(200).send('pong'));
+
+// API Endpoint for Database Records Interface
+app.get('/api/records', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('registrations')
+            .select('*')
+            .order('created_at', { ascending: false });
+            
+        if (error) throw error;
+        res.json({ success: true, data: data });
+    } catch (err) {
+        console.error("Error fetching records:", err);
+        res.status(500).json({ success: false, error: "Database fetch failed" });
+    }
+});
 
 async function broadcastStaffUpdate() {
     const { data: waitingList } = await supabase

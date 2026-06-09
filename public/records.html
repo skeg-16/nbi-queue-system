@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Records | NBI QMS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="staff-body">
+    <div class="staff-nav">
+        <a href="/staff" class="nav-link">Queue Dashboard</a>
+        <a href="/records" class="nav-link active">Database Records</a>
+    </div>
+
+    <div class="staff-container" style="max-width: 1400px; padding: 2rem;">
+        <div class="staff-header">
+            <div class="staff-title">NBI Cybercrime Division</div>
+            <div class="staff-subtitle">Registration Database Records</div>
+        </div>
+
+        <div class="records-toolbar">
+            <input type="text" id="searchInput" class="form-control search-input" placeholder="Search by CCD No. or Name...">
+            <button class="btn-refresh" onclick="fetchRecords()">⟳ Refresh</button>
+        </div>
+
+        <div class="table-container">
+            <table class="records-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>CCD No.</th>
+                        <th>Full Name</th>
+                        <th>Age</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsBody">
+                    <tr><td colspan="6" style="text-align: center; padding: 3rem; color: #a0aec0;">Loading records...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allRecords = [];
+
+        async function fetchRecords() {
+            try {
+                const response = await fetch('/api/records');
+                const result = await response.json();
+                if (result.success) {
+                    allRecords = result.data;
+                    renderTable(allRecords);
+                } else {
+                    alert('Failed to fetch records.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error fetching database records.');
+            }
+        }
+
+        function renderTable(records) {
+            const tbody = document.getElementById('recordsBody');
+            tbody.innerHTML = '';
+
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 3rem; color: #a0aec0;">No records found.</td></tr>';
+                return;
+            }
+
+            records.forEach(r => {
+                const tr = document.createElement('tr');
+                
+                // Format Date
+                const dateObj = new Date(r.created_at);
+                const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                // Priority Badge
+                const priorityBadge = r.is_priority ? `<span class="badge priority-badge">PWD/Senior</span>` : '';
+
+                // Status Badge class
+                let statusClass = 'status-waiting';
+                if (r.status === 'Serving') statusClass = 'status-serving';
+                if (r.status === 'Served') statusClass = 'status-served';
+                if (r.status === 'Skipped') statusClass = 'status-skipped';
+
+                tr.innerHTML = `
+                    <td style="color: #a0aec0;">${dateStr}</td>
+                    <td style="font-family: monospace; font-weight: 600; color: var(--secondary-color);">${r.ccd_no}</td>
+                    <td style="font-weight: bold;">${r.full_name} ${priorityBadge}</td>
+                    <td>${r.age}</td>
+                    <td style="color: #a0aec0;">${r.contact}</td>
+                    <td><span class="status-badge ${statusClass}">${r.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allRecords.filter(r => 
+                r.full_name.toLowerCase().includes(term) || 
+                r.ccd_no.toLowerCase().includes(term)
+            );
+            renderTable(filtered);
+        });
+
+        // Initial fetch
+        fetchRecords();
+    </script>
+</body>
+</html>
