@@ -29,20 +29,16 @@ let state = {
     priorityServedCount: 0
 };
 
-// Closed Dates Storage
-const closedDatesFile = path.join(__dirname, 'closed_dates.json');
-function loadClosedDates() {
-    if (fs.existsSync(closedDatesFile)) {
-        try { return JSON.parse(fs.readFileSync(closedDatesFile, 'utf8')); } catch(e) { return []; }
+// Agent Remarks Storage
+const agentRemarksFile = path.join(__dirname, 'agent_remarks.json');
+function loadAgentRemarks() {
+    if (fs.existsSync(agentRemarksFile)) {
+        try { return JSON.parse(fs.readFileSync(agentRemarksFile, 'utf8')); } catch(e) { return {}; }
     }
-    return [];
+    return {};
 }
-function saveClosedDates(dates) {
-    fs.writeFileSync(closedDatesFile, JSON.stringify(dates, null, 2));
-}
-function isSessionClosed(dateStr) {
-    const dates = loadClosedDates();
-    return dates.includes(dateStr);
+function saveAgentRemarks(remarksObj) {
+    fs.writeFileSync(agentRemarksFile, JSON.stringify(remarksObj, null, 2));
 }
 
 function getCycleSortedList(waitingList, initialPriorityCount) {
@@ -193,46 +189,29 @@ app.get('/api/audit', (req, res) => {
     }
 });
 
-// === Sessions API (Close Day Logic) ===
+// === Agent Remarks API ===
 
-app.get('/api/sessions/status', (req, res) => {
-    const todayStr = getTodayDateStr();
-    res.json({ success: true, closed: isSessionClosed(todayStr), date: todayStr });
-});
-
-app.post('/api/sessions/close', (req, res) => {
+app.get('/api/records/:id/remarks', (req, res) => {
     try {
-        const todayStr = getTodayDateStr();
-        const dates = loadClosedDates();
-        if (!dates.includes(todayStr)) {
-            dates.push(todayStr);
-            saveClosedDates(dates);
-        }
-        
-        // Reset state for tomorrow
-        state.currentlyServing = null;
-        state.priorityServedCount = 0;
-        state.recentServed = [];
-        broadcastStaffUpdate();
-        
-        auditLog('Session Close', `Closed session for ${todayStr}`);
-        res.json({ success: true });
+        const remarks = loadAgentRemarks();
+        const recordRemarks = remarks[req.params.id] || { text: '', last_modified: null };
+        res.json({ success: true, data: recordRemarks });
     } catch(err) {
-        res.status(500).json({ success: false, error: "Failed to close session" });
+        res.status(500).json({ success: false, error: "Failed to load remarks" });
     }
 });
 
-app.post('/api/sessions/open', (req, res) => {
+app.post('/api/records/:id/remarks', (req, res) => {
     try {
-        const todayStr = getTodayDateStr();
-        let dates = loadClosedDates();
-        dates = dates.filter(d => d !== todayStr);
-        saveClosedDates(dates);
-        
-        auditLog('Session Open', `Opened session for ${todayStr}`);
-        res.json({ success: true });
+        const id = req.params.id;
+        const { text } = req.body;
+        let remarks = loadAgentRemarks();
+        remarks[id] = { text: text || '', last_modified: new Date().toISOString() };
+        saveAgentRemarks(remarks);
+        auditLog('Agent Remarks', `Updated remarks for ID ${id}`);
+        res.json({ success: true, data: remarks[id] });
     } catch(err) {
-        res.status(500).json({ success: false, error: "Failed to open session" });
+        res.status(500).json({ success: false, error: "Failed to save remarks" });
     }
 });
 

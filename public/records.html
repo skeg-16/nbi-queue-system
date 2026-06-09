@@ -30,23 +30,37 @@
             --dropdown-bg: #0b1d3a;
             --gold: #f39c12;
             --red: #CC2222;
+            
+            /* Status Badges Dark */
+            --status-served-bg: rgba(46, 204, 113, 0.15); --status-served-txt: #2ecc71; --status-served-border: rgba(46, 204, 113, 0.3);
+            --status-waiting-bg: rgba(52, 152, 219, 0.15); --status-waiting-txt: #3498db; --status-waiting-border: rgba(52, 152, 219, 0.3);
+            --status-skipped-bg: rgba(231, 76, 60, 0.15); --status-skipped-txt: #e74c3c; --status-skipped-border: rgba(231, 76, 60, 0.3);
+            --status-noshow-bg: rgba(149, 165, 166, 0.15); --status-noshow-txt: #95a5a6; --status-noshow-border: rgba(149, 165, 166, 0.3);
+            --status-serving-bg: rgba(243, 156, 18, 0.15); --status-serving-txt: var(--gold); --status-serving-border: rgba(243, 156, 18, 0.3);
         }
 
         body.light-mode {
-            --bg-color: #F4F2EE;
-            --panel-bg: #FAFAF8;
-            --border-color: #D1CDC4;
-            --text-main: #1A1A1A;
-            --text-muted: #5A5A5A;
-            --btn-bg: #FAFAF8;
-            --btn-border: #D1CDC4;
-            --btn-hover: #EAE6DF;
-            --table-hover: #EAE6DF;
-            --table-alt: #F7F5F1;
+            --bg-color: #F0EDE6;
+            --panel-bg: #FDFCFA;
+            --border-color: #DDD8CF;
+            --text-main: #1C1A16;
+            --text-muted: #6B6560;
+            --btn-bg: #FDFCFA;
+            --btn-border: #3A3530;
+            --btn-hover: #E8E4DC;
+            --table-hover: #EDE9E0;
+            --table-alt: #F5F2EC;
             --input-bg: #FFFFFF;
-            --modal-bg: #FAFAF8;
-            --dropdown-bg: #FFFFFF;
-            --gold: #c27000; /* Darker gold for text contrast */
+            --modal-bg: #FDFCFA;
+            --dropdown-bg: #FDFCFA;
+            --gold: #F0A500;
+            
+            /* Status Badges Light */
+            --status-served-bg: #D4F0DE; --status-served-txt: #1A7A3A; --status-served-border: #D4F0DE;
+            --status-waiting-bg: #D4E8F8; --status-waiting-txt: #1A5FA0; --status-waiting-border: #D4E8F8;
+            --status-skipped-bg: #F8D4D4; --status-skipped-txt: #A02020; --status-skipped-border: #F8D4D4;
+            --status-noshow-bg: #E8E4DC; --status-noshow-txt: #6B6560; --status-noshow-border: #E8E4DC;
+            --status-serving-bg: #FFF0C0; --status-serving-txt: #8A5A00; --status-serving-border: #FFF0C0;
         }
 
         .staff-body {
@@ -69,6 +83,10 @@
             transition: background 0.3s ease;
         }
         
+        body.light-mode .staff-nav {
+            background: #E8E4DC;
+        }
+        
         .staff-nav .nav-link {
             color: var(--text-muted);
             text-decoration: none;
@@ -84,6 +102,10 @@
         
         .staff-nav .nav-link:hover { color: var(--text-main); }
         .staff-nav .nav-link.active { color: var(--gold); border-bottom-color: var(--gold); }
+        
+        body.light-mode .staff-nav .nav-link.active {
+            background: #FDFCFA; border-top-left-radius: 6px; border-top-right-radius: 6px;
+        }
 
         .theme-toggle {
             position: absolute;
@@ -96,6 +118,7 @@
             transition: color 0.2s;
         }
         .theme-toggle:hover { color: var(--gold); }
+        body.light-mode .theme-toggle { color: var(--gold); }
 
         /* Formal Page Header */
         .page-header {
@@ -109,6 +132,11 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 0.3rem;
+        }
+        body.light-mode .page-title {
+            color: #1C1A16;
+            text-decoration: underline;
+            text-decoration-color: var(--gold);
         }
         .page-subtitle {
             font-size: 1rem;
@@ -125,16 +153,30 @@
             align-items: center;
             gap: 2rem;
             margin-bottom: 2rem;
+            position: relative;
         }
+        .ledger-date-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .ledger-date-container:hover { background: var(--panel-bg); }
         .ledger-date {
             font-size: 1.4rem;
             font-weight: 700;
             color: var(--text-main);
         }
+        .ledger-date.active { color: var(--gold); }
+        .calendar-icon { font-size: 1.2rem; color: var(--text-muted); }
+        
         .ledger-btn {
             background: none;
             border: none;
-            color: var(--text-muted);
+            color: var(--text-main);
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
@@ -146,6 +188,39 @@
         .ledger-btn:hover:not(:disabled) { color: var(--gold); }
         .ledger-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
+        /* Calendar Picker */
+        .calendar-popover {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dropdown-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 100;
+            width: 320px;
+            display: none;
+            margin-top: 10px;
+        }
+        .calendar-popover.active { display: block; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .cal-title { font-weight: 700; font-size: 1.1rem; color: var(--text-main); }
+        .cal-nav-btn { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+        .cal-nav-btn:hover { color: var(--gold); }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .cal-day-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.5rem; }
+        .cal-day { 
+            padding: 8px 0; border-radius: 50%; font-size: 0.9rem; color: var(--text-main); cursor: pointer; transition: all 0.2s;
+        }
+        .cal-day.disabled { color: var(--text-muted); opacity: 0.3; cursor: not-allowed; }
+        .cal-day.empty { color: var(--text-muted); opacity: 0.6; }
+        .cal-day.has-records { font-weight: 800; color: var(--text-main); }
+        .cal-day:hover:not(.disabled) { background: var(--table-hover); }
+        .cal-day.selected { background: var(--gold); color: #fff; font-weight: 700; }
+        .cal-day.today:not(.selected) { border: 2px solid var(--gold); }
+
         .summary-bar { 
             display: flex; justify-content: space-between; 
             background: var(--panel-bg); padding: 1.5rem 2.5rem; 
@@ -156,7 +231,8 @@
         .stat-value { font-size: 2.2rem; font-weight: 800; color: var(--gold); line-height: 1; }
         .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;}
         .stats-context { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; font-style: italic; }
-        
+        body.light-mode .stats-context { color: #8A8078; }
+
         /* Single Row Toolbar Alignment */
         .toolbar-container {
             display: flex; justify-content: space-between; align-items: center; gap: 1rem; 
@@ -181,10 +257,13 @@
         }
         .btn-formal:hover { background: var(--btn-hover); }
         
-        .btn-primary { background: rgba(243, 156, 18, 0.15); color: var(--gold); border-color: rgba(243, 156, 18, 0.4); }
-        .btn-primary:hover { background: rgba(243, 156, 18, 0.25); }
+        body.light-mode .btn-formal { color: #3A3530; border-color: #3A3530; }
+        body.light-mode .btn-formal:hover { background: #E8E4DC; }
         
-        .btn-danger { background: rgba(204, 34, 34, 0.1); color: var(--red); border-color: rgba(204, 34, 34, 0.3); }
+        .btn-primary { background: var(--gold); color: #1C1A16 !important; border-color: var(--gold) !important; }
+        .btn-primary:hover { opacity: 0.9; }
+        
+        .btn-danger { background: rgba(204, 34, 34, 0.1); color: var(--red) !important; border-color: rgba(204, 34, 34, 0.3) !important; }
         .btn-danger:hover { background: rgba(204, 34, 34, 0.2); }
 
         .filter-badge {
@@ -224,28 +303,25 @@
             padding: 1rem 1.2rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;
             border-bottom: 1px solid var(--border-color); background: var(--panel-bg); cursor: pointer; white-space: nowrap; position: sticky; top: 0;
         }
-        .records-table th:hover { color: var(--text-main); }
+        body.light-mode .records-table th { background: #E8E4DC; color: #3A3530; border-bottom: 1px solid #C8C4BC; }
         .records-table td { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border-color); vertical-align: middle;}
+        body.light-mode .records-table td { border-bottom: 1px solid #E0DDD6; }
         
         .records-table tbody tr:nth-child(even) { background: var(--table-alt); }
         .records-table tbody tr:hover { background: var(--table-hover); }
+        
+        body.light-mode .records-table tbody tr.priority-row { border-left: 3px solid var(--red); }
         
         /* Badges */
         .badge { padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; white-space: nowrap;}
         .badge-priority { background: var(--red); color: white; border: 1px solid #ff4444; }
         
         .status-badge { padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block;}
-        .status-waiting { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
-        .status-serving { background: rgba(243, 156, 18, 0.15); color: var(--gold); border: 1px solid rgba(243, 156, 18, 0.3); }
-        .status-served { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
-        .status-skipped { background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.3); }
-        .status-noshow { background: rgba(149, 165, 166, 0.15); color: #95a5a6; border: 1px solid rgba(149, 165, 166, 0.3); }
-        
-        body.light-mode .status-waiting { background: #E1F0FA; color: #2980b9; border-color: #B3D8F1; }
-        body.light-mode .status-serving { background: #FDF3E1; color: #d68910; border-color: #F8DCB3; }
-        body.light-mode .status-served { background: #E3F8EB; color: #27ae60; border-color: #B8EDCD; }
-        body.light-mode .status-skipped { background: #FCEAE8; color: #c0392b; border-color: #F6C8C3; }
-        body.light-mode .status-noshow { background: #F2F4F4; color: #7f8c8d; border-color: #D5DBDB; }
+        .status-waiting { background: var(--status-waiting-bg); color: var(--status-waiting-txt); border: 1px solid var(--status-waiting-border); }
+        .status-serving { background: var(--status-serving-bg); color: var(--status-serving-txt); border: 1px solid var(--status-serving-border); }
+        .status-served { background: var(--status-served-bg); color: var(--status-served-txt); border: 1px solid var(--status-served-border); }
+        .status-skipped { background: var(--status-skipped-bg); color: var(--status-skipped-txt); border: 1px solid var(--status-skipped-border); }
+        .status-noshow { background: var(--status-noshow-bg); color: var(--status-noshow-txt); border: 1px solid var(--status-noshow-border); }
         
         /* Pagination */
         .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem; }
@@ -271,8 +347,9 @@
         .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
         .form-group.full-width { grid-column: 1 / -1; }
         .form-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .form-input, .form-select { width: 100%; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.8rem; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.95rem; }
-        .form-input:focus, .form-select:focus { border-color: var(--gold); outline: none; }
+        .form-input, .form-select, .form-textarea { width: 100%; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.8rem; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.95rem; }
+        .form-textarea { resize: vertical; min-height: 120px; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--gold); outline: none; }
         .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
         
         .detail-row { display: flex; border-bottom: 1px solid var(--border-color); padding: 1rem 0; }
@@ -306,14 +383,33 @@
         
         <!-- Formal Page Header -->
         <div class="page-header">
-            <div class="page-title">NBI Cybercrime Division — Complaint Registry</div>
+            <div class="page-title">NBI Cybercrime Division <span style="color: var(--text-muted);">&mdash;</span> Complaint Registry</div>
             <div class="page-subtitle">Digital Complainant Database & Records Management</div>
         </div>
 
-        <!-- Ledger Navigation -->
+        <!-- Ledger Navigation with Calendar Picker -->
         <div class="ledger-nav">
             <button class="ledger-btn" onclick="changeDate(-1)">← Previous Day</button>
-            <div class="ledger-date" id="ledgerDateDisplay">Loading...</div>
+            <div style="position: relative;" id="calendarContainer">
+                <div class="ledger-date-container" id="dateHeader" title="Click to pick a date">
+                    <span class="ledger-date" id="ledgerDateDisplay">Loading...</span>
+                    <span class="calendar-icon">📅</span>
+                </div>
+                <!-- Calendar Popover -->
+                <div class="calendar-popover" id="calendarPopover">
+                    <div class="cal-header">
+                        <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)">◀</button>
+                        <div class="cal-title" id="calMonthYear">June 2026</div>
+                        <button class="cal-nav-btn" onclick="changeCalendarMonth(1)">▶</button>
+                    </div>
+                    <div class="cal-grid" id="calGrid">
+                        <div class="cal-day-label">Su</div><div class="cal-day-label">Mo</div><div class="cal-day-label">Tu</div>
+                        <div class="cal-day-label">We</div><div class="cal-day-label">Th</div><div class="cal-day-label">Fr</div>
+                        <div class="cal-day-label">Sa</div>
+                        <!-- Days populated via JS -->
+                    </div>
+                </div>
+            </div>
             <button class="ledger-btn" id="btnNextDay" onclick="changeDate(1)">Next Day →</button>
         </div>
 
@@ -363,8 +459,6 @@
                                 <option value="No-show">No-show</option>
                             </select>
                         </div>
-                        <!-- Date range filters inside popover can remain for custom global searching if needed, 
-                             but the primary mode is the daily ledger view -->
                         <div class="filter-row" style="margin-top: 1rem;">
                             <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 500; cursor: pointer;">
                                 <input type="checkbox" id="filterPriority"> Show Priority Only
@@ -377,7 +471,7 @@
             </div>
             
             <div class="toolbar-actions" style="justify-content: flex-end;">
-                <span id="lastUpdated" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem;">Connecting...</span>
+                <span id="lastUpdated" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem; font-style: italic;">Connecting...</span>
                 
                 <div class="dropdown right" id="exportDropdown">
                     <button class="btn-formal dropdown-btn" onclick="toggleDropdown(event, 'export-menu')">Export ▾</button>
@@ -391,9 +485,6 @@
                 </div>
                 
                 <button class="btn-formal btn-primary" onclick="generateEODReport()">End of Day Report</button>
-                <div style="width: 1px; height: 30px; background: var(--border-color); margin: 0 0.5rem;"></div>
-                
-                <button class="btn-formal btn-danger" onclick="openCloseDayModal()" title="Closes today's session. Data is preserved.">Close Day</button>
             </div>
         </div>
 
@@ -430,26 +521,6 @@
     </div>
 
     <!-- Modals -->
-
-    <!-- Close Day Confirmation Modal -->
-    <div class="modal-overlay" id="modalCloseDay">
-        <div class="modal" style="max-width: 450px;">
-            <div class="modal-header">
-                <div class="modal-title" style="color: var(--red);">Close Today's Session?</div>
-                <button class="modal-close" onclick="closeModal('modalCloseDay')">&times;</button>
-            </div>
-            <div style="line-height: 1.6; color: var(--text-main); margin-bottom: 2rem;">
-                This will mark today's session (<strong id="closeDayDateText"></strong>) as closed.
-                <br><br>
-                All records will be preserved and accessible in history.
-                The queue counter will be reset for the next business day.
-            </div>
-            <div class="modal-footer">
-                <button class="btn-formal" onclick="closeModal('modalCloseDay')">Cancel</button>
-                <button class="btn-formal btn-danger" onclick="submitCloseDay()">Close Day</button>
-            </div>
-        </div>
-    </div>
 
     <!-- View Details Modal -->
     <div class="modal-overlay" id="modalView">
@@ -566,6 +637,26 @@
             </div>
         </div>
     </div>
+    
+    <!-- Agent Remarks Modal -->
+    <div class="modal-overlay" id="modalRemarks">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <div class="modal-title">Agent Remarks</div>
+                <button class="modal-close" onclick="closeModal('modalRemarks')">&times;</button>
+            </div>
+            <input type="hidden" id="remarksId">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label">Case Notes & Remarks</label>
+                <textarea id="remarksText" class="form-textarea" placeholder="Enter private agent remarks for this complainant..."></textarea>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.5rem;" id="remarksTimestamp"></div>
+            <div class="modal-footer">
+                <button class="btn-formal" onclick="closeModal('modalRemarks')">Cancel</button>
+                <button class="btn-formal btn-primary" onclick="submitRemarks()">Save Remarks</button>
+            </div>
+        </div>
+    </div>
 
     <!-- EOD Report Modal -->
     <div class="modal-overlay" id="modalEOD">
@@ -581,17 +672,37 @@
             </div>
         </div>
     </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="modalDelete">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-title" style="color: var(--red);">Delete Record</div>
+                <button class="modal-close" onclick="closeModal('modalDelete')">&times;</button>
+            </div>
+            <input type="hidden" id="deleteId">
+            <div style="line-height: 1.6; color: var(--text-main); margin-bottom: 2rem;">
+                Are you absolutely sure you want to permanently delete this official record? 
+                <strong>This action cannot be undone.</strong>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-formal" onclick="closeModal('modalDelete')">Cancel</button>
+                <button class="btn-formal btn-danger" onclick="submitDelete()">Delete Record</button>
+            </div>
+        </div>
+    </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
         // --- State ---
-        let allRecords = []; // Full cache
+        let allRecords = []; 
         let filteredRecords = [];
         let lastFetchTime = null;
         let isConnected = true;
         
         let viewDateObj = new Date();
+        let calDateObj = new Date(); // For calendar rendering
         
         let currentPage = 1;
         const recordsPerPage = 25;
@@ -607,11 +718,11 @@
             body.classList.toggle('light-mode');
             const isLight = body.classList.contains('light-mode');
             localStorage.setItem('nbi_theme', isLight ? 'light' : 'dark');
-            document.getElementById('themeToggle').textContent = isLight ? '🌙' : '☀️';
+            document.getElementById('themeToggle').textContent = isLight ? '☀' : '☀️';
         }
         if (localStorage.getItem('nbi_theme') === 'light') {
             document.body.classList.add('light-mode');
-            document.getElementById('themeToggle').textContent = '🌙';
+            document.getElementById('themeToggle').textContent = '☀';
         }
 
         // --- Initialization ---
@@ -619,10 +730,28 @@
             updateLedgerDateDisplay();
             fetchRecords();
             
-            // Close dropdowns
+            // Dropdowns & Calendar Close
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.dropdown')) {
                     document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+                }
+                if (!e.target.closest('#calendarContainer')) {
+                    document.getElementById('calendarPopover').classList.remove('active');
+                }
+            });
+            
+            // Calendar trigger
+            document.getElementById('dateHeader').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const popover = document.getElementById('calendarPopover');
+                if(popover.classList.contains('active')) {
+                    popover.classList.remove('active');
+                    document.getElementById('ledgerDateDisplay').classList.remove('active');
+                } else {
+                    calDateObj = new Date(viewDateObj);
+                    renderCalendar();
+                    popover.classList.add('active');
+                    document.getElementById('ledgerDateDisplay').classList.add('active');
                 }
             });
 
@@ -632,7 +761,6 @@
                 searchTimeout = setTimeout(() => applyFiltersAndSort(), 300);
             });
 
-            // Auto-filter
             document.getElementById('filterStatus').addEventListener('change', applyFiltersAndSort);
             document.getElementById('filterPriority').addEventListener('change', applyFiltersAndSort);
 
@@ -649,7 +777,7 @@
             if (!wasActive) parent.classList.add('active');
         }
 
-        // --- Ledger Date Logic ---
+        // --- Ledger Date & Calendar Logic ---
         function updateLedgerDateDisplay() {
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('ledgerDateDisplay').textContent = viewDateObj.toLocaleDateString('en-US', options);
@@ -663,22 +791,77 @@
 
         function changeDate(offset) {
             viewDateObj.setDate(viewDateObj.getDate() + offset);
-            
-            // Prevent going into future
             const today = new Date();
-            if (viewDateObj > today) {
-                viewDateObj = today;
-            }
+            if (viewDateObj > today) viewDateObj = new Date(today);
             
             updateLedgerDateDisplay();
             applyFiltersAndSort();
         }
 
         function getViewDateString() {
-            // Returns YYYY-MM-DD in local time
             const offset = viewDateObj.getTimezoneOffset();
             const localDate = new Date(viewDateObj.getTime() - (offset*60*1000));
             return localDate.toISOString().split('T')[0];
+        }
+
+        function renderCalendar() {
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calMonthYear').textContent = `${monthNames[calDateObj.getMonth()]} ${calDateObj.getFullYear()}`;
+            
+            const firstDay = new Date(calDateObj.getFullYear(), calDateObj.getMonth(), 1).getDay();
+            const daysInMonth = new Date(calDateObj.getFullYear(), calDateObj.getMonth() + 1, 0).getDate();
+            
+            const grid = document.getElementById('calGrid');
+            // Remove old days
+            const dayLabels = Array.from(grid.querySelectorAll('.cal-day-label'));
+            grid.innerHTML = '';
+            dayLabels.forEach(l => grid.appendChild(l));
+            
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            // Find days that have records
+            const recordDates = new Set(allRecords.map(r => r.created_at.split('T')[0]));
+            
+            // Empty slots
+            for(let i=0; i<firstDay; i++) {
+                grid.innerHTML += `<div class="cal-day empty"></div>`;
+            }
+            
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateVal = new Date(calDateObj.getFullYear(), calDateObj.getMonth(), d);
+                dateVal.setHours(0,0,0,0);
+                
+                const offset = dateVal.getTimezoneOffset();
+                const localStr = new Date(dateVal.getTime() - (offset*60*1000)).toISOString().split('T')[0];
+                
+                const isFuture = dateVal > today;
+                const isSelected = dateVal.toDateString() === viewDateObj.toDateString();
+                const isToday = dateVal.toDateString() === today.toDateString();
+                const hasRecords = recordDates.has(localStr);
+                
+                let classes = 'cal-day';
+                if(isFuture) classes += ' disabled';
+                if(!hasRecords && !isFuture) classes += ' empty';
+                if(hasRecords) classes += ' has-records';
+                if(isSelected) classes += ' selected';
+                if(isToday) classes += ' today';
+                
+                grid.innerHTML += `<div class="${classes}" onclick="if(!${isFuture}) selectCalendarDate(${calDateObj.getFullYear()}, ${calDateObj.getMonth()}, ${d})">${d}</div>`;
+            }
+        }
+        
+        function changeCalendarMonth(offset) {
+            calDateObj.setMonth(calDateObj.getMonth() + offset);
+            renderCalendar();
+        }
+        
+        function selectCalendarDate(y, m, d) {
+            viewDateObj = new Date(y, m, d);
+            document.getElementById('calendarPopover').classList.remove('active');
+            document.getElementById('ledgerDateDisplay').classList.remove('active');
+            updateLedgerDateDisplay();
+            applyFiltersAndSort();
         }
 
         // --- Data Fetching (Cache) ---
@@ -752,7 +935,6 @@
             const status = document.getElementById('filterStatus').value;
             const prio = document.getElementById('filterPriority').checked;
             
-            // Count active filters
             let activeFilters = 0;
             if(status) activeFilters++;
             if(prio) activeFilters++;
@@ -770,11 +952,8 @@
 
             const viewStr = getViewDateString();
 
-            // Filter
             filteredRecords = allRecords.filter(r => {
-                // Must belong to current view date
                 if (!r.created_at.startsWith(viewStr)) return false;
-                
                 if (status && r.status !== status) return false;
                 if (prio && !r.is_priority) return false;
                 
@@ -790,7 +969,6 @@
                 return true;
             });
             
-            // Sort
             filteredRecords.sort((a, b) => {
                 let valA = a[sortColumn];
                 let valB = b[sortColumn];
@@ -802,7 +980,10 @@
                 return 0;
             });
             
-            currentPage = 1;
+            // Adjust pagination if filtered results shrink
+            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
+            if(currentPage > totalPages) currentPage = totalPages;
+            
             updateSummaryBar();
             renderTable();
             renderPagination();
@@ -844,6 +1025,8 @@
                 if(r.status === 'No-show') statusClass = 'status-noshow';
 
                 const tr = document.createElement('tr');
+                if (r.is_priority) tr.className = 'priority-row';
+                
                 tr.innerHTML = `
                     <td>${dateStr}</td>
                     <td style="font-weight: 800; color: var(--gold);">${r.ccd_no} ${isPrio}</td>
@@ -857,8 +1040,9 @@
                             <div class="dropdown-content" id="dd-${r.id}">
                                 <button class="menu-item" onclick="viewDetails('${r.id}')">View Full Details</button>
                                 <button class="menu-item" onclick="openEdit('${r.id}')">Edit Record</button>
+                                <button class="menu-item" onclick="openRemarks('${r.id}')">Agent Remarks</button>
                                 <button class="menu-item" onclick="openStatus('${r.id}', '${r.status}')">Change Status</button>
-                                <button class="menu-item danger" onclick="deleteRecord('${r.id}')" style="color: var(--red);">Delete Record</button>
+                                <button class="menu-item danger" onclick="confirmDelete('${r.id}')" style="color: var(--red);">Delete Record</button>
                             </div>
                         </div>
                     </td>
@@ -874,10 +1058,9 @@
             const container = document.getElementById('pageNumbers');
             container.innerHTML = '';
             
-            document.getElementById('btnPrev').disabled = currentPage === 1;
-            document.getElementById('btnNext').disabled = currentPage === totalPages;
+            document.getElementById('btnPrev').disabled = currentPage <= 1;
+            document.getElementById('btnNext').disabled = currentPage >= totalPages;
             
-            // Logic for up to 5 page pills
             let startPage = Math.max(1, currentPage - 2);
             let endPage = Math.min(totalPages, startPage + 4);
             if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
@@ -916,28 +1099,18 @@
             document.body.style.overflow = '';
         }
 
-        // --- Close Day Logic ---
-        function openCloseDayModal() {
-            document.getElementById('closeDayDateText').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            openModal('modalCloseDay');
-        }
-
-        async function submitCloseDay() {
-            try {
-                const response = await fetch(`/api/sessions/close`, { method: 'POST' });
-                if ((await response.json()).success) {
-                    showToast("Today's session has been closed. Records are preserved.");
-                    closeModal('modalCloseDay');
-                } else {
-                    showToast('Failed to close session', true);
-                }
-            } catch(err) { showToast('Server error', true); }
-        }
-
-        // --- Row Actions ---
-        function viewDetails(id) {
+        // --- CRUD Operations ---
+        async function viewDetails(id) {
             const r = allRecords.find(x => x.id === id);
             if (!r) return;
+            
+            // Fetch remarks for full details
+            let remarksText = 'None';
+            try {
+                const res = await fetch(`/api/records/${id}/remarks`);
+                const json = await res.json();
+                if(json.success && json.data.text) remarksText = json.data.text;
+            } catch(e) {}
             
             const dateStr = new Date(r.created_at).toLocaleString('en-PH');
             const html = `
@@ -950,6 +1123,7 @@
                 <div class="detail-row"><div class="detail-label">Address</div><div class="detail-value">${r.address}</div></div>
                 <div class="detail-row"><div class="detail-label">Purpose</div><div class="detail-value">${r.purpose}</div></div>
                 <div class="detail-row"><div class="detail-label">Referred By</div><div class="detail-value">${r.referred_by || 'N/A'}</div></div>
+                <div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem;">Agent Remarks</div><div class="detail-value" style="width: 100%; background: var(--panel-bg); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); white-space: pre-wrap;">${remarksText}</div></div>
             `;
             document.getElementById('viewDetailsContent').innerHTML = html;
             openModal('modalView');
@@ -976,15 +1150,15 @@
             e.preventDefault();
             const id = document.getElementById('editId').value;
             const updates = {
-                full_name: document.getElementById('editName').value,
+                full_name: document.getElementById('editName').value.trim(),
                 age: document.getElementById('editAge').value,
-                contact: document.getElementById('editContact').value,
-                email: document.getElementById('editEmail').value,
+                contact: document.getElementById('editContact').value.trim(),
+                email: document.getElementById('editEmail').value.trim(),
                 gender: document.getElementById('editGender').value,
                 civil_status: document.getElementById('editCivil').value,
-                address: document.getElementById('editAddress').value,
+                address: document.getElementById('editAddress').value.trim(),
                 purpose: document.getElementById('editPurpose').value,
-                referred_by: document.getElementById('editReferred').value,
+                referred_by: document.getElementById('editReferred').value.trim(),
                 is_priority: document.getElementById('editPriority').checked
             };
             
@@ -995,11 +1169,15 @@
                     body: JSON.stringify(updates)
                 });
                 if ((await response.json()).success) {
-                    showToast('Record updated');
+                    showToast('Record updated successfully');
                     closeModal('modalEdit');
-                    fetchRecords(false); // re-fetch silently
-                } else { showToast('Update failed', true); }
-            } catch(err) { showToast('Server error', true); }
+                    
+                    // Instantly update local cache
+                    const idx = allRecords.findIndex(x => x.id === id);
+                    if(idx !== -1) allRecords[idx] = { ...allRecords[idx], ...updates };
+                    applyFiltersAndSort();
+                } else { showToast('Failed to update record. Please try again.', true); }
+            } catch(err) { showToast('Server error. Failed to save.', true); }
         }
 
         function openStatus(id, currentStatus) {
@@ -1014,7 +1192,7 @@
             const newStatus = document.getElementById('newStatus').value;
             const remarks = document.getElementById('statusRemarks').value.trim();
             
-            if (!remarks) { alert("Remarks are required to change status manually."); return; }
+            if (!remarks) { showToast("Remarks are required for status change.", true); return; }
             
             try {
                 const response = await fetch(`/api/records/${id}/status`, {
@@ -1023,22 +1201,75 @@
                     body: JSON.stringify({ status: newStatus })
                 });
                 if ((await response.json()).success) {
-                    showToast('Status updated');
+                    showToast('Status updated successfully');
                     closeModal('modalStatus');
-                    fetchRecords(false);
-                } else { showToast('Update failed', true); }
-            } catch(err) { showToast('Server error', true); }
+                    
+                    const idx = allRecords.findIndex(x => x.id === id);
+                    if(idx !== -1) allRecords[idx].status = newStatus;
+                    applyFiltersAndSort();
+                } else { showToast('Failed to update status.', true); }
+            } catch(err) { showToast('Server error.', true); }
         }
 
-        async function deleteRecord(id) {
-            if (!confirm('Are you absolutely sure you want to permanently delete this official record? This cannot be undone.')) return;
+        async function openRemarks(id) {
+            document.getElementById('remarksId').value = id;
+            document.getElementById('remarksText').value = "Loading...";
+            document.getElementById('remarksTimestamp').textContent = "";
+            openModal('modalRemarks');
+            
+            try {
+                const res = await fetch(`/api/records/${id}/remarks`);
+                const json = await res.json();
+                if(json.success) {
+                    document.getElementById('remarksText').value = json.data.text || "";
+                    if(json.data.last_modified) {
+                        const d = new Date(json.data.last_modified).toLocaleString('en-PH');
+                        document.getElementById('remarksTimestamp').textContent = `Last modified: ${d}`;
+                    } else {
+                        document.getElementById('remarksTimestamp').textContent = "No previous remarks.";
+                    }
+                }
+            } catch(e) {
+                document.getElementById('remarksText').value = "";
+                showToast("Failed to load existing remarks", true);
+            }
+        }
+
+        async function submitRemarks() {
+            const id = document.getElementById('remarksId').value;
+            const text = document.getElementById('remarksText').value;
+            
+            try {
+                const response = await fetch(`/api/records/${id}/remarks`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ text })
+                });
+                if ((await response.json()).success) {
+                    showToast('Remarks saved successfully');
+                    closeModal('modalRemarks');
+                } else { showToast('Failed to save remarks.', true); }
+            } catch(err) { showToast('Server error.', true); }
+        }
+
+        function confirmDelete(id) {
+            document.getElementById('deleteId').value = id;
+            openModal('modalDelete');
+        }
+
+        async function submitDelete() {
+            const id = document.getElementById('deleteId').value;
             try {
                 const response = await fetch(`/api/records/${id}`, { method: 'DELETE' });
                 if ((await response.json()).success) {
-                    showToast('Record deleted');
-                    fetchRecords(false);
-                } else { showToast('Delete failed', true); }
-            } catch(err) { showToast('Server error', true); }
+                    showToast('Record deleted successfully');
+                    closeModal('modalDelete');
+                    
+                    // Instantly update local cache
+                    allRecords = allRecords.filter(x => x.id !== id);
+                    applyFiltersAndSort();
+                } else { showToast('Failed to delete record. Please try again.', true); }
+            } catch(err) { showToast('Server error. Deletion failed.', true); }
         }
 
         // --- Export & Reports ---
