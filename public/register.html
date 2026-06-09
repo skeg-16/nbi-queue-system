@@ -171,21 +171,21 @@
                 <!-- Row 1 -->
                 <div class="form-group">
                     <label>Full Name *</label>
-                    <input type="text" class="form-control" id="fullName" required placeholder="Enter full name">
+                    <input type="text" class="form-control" id="fullName" required placeholder="Enter full name" pattern="[A-Za-z\s\-\.]+" title="Letters, spaces, hyphens, and periods only">
                 </div>
                 <div class="form-group">
                     <label>Contact Details *</label>
-                    <input type="tel" class="form-control" id="contact" required placeholder="Mobile Number">
+                    <input type="tel" class="form-control" id="contact" required placeholder="Mobile Number" pattern="(09|\+639)\d{9}" title="Valid Philippine mobile number (e.g., 09171234567)">
                 </div>
                 <div class="form-group">
                     <label>Email (Optional)</label>
-                    <input type="email" class="form-control" id="email" placeholder="Email Address">
+                    <input type="email" class="form-control" id="email" placeholder="Email Address" pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" title="Valid email address with a domain (e.g., name@gmail.com)">
                 </div>
 
                 <!-- Row 2 -->
                 <div class="form-group">
                     <label>Age *</label>
-                    <input type="number" class="form-control" id="age" required min="1" max="150" placeholder="Age">
+                    <input type="number" class="form-control" id="age" required min="1" max="130" placeholder="Age">
                 </div>
                 <div class="form-group">
                     <label>Civil Status</label>
