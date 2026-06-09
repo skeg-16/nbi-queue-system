@@ -13,87 +13,166 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     
     <style>
-        .summary-bar { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 1.5rem 2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border-color); }
-        .summary-stat { display: flex; flex-direction: column; align-items: center; }
-        .stat-value { font-size: 2rem; font-weight: 800; color: var(--secondary-color); line-height: 1; margin-bottom: 0.3rem;}
-        .stat-label { font-size: 0.85rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px; }
+        .staff-body {
+            background: #050e1d; /* Solid formal dark background */
+            font-family: 'Inter', sans-serif;
+        }
+
+        .staff-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(5, 14, 29, 0.98);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .summary-bar { 
+            display: flex; justify-content: space-between; 
+            background: rgba(255,255,255,0.02); padding: 1.5rem 2.5rem; 
+            border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.05); 
+        }
+        .summary-stat { display: flex; flex-direction: column; align-items: center; gap: 0.5rem;}
+        .stat-value { font-size: 2.2rem; font-weight: 800; color: #f39c12; line-height: 1; }
+        .stat-label { font-size: 0.8rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;}
         
-        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color); }
-        .filter-group { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-        .filter-select, .filter-input { background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: white; padding: 0.6rem 1rem; border-radius: 8px; font-family: 'Inter', sans-serif;}
-        .filter-checkbox { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: white; user-select: none; }
+        .toolbar-container {
+            display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; 
+            margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); padding: 1.5rem; 
+            border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); 
+        }
+
+        .toolbar-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .toolbar-title { font-size: 0.75rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 0.2rem;}
+        .toolbar-actions { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
         
-        .action-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .btn-small { padding: 0.6rem 1.2rem; font-size: 0.9rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white; cursor: pointer; transition: all 0.2s; font-weight: 500; display: flex; align-items: center; gap: 0.4rem; }
-        .btn-small:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
-        .btn-primary-small { background: var(--secondary-color); color: var(--primary-color); border: none; font-weight: 700; }
-        .btn-primary-small:hover { background: #f39c12; }
-        .btn-danger-small { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border-color: rgba(231, 76, 60, 0.4); }
-        .btn-danger-small:hover { background: rgba(231, 76, 60, 0.2); }
+        .filter-select, .filter-input { 
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); 
+            color: white; padding: 0.6rem 1rem; border-radius: 6px; font-family: 'Inter', sans-serif;
+            font-size: 0.9rem; transition: border-color 0.2s;
+        }
+        .filter-select:focus, .filter-input:focus { outline: none; border-color: #f39c12; }
+        .filter-checkbox { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #a0aec0; font-size: 0.9rem; font-weight: 600; user-select: none; }
         
-        .records-table th { cursor: pointer; user-select: none; white-space: nowrap; }
-        .records-table th:hover { background: rgba(255,255,255,0.05); }
-        .sort-icon { display: inline-block; width: 1em; text-align: center; color: var(--secondary-color); margin-left: 0.3rem; font-size: 0.8em; }
+        .btn-formal {
+            padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: white; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-formal:hover { background: rgba(255,255,255,0.08); }
+        .btn-primary { background: rgba(243, 156, 18, 0.15); color: #f39c12; border-color: rgba(243, 156, 18, 0.4); }
+        .btn-primary:hover { background: rgba(243, 156, 18, 0.25); }
+        .btn-danger { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border-color: rgba(231, 76, 60, 0.3); }
+        .btn-danger:hover { background: rgba(231, 76, 60, 0.2); }
         
-        .records-table tbody tr { transition: background 0.2s; }
-        .records-table tbody tr:hover { background: rgba(255,255,255,0.05); }
-        .records-table tbody tr.is-priority { background: rgba(241, 196, 15, 0.05); border-left: 4px solid var(--secondary-color); }
-        .records-table tbody tr.is-priority:hover { background: rgba(241, 196, 15, 0.1); }
+        .table-container { overflow-x: auto; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; }
+        .records-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;}
+        .records-table th { 
+            padding: 1.2rem 1.5rem; color: #a0aec0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; white-space: nowrap;
+        }
+        .records-table th:hover { color: white; }
+        .records-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.02); color: #e2e8f0; vertical-align: middle;}
         
-        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 0; color: #a0aec0; }
-        .page-controls { display: flex; gap: 0.3rem; }
-        .page-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-        .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
-        .page-btn.active { background: var(--secondary-color); color: var(--primary-color); font-weight: bold; border: none; }
-        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .records-table tbody tr:hover { background: rgba(255,255,255,0.02); }
         
-        .row-actions { display: flex; gap: 0.5rem; justify-content: center; }
-        .row-action-btn { background: none; border: none; cursor: pointer; padding: 0.3rem; font-size: 1.1rem; border-radius: 4px; transition: background 0.2s; }
-        .row-action-btn:hover { background: rgba(255,255,255,0.1); }
+        /* Refined Badges */
+        .badge { padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; white-space: nowrap;}
+        .badge-priority { background: rgba(243, 156, 18, 0.15); color: #f39c12; border: 1px solid rgba(243, 156, 18, 0.3); }
+        
+        .status-badge { padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block;}
+        .status-waiting { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .status-serving { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
+        .status-served { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
+        .status-skipped { background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.3); }
+        .status-noshow { background: rgba(149, 165, 166, 0.15); color: #95a5a6; border: 1px solid rgba(149, 165, 166, 0.3); }
+        
+        /* Case Management Row Indicators */
+        .case-badge { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px; margin-left: 0.5rem; letter-spacing: 0.5px;}
+        .case-filed { background: #3498db; color: white; }
+        .case-remarks { background: #7f8c8d; color: white; }
+
+        /* Dropdown Actions */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-btn { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;}
+        .dropdown-btn:hover { background: rgba(255,255,255,0.1); }
+        .dropdown-content { 
+            display: none; position: absolute; right: 0; background-color: #0b1d3a; min-width: 180px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden; text-align: left;
+        }
+        .dropdown-content button {
+            color: white; padding: 0.8rem 1rem; text-decoration: none; display: block; width: 100%; text-align: left; 
+            background: none; border: none; font-size: 0.85rem; font-weight: 500; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02);
+            font-family: 'Inter', sans-serif;
+        }
+        .dropdown-content button:hover { background-color: rgba(255,255,255,0.05); color: #f39c12;}
+        .dropdown-content button.danger:hover { color: #e74c3c; }
+        .dropdown.active .dropdown-content { display: block; }
         
         /* Modals */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; display: none; justify-content: center; align-items: center; padding: 1rem; }
-        .modal { background: #050e1d; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 2rem; max-width: 600px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
-        .modal-title { font-size: 1.5rem; font-weight: 800; color: white; }
-        .modal-close { background: none; border: none; color: #a0aec0; font-size: 1.8rem; cursor: pointer; line-height: 1; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; display: none; justify-content: center; align-items: center; padding: 1rem; overflow-y: auto;}
+        .modal { background: #050e1d; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2.5rem; max-width: 700px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8); margin: auto; position: relative;}
+        .modal-header { margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+        .modal-title { font-size: 1.4rem; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 1px;}
+        .modal-close { position: absolute; top: 2rem; right: 2rem; background: none; border: none; color: #a0aec0; font-size: 1.8rem; cursor: pointer; line-height: 1; }
         .modal-close:hover { color: white; }
         
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        /* Modal Tabs */
+        .modal-tabs { display: flex; gap: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 2rem; }
+        .modal-tab { background: none; border: none; color: #a0aec0; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; padding: 0.8rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; }
+        .modal-tab.active { color: #f39c12; border-bottom-color: #f39c12; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
         .form-group.full-width { grid-column: 1 / -1; }
-        .form-label { color: #a0aec0; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .form-input, .form-select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.8rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 1rem; }
-        .form-input:focus, .form-select:focus { border-color: var(--secondary-color); outline: none; }
+        .form-label { color: #a0aec0; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .form-input, .form-select, .form-textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.8rem; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.95rem; resize: vertical;}
+        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #f39c12; outline: none; }
+        
+        .evidence-checklist { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+        .evidence-item { display: flex; align-items: center; gap: 0.5rem; color: white; font-size: 0.9rem; }
         
         .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
         
-        /* Toast */
+        /* View Details Data */
+        .detail-row { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 1rem 0; }
+        .detail-label { width: 35%; color: #a0aec0; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .detail-value { width: 65%; color: white; font-weight: 500; font-size: 0.95rem;}
+
+        /* Mobile Card Layout */
+        .mobile-cards { display: none; flex-direction: column; gap: 1rem; }
+        .record-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 1.5rem; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .card-ccd { color: #f39c12; font-weight: 800; font-size: 1.1rem; }
+        .card-name { color: white; font-weight: 700; font-size: 1.2rem; margin-top: 0.3rem;}
+        
+        @media (max-width: 1024px) {
+            .toolbar-container { flex-direction: column; align-items: stretch; }
+            .summary-bar { flex-wrap: wrap; gap: 1rem; }
+        }
+        
+        @media (max-width: 768px) {
+            .table-container { display: none; }
+            .mobile-cards { display: flex; }
+        }
+        
         .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.5rem; }
-        .toast { background: var(--success-color); color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 0.8rem; font-weight: 600; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .toast.show { transform: translateX(0); }
-        .toast.error { background: #e74c3c; }
+        .toast { background: #2ecc71; color: #050e1d; padding: 1rem 1.5rem; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;}
         
         .col-hidden { display: none !important; }
-        .columns-dropdown { position: relative; }
-        .columns-menu { position: absolute; top: 120%; right: 0; background: #0b1d3a; border: 1px solid var(--border-color); padding: 1rem; border-radius: 12px; display: none; flex-direction: column; gap: 0.8rem; z-index: 50; box-shadow: 0 10px 40px rgba(0,0,0,0.8); width: 220px; }
-        .columns-menu.show { display: flex; }
-        
-        /* Status badge additions */
-        .status-noshow { background: rgba(149, 165, 166, 0.2); color: #95a5a6; border: 1px solid rgba(149, 165, 166, 0.4); }
-        
-        /* View Details specifically */
-        .detail-row { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 0.8rem 0; }
-        .detail-label { width: 40%; color: #a0aec0; font-weight: 600; font-size: 0.9rem; }
-        .detail-value { width: 60%; color: white; font-weight: 500; }
         
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; color: black; background: white; }
-            .records-table { border-collapse: collapse; width: 100%; }
-            .records-table th, .records-table td { border: 1px solid #ccc; padding: 8px; color: black !important; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            .records-table th, .records-table td { border: 1px solid #ccc; color: black !important; }
             .no-print { display: none !important; }
+            .dropdown { display: none !important; }
         }
     </style>
 </head>
@@ -109,10 +188,10 @@
         <div class="summary-bar">
             <div class="summary-stat">
                 <div class="stat-value" id="stat-registered">0</div>
-                <div class="stat-label">Total Registered Today</div>
+                <div class="stat-label">Total Registered</div>
             </div>
             <div class="summary-stat">
-                <div class="stat-value" id="stat-served" style="color: var(--success-color);">0</div>
+                <div class="stat-value" id="stat-served" style="color: #2ecc71;">0</div>
                 <div class="stat-label">Served</div>
             </div>
             <div class="summary-stat">
@@ -121,85 +200,219 @@
             </div>
             <div class="summary-stat">
                 <div class="stat-value" id="stat-skipped" style="color: #95a5a6;">0</div>
-                <div class="stat-label">Skipped / No-show</div>
+                <div class="stat-label">Skipped</div>
             </div>
             <div class="summary-stat">
                 <div class="stat-value" id="stat-priority" style="color: #e74c3c;">0</div>
-                <div class="stat-label">PWD / Senior Priority</div>
+                <div class="stat-label">Priority</div>
             </div>
         </div>
 
-        <div class="toolbar">
-            <div class="filter-group">
-                <input type="text" id="searchInput" class="filter-input" placeholder="Search any field..." style="width: 250px;">
-                <select id="filterStatus" class="filter-select">
-                    <option value="">All Statuses</option>
-                    <option value="Waiting">Waiting</option>
-                    <option value="Serving">Serving</option>
-                    <option value="Served">Served</option>
-                    <option value="Skipped">Skipped</option>
-                    <option value="No-show">No-show</option>
-                </select>
-                <input type="date" id="filterDateFrom" class="filter-input" title="From Date">
-                <span style="color: #a0aec0;">to</span>
-                <input type="date" id="filterDateTo" class="filter-input" title="To Date">
-                <label class="filter-checkbox">
-                    <input type="checkbox" id="filterPriority"> Show Priority Only
-                </label>
+        <div class="toolbar-container">
+            <!-- Left Group: Filters -->
+            <div class="toolbar-group">
+                <div class="toolbar-title">Search & Filters</div>
+                <div class="toolbar-actions">
+                    <input type="text" id="searchInput" class="filter-input" placeholder="Search name, CCD, contact..." style="width: 250px;">
+                    <select id="filterStatus" class="filter-select">
+                        <option value="">All Statuses</option>
+                        <option value="Waiting">Waiting</option>
+                        <option value="Serving">Serving</option>
+                        <option value="Served">Served</option>
+                        <option value="Skipped">Skipped</option>
+                        <option value="No-show">No-show</option>
+                    </select>
+                    <input type="date" id="filterDateFrom" class="filter-input">
+                    <span style="color: #a0aec0;">to</span>
+                    <input type="date" id="filterDateTo" class="filter-input">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" id="filterPriority"> Priority Only
+                    </label>
+                    <button class="btn-formal btn-primary" onclick="applyFiltersAndSort()">Apply Filters</button>
+                </div>
             </div>
             
-            <div class="action-group">
-                <div class="columns-dropdown">
-                    <button class="btn-small" onclick="toggleColumnsMenu()">⚙ Columns</button>
-                    <div class="columns-menu" id="columnsMenu">
-                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="0" checked> Date & Time</label>
-                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="1" checked> CCD No.</label>
-                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="2" checked> Full Name</label>
-                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="3" checked> Age</label>
-                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="4" checked> Contact</label>
-                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="5" checked> Status</label>
-                    </div>
+            <!-- Right Group: Actions -->
+            <div class="toolbar-group">
+                <div class="toolbar-title">System Actions</div>
+                <div class="toolbar-actions" style="justify-content: flex-end;">
+                    <button class="btn-formal" onclick="exportToExcel()">Export Excel</button>
+                    <button class="btn-formal" onclick="exportToPDF()">Export PDF</button>
+                    <button class="btn-formal" onclick="window.print()">Print</button>
+                    <button class="btn-formal" onclick="generateEODReport()">End of Day Report</button>
+                    
+                    <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.2); margin: 0 0.5rem;"></div>
+                    
+                    <label class="filter-checkbox" title="Auto-refresh every 30 seconds" style="margin-right: 0.5rem;">
+                        <input type="checkbox" id="autoRefreshToggle"> Auto-refresh
+                    </label>
+                    <button class="btn-formal" onclick="fetchRecords(true)">Refresh</button>
+                    <button class="btn-formal btn-danger" onclick="clearTodaysRecords()">Clear Today</button>
                 </div>
-                
-                <button class="btn-small btn-primary-small" onclick="exportToExcel()" title="Export filtered records to Excel">📊 Export Excel</button>
-                <button class="btn-small" onclick="exportToPDF()" title="Export filtered records to PDF">📄 Export PDF</button>
-                <button class="btn-small" onclick="window.print()" title="Print table">🖨 Print</button>
-                <button class="btn-small" onclick="generateEODReport()" title="Generate End-of-Day Summary">📝 EOD Report</button>
-                
-                <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.2); margin: 0 0.5rem;"></div>
-                
-                <label class="filter-checkbox" title="Auto-refresh every 30 seconds" style="margin-right: 0.5rem;">
-                    <input type="checkbox" id="autoRefreshToggle"> Auto-refresh
-                </label>
-                <button class="btn-small" onclick="fetchRecords(true)">⟳ Refresh</button>
-                <button class="btn-small btn-danger-small" onclick="clearTodaysRecords()" title="Permanently delete today's records">🗑 Clear Today</button>
             </div>
         </div>
 
         <div class="table-container" id="print-area">
-            <h2 class="print-only" style="display: none; text-align: center; margin-bottom: 20px; color: black;">NBI Cybercrime Division - Database Records</h2>
+            <h2 class="print-only" style="display: none; text-align: center; margin-bottom: 20px; color: black;">NBI Cybercrime Division - Official Records</h2>
             <table class="records-table" id="recordsTable">
                 <thead>
                     <tr>
-                        <th onclick="handleSort('created_at', 0)">Date & Time <span class="sort-icon" id="sort-0">▼</span></th>
-                        <th onclick="handleSort('ccd_no', 1)">CCD No. <span class="sort-icon" id="sort-1"></span></th>
-                        <th onclick="handleSort('full_name', 2)">Full Name <span class="sort-icon" id="sort-2"></span></th>
-                        <th onclick="handleSort('age', 3)">Age <span class="sort-icon" id="sort-3"></span></th>
-                        <th onclick="handleSort('contact', 4)">Contact <span class="sort-icon" id="sort-4"></span></th>
-                        <th onclick="handleSort('status', 5)">Status <span class="sort-icon" id="sort-5"></span></th>
-                        <th class="no-print" style="text-align: center;">Actions</th>
+                        <th onclick="handleSort('created_at', 0)">Date & Time ▼</th>
+                        <th onclick="handleSort('ccd_no', 1)">CCD No.</th>
+                        <th onclick="handleSort('full_name', 2)">Full Name</th>
+                        <th onclick="handleSort('age', 3)">Age</th>
+                        <th onclick="handleSort('contact', 4)">Contact</th>
+                        <th onclick="handleSort('status', 5)">Status</th>
+                        <th class="no-print" style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="recordsBody">
-                    <tr><td colspan="7" style="text-align: center; padding: 3rem; color: #a0aec0;">Loading records...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; padding: 3rem; color: #a0aec0;">Loading official records...</td></tr>
                 </tbody>
             </table>
         </div>
         
-        <div class="pagination">
+        <!-- Mobile Cards -->
+        <div class="mobile-cards" id="mobileCardsContainer">
+            <!-- Rendered via JS -->
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; padding: 1.5rem 0; color: #a0aec0; font-size: 0.9rem;">
             <div id="recordCount">Showing 0 records</div>
-            <div class="page-controls" id="pageControls">
-                <!-- Pagination buttons generated here -->
+            <div id="pageControls" style="display: flex; gap: 0.5rem;"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Case Management Modal -->
+    <div class="modal-overlay" id="modalCase">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header" style="margin-bottom: 1rem;">
+                <div class="modal-title">Case Management File</div>
+                <button class="modal-close" onclick="closeModal('modalCase')">&times;</button>
+            </div>
+            
+            <div class="modal-tabs">
+                <button class="modal-tab active" onclick="switchCaseTab('details')" id="tab-btn-details">Case Details (Actionable)</button>
+                <button class="modal-tab" onclick="switchCaseTab('remarks')" id="tab-btn-remarks">Agent Remarks (Non-Actionable)</button>
+            </div>
+            
+            <input type="hidden" id="caseRecordId">
+
+            <!-- Tab 1: Case Details -->
+            <div class="tab-content active" id="tab-details">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Case Status</label>
+                        <select id="caseStatus" class="form-select">
+                            <option value="Open">Open</option>
+                            <option value="Under Investigation">Under Investigation</option>
+                            <option value="For Referral">For Referral</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Type of Cybercrime</label>
+                        <select id="caseType" class="form-select">
+                            <option value="">-- Select Type --</option>
+                            <option value="Online Scam / Estafa">Online Scam / Estafa</option>
+                            <option value="Identity Theft">Identity Theft</option>
+                            <option value="Cyber Harassment / Bullying">Cyber Harassment / Bullying</option>
+                            <option value="Unauthorized Access / Hacking">Unauthorized Access / Hacking</option>
+                            <option value="Child Exploitation Material">Child Exploitation Material</option>
+                            <option value="Online Libel">Online Libel</option>
+                            <option value="Investment Fraud">Investment Fraud</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width" id="caseTypeOtherGroup" style="display: none;">
+                        <label class="form-label">Specify Other Type</label>
+                        <input type="text" id="caseTypeOther" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Incident Date</label>
+                        <input type="date" id="caseIncidentDate" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assigned Agent</label>
+                        <input type="text" id="caseAgent" class="form-input" placeholder="Agent Name">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Incident Description *</label>
+                        <textarea id="caseDescription" class="form-textarea" rows="4" placeholder="Detailed description of the report..."></textarea>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Evidence Submitted</label>
+                        <div class="evidence-checklist">
+                            <label class="evidence-item"><input type="checkbox" id="evScreenshots"> Screenshots</label>
+                            <label class="evidence-item"><input type="checkbox" id="evChatLogs"> Chat Logs</label>
+                            <label class="evidence-item"><input type="checkbox" id="evReceipts"> Transaction Receipts</label>
+                            <label class="evidence-item"><input type="checkbox" id="evEmail"> Email Headers</label>
+                            <label class="evidence-item"><input type="checkbox" id="evOther"> Others</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Referred To</label>
+                        <input type="text" id="caseReferred" class="form-input" placeholder="e.g. PNP, DOJ, Other Unit">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Follow-up Date</label>
+                        <input type="date" id="caseFollowup" class="form-input">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Next Action Required</label>
+                        <textarea id="caseNextAction" class="form-textarea" rows="2" placeholder="What needs to happen next?"></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button class="btn-formal" onclick="closeModal('modalCase')">Cancel</button>
+                    <button class="btn-formal btn-primary" onclick="saveCaseData('details')">Save Case Details</button>
+                </div>
+            </div>
+
+            <!-- Tab 2: Agent Remarks -->
+            <div class="tab-content" id="tab-remarks">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">Remarks Type</label>
+                        <select id="remarksType" class="form-select">
+                            <option value="">-- Select Type --</option>
+                            <option value="Not Actionable - Informed and Advised">Not Actionable - Informed and Advised</option>
+                            <option value="Misdirected - Referred to Correct Office">Misdirected - Referred to Correct Office</option>
+                            <option value="Inquiry Only - No Complaint Filed">Inquiry Only - No Complaint Filed</option>
+                            <option value="Duplicate Complaint">Duplicate Complaint</option>
+                            <option value="Withdrew Complaint">Withdrew Complaint</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Agent Remarks</label>
+                        <textarea id="remarksText" class="form-textarea" rows="5" placeholder="Notes regarding the interaction..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Handling Agent</label>
+                        <input type="text" id="remarksAgent" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date & Time</label>
+                        <input type="text" id="remarksDate" class="form-input" readonly disabled value="Will be auto-filled">
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button class="btn-formal" onclick="closeModal('modalCase')">Cancel</button>
+                    <button class="btn-formal" style="background: rgba(149, 165, 166, 0.2); border-color: rgba(149, 165, 166, 0.5);" onclick="saveCaseData('remarks')">Save Remarks</button>
+                </div>
             </div>
         </div>
     </div>
@@ -208,12 +421,12 @@
     <div class="modal-overlay" id="modalView">
         <div class="modal">
             <div class="modal-header">
-                <div class="modal-title">Complainant Details</div>
+                <div class="modal-title">Official Dossier</div>
                 <button class="modal-close" onclick="closeModal('modalView')">&times;</button>
             </div>
             <div id="viewDetailsContent"></div>
             <div class="modal-footer">
-                <button class="btn-small" onclick="closeModal('modalView')">Close</button>
+                <button class="btn-formal" onclick="closeModal('modalView')">Close</button>
             </div>
         </div>
     </div>
@@ -249,7 +462,7 @@
                         <select id="editGender" class="form-select">
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
-                            <option value="Other">Other</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -258,36 +471,49 @@
                             <option value="Single">Single</option>
                             <option value="Married">Married</option>
                             <option value="Widowed">Widowed</option>
-                            <option value="Divorced">Divorced</option>
+                            <option value="Separated">Separated</option>
                         </select>
                     </div>
                     <div class="form-group full-width">
                         <label class="form-label">Address</label>
-                        <input type="text" id="editAddress" class="form-input">
+                        <input type="text" id="editAddress" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Purpose</label>
+                        <select id="editPurpose" class="form-select">
+                            <option value="File a Complaint">File a Complaint</option>
+                            <option value="Inquire">Inquire</option>
+                            <option value="Follow-Up">Follow-Up</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Referred By</label>
+                        <input type="text" id="editReferred" class="form-input">
                     </div>
                     <div class="form-group full-width">
-                        <label class="form-label">Purpose</label>
-                        <input type="text" id="editPurpose" class="form-input">
+                        <label class="filter-checkbox" style="color: white;">
+                            <input type="checkbox" id="editPriority"> PWD / Senior Citizen Priority
+                        </label>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-small" onclick="closeModal('modalEdit')">Cancel</button>
-                    <button type="submit" class="btn-small btn-primary-small">Save Changes</button>
+                    <button type="button" class="btn-formal" onclick="closeModal('modalEdit')">Cancel</button>
+                    <button type="submit" class="btn-formal btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
-    
-    <!-- Status Override Modal -->
+
+    <!-- Change Status Modal -->
     <div class="modal-overlay" id="modalStatus">
         <div class="modal" style="max-width: 400px;">
             <div class="modal-header">
-                <div class="modal-title">Override Status</div>
+                <div class="modal-title">Change Status</div>
                 <button class="modal-close" onclick="closeModal('modalStatus')">&times;</button>
             </div>
             <input type="hidden" id="statusId">
-            <div class="form-group">
-                <label class="form-label">Select New Status</label>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label">New Status</label>
                 <select id="newStatus" class="form-select">
                     <option value="Waiting">Waiting</option>
                     <option value="Serving">Serving</option>
@@ -296,9 +522,13 @@
                     <option value="No-show">No-show</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label class="form-label">Remarks (Required)</label>
+                <input type="text" id="statusRemarks" class="form-input" placeholder="Reason for override..." required>
+            </div>
             <div class="modal-footer">
-                <button class="btn-small" onclick="closeModal('modalStatus')">Cancel</button>
-                <button class="btn-small btn-primary-small" onclick="submitStatus()">Update Status</button>
+                <button class="btn-formal" onclick="closeModal('modalStatus')">Cancel</button>
+                <button class="btn-formal btn-primary" onclick="submitStatus()">Update Status</button>
             </div>
         </div>
     </div>
@@ -312,13 +542,12 @@
             </div>
             <div id="eodContent" style="color: white; line-height: 1.6; font-size: 1.1rem;"></div>
             <div class="modal-footer">
-                <button class="btn-small" onclick="closeModal('modalEOD')">Close</button>
-                <button class="btn-small btn-primary-small" onclick="exportEODToPDF()">Export EOD PDF</button>
+                <button class="btn-formal" onclick="closeModal('modalEOD')">Close</button>
+                <button class="btn-formal btn-primary" onclick="exportEODToPDF()">Export EOD PDF</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
@@ -334,13 +563,22 @@
         
         let autoRefreshInterval = null;
 
-        // --- Initialization ---
+        // --- Init ---
         document.addEventListener('DOMContentLoaded', () => {
             fetchRecords();
-            setupEventListeners();
+            document.getElementById('caseType').addEventListener('change', (e) => {
+                document.getElementById('caseTypeOtherGroup').style.display = e.target.value === 'Others' ? 'flex' : 'none';
+            });
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.matches('.dropdown-btn')) {
+                    document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+                }
+            });
         });
 
-        // --- Fetch & Process ---
+        // --- Core ---
         async function fetchRecords(showToastFlag = false) {
             try {
                 const response = await fetch('/api/records');
@@ -350,8 +588,6 @@
                     updateSummaryBar();
                     applyFiltersAndSort();
                     if (showToastFlag) showToast('Records refreshed successfully');
-                } else {
-                    showToast('Failed to fetch records', true);
                 }
             } catch (err) {
                 console.error(err);
@@ -370,292 +606,346 @@
             document.getElementById('stat-priority').textContent = todayRecords.filter(r => r.is_priority).length;
         }
 
-        function setupEventListeners() {
-            document.getElementById('searchInput').addEventListener('input', applyFiltersAndSort);
-            document.getElementById('filterStatus').addEventListener('change', applyFiltersAndSort);
-            document.getElementById('filterDateFrom').addEventListener('change', applyFiltersAndSort);
-            document.getElementById('filterDateTo').addEventListener('change', applyFiltersAndSort);
-            document.getElementById('filterPriority').addEventListener('change', applyFiltersAndSort);
-            
-            document.getElementById('autoRefreshToggle').addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    autoRefreshInterval = setInterval(() => fetchRecords(), 30000);
-                    showToast('Auto-refresh enabled (30s)');
-                } else {
-                    clearInterval(autoRefreshInterval);
-                    showToast('Auto-refresh disabled');
-                }
-            });
-
-            // Column toggles
-            document.querySelectorAll('.col-toggle').forEach(chk => {
-                chk.addEventListener('change', (e) => {
-                    const colIndex = parseInt(e.target.value);
-                    const table = document.getElementById('recordsTable');
-                    const ths = table.querySelectorAll('th');
-                    if (e.target.checked) {
-                        ths[colIndex].classList.remove('col-hidden');
-                        table.querySelectorAll(`tbody tr td:nth-child(${colIndex + 1})`).forEach(td => td.classList.remove('col-hidden'));
-                    } else {
-                        ths[colIndex].classList.add('col-hidden');
-                        table.querySelectorAll(`tbody tr td:nth-child(${colIndex + 1})`).forEach(td => td.classList.add('col-hidden'));
-                    }
-                });
-            });
-
-            // Close columns menu if clicked outside
-            document.addEventListener('click', (e) => {
-                const menu = document.getElementById('columnsMenu');
-                if (!e.target.closest('.columns-dropdown') && menu.classList.contains('show')) {
-                    menu.classList.remove('show');
-                }
-            });
-            
-            // Close modals on outside click
-            document.querySelectorAll('.modal-overlay').forEach(overlay => {
-                overlay.addEventListener('click', (e) => {
-                    if (e.target === overlay) {
-                        overlay.style.display = 'none';
-                    }
-                });
-            });
-        }
-
-        function toggleColumnsMenu() {
-            document.getElementById('columnsMenu').classList.toggle('show');
-        }
-
-        // --- Filtering & Sorting ---
         function applyFiltersAndSort() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('filterStatus').value;
-            const dateFrom = document.getElementById('filterDateFrom').value;
-            const dateTo = document.getElementById('filterDateTo').value;
-            const priorityOnly = document.getElementById('filterPriority').checked;
-
+            const from = document.getElementById('filterDateFrom').value;
+            const to = document.getElementById('filterDateTo').value;
+            const prio = document.getElementById('filterPriority').checked;
+            
             filteredRecords = allRecords.filter(r => {
-                // Search
-                const searchable = `${r.ccd_no} ${r.full_name} ${r.contact} ${r.age} ${r.status}`.toLowerCase();
-                if (term && !searchable.includes(term)) return false;
-                
-                // Status
                 if (status && r.status !== status) return false;
+                if (prio && !r.is_priority) return false;
+                if (from && r.created_at.split('T')[0] < from) return false;
+                if (to && r.created_at.split('T')[0] > to) return false;
                 
-                // Priority
-                if (priorityOnly && !r.is_priority) return false;
-                
-                // Date
-                const rDate = r.created_at.split('T')[0];
-                if (dateFrom && rDate < dateFrom) return false;
-                if (dateTo && rDate > dateTo) return false;
-                
+                if (term) {
+                    return r.full_name.toLowerCase().includes(term) ||
+                           r.ccd_no.toLowerCase().includes(term) ||
+                           (r.contact && r.contact.includes(term));
+                }
                 return true;
             });
-
-            // Sorting
+            
             filteredRecords.sort((a, b) => {
                 let valA = a[sortColumn];
                 let valB = b[sortColumn];
-                
                 if (sortColumn === 'age') {
-                    valA = parseInt(valA) || 0;
-                    valB = parseInt(valB) || 0;
-                } else {
-                    valA = String(valA).toLowerCase();
-                    valB = String(valB).toLowerCase();
+                    valA = parseInt(valA); valB = parseInt(valB);
                 }
-
                 if (valA < valB) return sortAsc ? -1 : 1;
                 if (valA > valB) return sortAsc ? 1 : -1;
                 return 0;
             });
-
-            currentPage = 1; // Reset to first page
+            
+            currentPage = 1;
             renderTable();
         }
 
-        function handleSort(colName, colIndex) {
-            if (sortColumn === colName) {
+        function handleSort(col, thIndex) {
+            if (sortColumn === col) {
                 sortAsc = !sortAsc;
             } else {
-                sortColumn = colName;
+                sortColumn = col;
                 sortAsc = true;
             }
             
-            // Update icons
-            document.querySelectorAll('.sort-icon').forEach(icon => icon.textContent = '');
-            document.getElementById(`sort-${colIndex}`).textContent = sortAsc ? '▲' : '▼';
+            const ths = document.querySelectorAll('#recordsTable th');
+            ths.forEach(th => th.innerHTML = th.innerHTML.replace(' ▲', '').replace(' ▼', ''));
+            ths[thIndex].innerHTML += sortAsc ? ' ▲' : ' ▼';
             
             applyFiltersAndSort();
         }
 
-        // --- Rendering & Pagination ---
         function renderTable() {
             const tbody = document.getElementById('recordsBody');
+            const mobileContainer = document.getElementById('mobileCardsContainer');
             tbody.innerHTML = '';
-
-            const total = filteredRecords.length;
+            mobileContainer.innerHTML = '';
             
-            if (total === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 4rem; color: #a0aec0; font-size: 1.1rem;">
-                    <div>🔍</div>
-                    No records found matching your filters.<br>
-                    <button class="btn-small" style="margin: 1rem auto 0;" onclick="clearFilters()">Clear Filters</button>
-                </td></tr>`;
-                document.getElementById('recordCount').textContent = 'Showing 0 records';
-                renderPagination(0);
+            if (filteredRecords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 3rem; color: #a0aec0;">No records found matching filters.</td></tr>';
+                mobileContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: #a0aec0;">No records found.</div>';
+                document.getElementById('recordCount').textContent = "Showing 0 records";
+                document.getElementById('pageControls').innerHTML = "";
                 return;
             }
-
-            const totalPages = Math.ceil(total / recordsPerPage);
-            if (currentPage > totalPages) currentPage = totalPages;
             
-            const startIdx = (currentPage - 1) * recordsPerPage;
-            const endIdx = Math.min(startIdx + recordsPerPage, total);
-            const pageData = filteredRecords.slice(startIdx, endIdx);
-
-            document.getElementById('recordCount').textContent = `Showing ${startIdx + 1}–${endIdx} of ${total} records`;
-
-            pageData.forEach(r => {
-                const tr = document.createElement('tr');
-                if (r.is_priority) tr.classList.add('is-priority');
+            const start = (currentPage - 1) * recordsPerPage;
+            const end = start + recordsPerPage;
+            const paginated = filteredRecords.slice(start, end);
+            
+            paginated.forEach(r => {
+                const isPrio = r.is_priority ? '<span class="badge badge-priority">Priority</span>' : '';
+                const dateStr = new Date(r.created_at).toLocaleString('en-PH', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'});
                 
-                // Format Date
-                const dateObj = new Date(r.created_at);
-                const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                
-                const priorityBadge = r.is_priority ? `<span class="badge priority-badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 0.2rem 0.5rem;">PWD/Senior</span>` : '';
-
-                // Status Badge class
                 let statusClass = 'status-waiting';
-                if (r.status === 'Serving') statusClass = 'status-serving';
-                if (r.status === 'Served') statusClass = 'status-served';
-                if (r.status === 'Skipped') statusClass = 'status-skipped';
-                if (r.status === 'No-show') statusClass = 'status-noshow';
+                if(r.status === 'Serving') statusClass = 'status-serving';
+                if(r.status === 'Served') statusClass = 'status-served';
+                if(r.status === 'Skipped') statusClass = 'status-skipped';
+                if(r.status === 'No-show') statusClass = 'status-noshow';
 
-                // Check hidden columns
-                const cols = document.querySelectorAll('.col-toggle');
-                const h = (idx) => cols[idx].checked ? '' : 'class="col-hidden"';
-
+                let caseBadge = '';
+                if (r.case_status === 'CASE FILED') caseBadge = '<span class="case-badge case-filed">FILED</span>';
+                if (r.case_status === 'REMARKS ADDED') caseBadge = '<span class="case-badge case-remarks">REMARKS</span>';
+                
+                // Desktop Table Row
+                const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td ${h(0)} style="color: #a0aec0;">${dateStr}</td>
-                    <td ${h(1)} style="font-family: monospace; font-weight: 600; color: var(--secondary-color);">${r.ccd_no}</td>
-                    <td ${h(2)} style="font-weight: bold;">${r.full_name} ${priorityBadge}</td>
-                    <td ${h(3)}>${r.age}</td>
-                    <td ${h(4)} style="color: #a0aec0;">${r.contact}</td>
-                    <td ${h(5)}><span class="status-badge ${statusClass}">${r.status}</span></td>
-                    <td class="no-print" style="text-align: center;">
-                        <div class="row-actions">
-                            <button class="row-action-btn" title="View Details" onclick="openViewModal('${r.id}')">👁</button>
-                            <button class="row-action-btn" title="Edit Record" onclick="openEditModal('${r.id}')">✏️</button>
-                            <button class="row-action-btn" title="Override Status" onclick="openStatusModal('${r.id}')">🔄</button>
-                            <button class="row-action-btn" title="Delete Record" style="color: #e74c3c;" onclick="deleteRecord('${r.id}')">🗑</button>
+                    <td>${dateStr}</td>
+                    <td style="font-weight: 700; color: #f39c12;">${r.ccd_no} ${isPrio}</td>
+                    <td style="font-weight: 600; color: white;">${r.full_name}</td>
+                    <td>${r.age}</td>
+                    <td>${r.contact}</td>
+                    <td><span class="status-badge ${statusClass}">${r.status}</span> ${caseBadge}</td>
+                    <td class="no-print" style="text-align: right;">
+                        <div class="dropdown">
+                            <button class="dropdown-btn" onclick="toggleDropdown(event, 'dd-${r.id}')">Actions ▾</button>
+                            <div class="dropdown-content" id="dd-${r.id}">
+                                <button onclick="viewDetails('${r.id}')">View Full Details</button>
+                                <button onclick="openManageCase('${r.id}')">Manage Case File</button>
+                                <button onclick="openEdit('${r.id}')">Edit Record</button>
+                                <button onclick="openStatus('${r.id}', '${r.status}')">Change Status</button>
+                                <button class="danger" onclick="deleteRecord('${r.id}')">Delete Record</button>
+                            </div>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
+
+                // Mobile Card
+                const card = document.createElement('div');
+                card.className = 'record-card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div>
+                            <div class="card-ccd">${r.ccd_no} ${isPrio}</div>
+                            <div class="card-name">${r.full_name}</div>
+                            <div style="color: #a0aec0; font-size: 0.8rem; margin-top: 0.2rem;">${dateStr}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="margin-bottom: 0.5rem;"><span class="status-badge ${statusClass}">${r.status}</span></div>
+                            <div>${caseBadge}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+                        <button class="btn-formal" onclick="viewDetails('${r.id}')">Details</button>
+                        <button class="btn-formal" onclick="openManageCase('${r.id}')">Case</button>
+                        <button class="btn-formal" onclick="openStatus('${r.id}', '${r.status}')">Status</button>
+                    </div>
+                `;
+                mobileContainer.appendChild(card);
             });
             
-            renderPagination(totalPages);
-        }
-
-        function renderPagination(totalPages) {
-            const container = document.getElementById('pageControls');
-            container.innerHTML = '';
+            document.getElementById('recordCount').textContent = `Showing ${start + 1}-${Math.min(end, filteredRecords.length)} of ${filteredRecords.length} records`;
             
-            if (totalPages <= 1) return;
-
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'page-btn';
-            prevBtn.textContent = 'Previous';
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => { currentPage--; renderTable(); };
-            container.appendChild(prevBtn);
-
-            // Simple pagination: show all if < 7, else show ends + current
-            for (let i = 1; i <= totalPages; i++) {
-                if (totalPages > 7) {
-                    if (i !== 1 && i !== totalPages && (i < currentPage - 1 || i > currentPage + 1)) {
-                        if (i === 2 || i === totalPages - 1) {
-                            const span = document.createElement('span');
-                            span.textContent = '...';
-                            span.style.padding = '0.4rem';
-                            container.appendChild(span);
-                        }
-                        continue;
-                    }
+            // Pagination controls
+            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+            let pagesHtml = '';
+            for(let i=1; i<=totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    pagesHtml += `<button class="btn-formal ${i === currentPage ? 'btn-primary' : ''}" style="padding: 0.4rem 0.8rem;" onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    pagesHtml += `<span style="color: #a0aec0;">...</span>`;
                 }
-                
-                const btn = document.createElement('button');
-                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
-                btn.textContent = i;
-                btn.onclick = () => { currentPage = i; renderTable(); };
-                container.appendChild(btn);
             }
-
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'page-btn';
-            nextBtn.textContent = 'Next';
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = () => { currentPage++; renderTable(); };
-            container.appendChild(nextBtn);
+            document.getElementById('pageControls').innerHTML = pagesHtml;
         }
 
-        function clearFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('filterStatus').value = '';
-            document.getElementById('filterDateFrom').value = '';
-            document.getElementById('filterDateTo').value = '';
-            document.getElementById('filterPriority').checked = false;
-            applyFiltersAndSort();
+        function toggleDropdown(event, id) {
+            event.stopPropagation();
+            document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+            document.getElementById(id).parentElement.classList.toggle('active');
         }
 
-        // --- Row Actions & Modals ---
-        function getRecord(id) {
-            return allRecords.find(r => r.id === id);
+        function goToPage(p) {
+            currentPage = p;
+            renderTable();
         }
 
+        // --- Modals Base ---
         function openModal(id) {
             document.getElementById(id).style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
-
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
+            document.body.style.overflow = '';
         }
 
-        function openViewModal(id) {
-            const r = getRecord(id);
-            if (!r) return;
-            const container = document.getElementById('viewDetailsContent');
-            
-            const fields = [
-                { label: 'Date/Time', val: new Date(r.created_at).toLocaleString() },
-                { label: 'CCD No.', val: r.ccd_no },
-                { label: 'Full Name', val: r.full_name },
-                { label: 'Priority / PWD', val: r.is_priority ? 'Yes' : 'No' },
-                { label: 'Age', val: r.age },
-                { label: 'Gender', val: r.gender },
-                { label: 'Civil Status', val: r.civil_status },
-                { label: 'Contact No.', val: r.contact },
-                { label: 'Email', val: r.email || 'N/A' },
-                { label: 'Address', val: r.address || 'N/A' },
-                { label: 'Purpose', val: r.purpose || 'N/A' },
-                { label: 'Referred By', val: r.referred_by || 'N/A' },
-                { label: 'Current Status', val: r.status }
-            ];
+        // --- Case Management ---
+        function switchCaseTab(tab) {
+            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-btn-${tab}`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
 
-            container.innerHTML = fields.map(f => `
-                <div class="detail-row">
-                    <div class="detail-label">${f.label}</div>
-                    <div class="detail-value">${f.val}</div>
-                </div>
-            `).join('');
+        async function openManageCase(id) {
+            document.getElementById('caseRecordId').value = id;
             
+            // Clear forms
+            document.getElementById('caseStatus').value = 'Open';
+            document.getElementById('caseType').value = '';
+            document.getElementById('caseTypeOther').value = '';
+            document.getElementById('caseTypeOtherGroup').style.display = 'none';
+            document.getElementById('caseIncidentDate').value = '';
+            document.getElementById('caseAgent').value = '';
+            document.getElementById('caseDescription').value = '';
+            document.querySelectorAll('.evidence-item input').forEach(c => c.checked = false);
+            document.getElementById('caseReferred').value = '';
+            document.getElementById('caseFollowup').value = '';
+            document.getElementById('caseNextAction').value = '';
+            
+            document.getElementById('remarksType').value = '';
+            document.getElementById('remarksText').value = '';
+            document.getElementById('remarksAgent').value = '';
+            document.getElementById('remarksDate').value = new Date().toLocaleString();
+
+            // Load from server
+            try {
+                const res = await fetch(`/api/cases/${id}`);
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const c = data.data;
+                    switchCaseTab(c.tab || 'details');
+                    
+                    if (c.tab === 'details') {
+                        document.getElementById('caseStatus').value = c.status || 'Open';
+                        document.getElementById('caseType').value = c.type || '';
+                        if(c.type === 'Others') {
+                            document.getElementById('caseTypeOtherGroup').style.display = 'flex';
+                            document.getElementById('caseTypeOther').value = c.typeOther || '';
+                        }
+                        document.getElementById('caseIncidentDate').value = c.incidentDate || '';
+                        document.getElementById('caseAgent').value = c.agent || '';
+                        document.getElementById('caseDescription').value = c.description || '';
+                        if(c.evidence) {
+                            c.evidence.forEach(ev => {
+                                const el = document.getElementById(ev);
+                                if(el) el.checked = true;
+                            });
+                        }
+                        document.getElementById('caseReferred').value = c.referred || '';
+                        document.getElementById('caseFollowup').value = c.followup || '';
+                        document.getElementById('caseNextAction').value = c.nextAction || '';
+                    } else if (c.tab === 'remarks') {
+                        document.getElementById('remarksType').value = c.type || '';
+                        document.getElementById('remarksText').value = c.remarks || '';
+                        document.getElementById('remarksAgent').value = c.agent || '';
+                        document.getElementById('remarksDate').value = c.date || new Date().toLocaleString();
+                    }
+                } else {
+                    switchCaseTab('details'); // default
+                }
+            } catch (e) { console.error(e); }
+
+            openModal('modalCase');
+        }
+
+        async function saveCaseData(tab) {
+            const id = document.getElementById('caseRecordId').value;
+            let payload = { tab: tab };
+            
+            if (tab === 'details') {
+                payload.status = document.getElementById('caseStatus').value;
+                payload.type = document.getElementById('caseType').value;
+                payload.typeOther = document.getElementById('caseTypeOther').value;
+                payload.incidentDate = document.getElementById('caseIncidentDate').value;
+                payload.agent = document.getElementById('caseAgent').value;
+                payload.description = document.getElementById('caseDescription').value;
+                
+                if (!payload.description.trim()) {
+                    alert("Incident Description is required.");
+                    return;
+                }
+                
+                payload.evidence = Array.from(document.querySelectorAll('.evidence-item input:checked')).map(el => el.id);
+                payload.referred = document.getElementById('caseReferred').value;
+                payload.followup = document.getElementById('caseFollowup').value;
+                payload.nextAction = document.getElementById('caseNextAction').value;
+            } else {
+                payload.type = document.getElementById('remarksType').value;
+                payload.remarks = document.getElementById('remarksText').value;
+                payload.agent = document.getElementById('remarksAgent').value;
+                payload.date = new Date().toLocaleString();
+                
+                if (!payload.remarks.trim()) {
+                    alert("Remarks text is required.");
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch(`/api/cases/${id}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('Case file saved successfully');
+                    closeModal('modalCase');
+                    fetchRecords(); // Refresh to get badges
+                } else {
+                    showToast('Failed to save case', true);
+                }
+            } catch (err) {
+                showToast('Server error', true);
+            }
+        }
+
+        // --- Other Row Actions ---
+        async function viewDetails(id) {
+            const r = allRecords.find(x => x.id === id);
+            if (!r) return;
+            
+            const dateStr = new Date(r.created_at).toLocaleString('en-PH');
+            let caseHtml = '';
+            
+            try {
+                const res = await fetch(`/api/cases/${id}`);
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const c = data.data;
+                    caseHtml = `<div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <h4 style="color: #f39c12; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">Case Management Record</h4>`;
+                    
+                    if (c.tab === 'details') {
+                        caseHtml += `
+                            <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${c.status}</div></div>
+                            <div class="detail-row"><div class="detail-label">Type</div><div class="detail-value">${c.type === 'Others' ? c.typeOther : c.type}</div></div>
+                            <div class="detail-row"><div class="detail-label">Assigned Agent</div><div class="detail-value">${c.agent || 'N/A'}</div></div>
+                            <div class="detail-row"><div class="detail-label">Description</div><div class="detail-value" style="white-space: pre-wrap;">${c.description}</div></div>
+                        </div>`;
+                    } else {
+                        caseHtml += `
+                            <div class="detail-row"><div class="detail-label">Remarks Type</div><div class="detail-value">${c.type}</div></div>
+                            <div class="detail-row"><div class="detail-label">Agent Notes</div><div class="detail-value" style="white-space: pre-wrap;">${c.remarks}</div></div>
+                            <div class="detail-row"><div class="detail-label">Logged By</div><div class="detail-value">${c.agent || 'N/A'}</div></div>
+                        </div>`;
+                    }
+                }
+            } catch(e) {}
+            
+            const html = `
+                <div class="detail-row"><div class="detail-label">Control No.</div><div class="detail-value" style="color: #f39c12; font-weight: 800;">${r.ccd_no}</div></div>
+                <div class="detail-row"><div class="detail-label">Registration</div><div class="detail-value">${dateStr}</div></div>
+                <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${r.status} ${r.is_priority ? '(Priority)' : ''}</div></div>
+                <div class="detail-row"><div class="detail-label">Full Name</div><div class="detail-value">${r.full_name}</div></div>
+                <div class="detail-row"><div class="detail-label">Demographics</div><div class="detail-value">${r.age} yrs • ${r.gender} • ${r.civil_status}</div></div>
+                <div class="detail-row"><div class="detail-label">Contact Info</div><div class="detail-value">${r.contact} <br> ${r.email || 'No email provided'}</div></div>
+                <div class="detail-row"><div class="detail-label">Address</div><div class="detail-value">${r.address}</div></div>
+                <div class="detail-row"><div class="detail-label">Purpose</div><div class="detail-value">${r.purpose}</div></div>
+                <div class="detail-row"><div class="detail-label">Referred By</div><div class="detail-value">${r.referred_by || 'N/A'}</div></div>
+                ${caseHtml}
+            `;
+            document.getElementById('viewDetailsContent').innerHTML = html;
             openModal('modalView');
         }
 
-        function openEditModal(id) {
-            const r = getRecord(id);
+        function openEdit(id) {
+            const r = allRecords.find(x => x.id === id);
             if (!r) return;
             document.getElementById('editId').value = r.id;
             document.getElementById('editName').value = r.full_name;
@@ -664,8 +954,10 @@
             document.getElementById('editEmail').value = r.email || '';
             document.getElementById('editGender').value = r.gender;
             document.getElementById('editCivil').value = r.civil_status;
-            document.getElementById('editAddress').value = r.address || '';
-            document.getElementById('editPurpose').value = r.purpose || '';
+            document.getElementById('editAddress').value = r.address;
+            document.getElementById('editPurpose').value = r.purpose;
+            document.getElementById('editReferred').value = r.referred_by || '';
+            document.getElementById('editPriority').checked = r.is_priority;
             openModal('modalEdit');
         }
 
@@ -674,178 +966,136 @@
             const id = document.getElementById('editId').value;
             const updates = {
                 full_name: document.getElementById('editName').value,
-                age: parseInt(document.getElementById('editAge').value, 10),
+                age: document.getElementById('editAge').value,
                 contact: document.getElementById('editContact').value,
                 email: document.getElementById('editEmail').value,
                 gender: document.getElementById('editGender').value,
                 civil_status: document.getElementById('editCivil').value,
                 address: document.getElementById('editAddress').value,
-                purpose: document.getElementById('editPurpose').value
+                purpose: document.getElementById('editPurpose').value,
+                referred_by: document.getElementById('editReferred').value,
+                is_priority: document.getElementById('editPriority').checked
             };
-
+            
             try {
-                const res = await fetch(`/api/records/${id}`, {
+                const response = await fetch(`/api/records/${id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(updates)
                 });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Record updated successfully');
+                if ((await response.json()).success) {
+                    showToast('Record updated');
                     closeModal('modalEdit');
-                    fetchRecords(); // Refresh data
-                } else throw new Error(data.error);
-            } catch (err) {
-                showToast(err.message, true);
-            }
+                    fetchRecords();
+                } else { showToast('Update failed', true); }
+            } catch(err) { showToast('Server error', true); }
         }
 
-        function openStatusModal(id) {
-            const r = getRecord(id);
-            if (!r) return;
-            document.getElementById('statusId').value = r.id;
-            document.getElementById('newStatus').value = r.status;
+        function openStatus(id, currentStatus) {
+            document.getElementById('statusId').value = id;
+            document.getElementById('newStatus').value = currentStatus;
+            document.getElementById('statusRemarks').value = '';
             openModal('modalStatus');
         }
 
         async function submitStatus() {
             const id = document.getElementById('statusId').value;
-            const status = document.getElementById('newStatus').value;
+            const newStatus = document.getElementById('newStatus').value;
+            const remarks = document.getElementById('statusRemarks').value.trim();
+            
+            if (!remarks) { alert("Remarks are required to change status manually."); return; }
+            
             try {
-                const res = await fetch(`/api/records/${id}/status`, {
+                const response = await fetch(`/api/records/${id}/status`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ status: newStatus })
                 });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Status updated successfully');
+                if ((await response.json()).success) {
+                    showToast('Status updated');
                     closeModal('modalStatus');
                     fetchRecords();
-                } else throw new Error(data.error);
-            } catch (err) {
-                showToast(err.message, true);
-            }
+                } else { showToast('Update failed', true); }
+            } catch(err) { showToast('Server error', true); }
         }
 
         async function deleteRecord(id) {
-            if (!confirm('Are you sure you want to completely delete this record? This cannot be undone.')) return;
+            if (!confirm('Are you absolutely sure you want to permanently delete this official record? This cannot be undone.')) return;
             try {
-                const res = await fetch(`/api/records/${id}`, { method: 'DELETE' });
-                const data = await res.json();
-                if (data.success) {
+                const response = await fetch(`/api/records/${id}`, { method: 'DELETE' });
+                if ((await response.json()).success) {
                     showToast('Record deleted');
                     fetchRecords();
-                } else throw new Error(data.error);
-            } catch (err) {
-                showToast(err.message, true);
-            }
+                } else { showToast('Delete failed', true); }
+            } catch(err) { showToast('Server error', true); }
         }
 
         async function clearTodaysRecords() {
-            if (!confirm('WARNING: You are about to permanently delete ALL records generated today. Are you absolutely sure?')) return;
-            const doubleCheck = prompt('Type "DELETE" to confirm clearing today\'s records:');
-            if (doubleCheck !== 'DELETE') {
-                showToast('Action cancelled', true);
-                return;
-            }
-            
+            if (!confirm('WARNING: Are you sure you want to completely wipe all records for today? This is a destructive action.')) return;
             try {
-                const res = await fetch(`/api/records/today`, { method: 'DELETE' });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('Today\'s records cleared successfully');
+                const response = await fetch(`/api/records/today`, { method: 'DELETE' });
+                if ((await response.json()).success) {
+                    showToast('Today\'s records cleared');
                     fetchRecords();
-                } else throw new Error(data.error);
-            } catch (err) {
-                showToast(err.message, true);
-            }
+                } else { showToast('Clear failed', true); }
+            } catch(err) { showToast('Server error', true); }
         }
 
-        // --- Export Functions ---
+        // --- Exports ---
         function exportToExcel() {
-            if (filteredRecords.length === 0) {
-                showToast('No records to export', true);
-                return;
-            }
-            // Prepare clean data array
-            const data = filteredRecords.map(r => ({
-                'Date & Time': new Date(r.created_at).toLocaleString(),
-                'CCD No.': r.ccd_no,
-                'Full Name': r.full_name,
-                'Priority': r.is_priority ? 'Yes' : 'No',
-                'Age': r.age,
-                'Gender': r.gender,
-                'Contact': r.contact,
-                'Status': r.status,
-                'Address': r.address || '',
-                'Purpose': r.purpose || ''
+            if (filteredRecords.length === 0) return alert("No records to export.");
+            const exportData = filteredRecords.map(r => ({
+                "Date & Time": new Date(r.created_at).toLocaleString(),
+                "CCD No.": r.ccd_no,
+                "Full Name": r.full_name,
+                "Age": r.age,
+                "Contact": r.contact,
+                "Gender": r.gender,
+                "Civil Status": r.civil_status,
+                "Address": r.address,
+                "Purpose": r.purpose,
+                "Priority": r.is_priority ? "YES" : "NO",
+                "Queue Status": r.status,
+                "Case Status": r.case_status || 'NO ACTION YET'
             }));
-
-            const ws = XLSX.utils.json_to_sheet(data);
+            const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Records");
-            XLSX.writeFile(wb, `NBI_QMS_Records_${new Date().toISOString().split('T')[0]}.xlsx`);
-            showToast('Excel file exported');
+            XLSX.writeFile(wb, `NBI_Records_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
 
         function exportToPDF() {
-            if (filteredRecords.length === 0) {
-                showToast('No records to export', true);
-                return;
-            }
+            if (filteredRecords.length === 0) return alert("No records to export.");
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
+            doc.text(`NBI Cybercrime Division - Records (${new Date().toISOString().split('T')[0]})`, 14, 15);
             
-            doc.setFontSize(16);
-            doc.text("NBI Cybercrime Division - Registration Records", 14, 15);
-            doc.setFontSize(10);
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
-
             const tableData = filteredRecords.map(r => [
-                new Date(r.created_at).toLocaleString(),
-                r.ccd_no,
-                r.full_name + (r.is_priority ? ' (Priority)' : ''),
-                r.age,
-                r.contact,
-                r.status
+                new Date(r.created_at).toLocaleString(), r.ccd_no, r.full_name, r.age, r.contact, r.status, r.case_status || 'NO ACTION'
             ]);
-
+            
             doc.autoTable({
-                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Contact', 'Status']],
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Contact', 'Status', 'Case']],
                 body: tableData,
-                startY: 25,
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [11, 29, 58] }
+                startY: 20,
+                styles: { fontSize: 8 }
             });
-
-            doc.save(`NBI_QMS_Records_${new Date().toISOString().split('T')[0]}.pdf`);
-            showToast('PDF file exported');
+            doc.save(`NBI_Records_${new Date().toISOString().split('T')[0]}.pdf`);
         }
 
         function generateEODReport() {
             const todayStr = new Date().toISOString().split('T')[0];
             const todayRecords = allRecords.filter(r => r.created_at.startsWith(todayStr));
             
-            if(todayRecords.length === 0) {
-                showToast("No records found for today to generate report.", true);
-                return;
-            }
-
-            const total = todayRecords.length;
-            const served = todayRecords.filter(r => r.status === 'Served').length;
-            const skipped = todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length;
-            const priority = todayRecords.filter(r => r.is_priority).length;
-            
-            const html = `
-                <h3>Daily Summary: ${new Date().toLocaleDateString()}</h3>
-                <hr style="border-color: rgba(255,255,255,0.1); margin: 1rem 0;">
-                <p><strong>Total Registered:</strong> ${total}</p>
-                <p><strong>Total Served:</strong> <span style="color: var(--success-color);">${served}</span></p>
-                <p><strong>Total Skipped/No-show:</strong> <span style="color: #95a5a6;">${skipped}</span></p>
-                <p><strong>Priority (PWD/Senior) Complainants:</strong> <span style="color: #e74c3c;">${priority}</span></p>
-                <p><strong>Completion Rate:</strong> ${Math.round((served / total) * 100)}%</p>
-            `;
+            let html = `<div style="margin-bottom: 20px;"><strong>Date:</strong> ${todayStr}</div>`;
+            html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr><td style="border: 1px solid #444; padding: 10px;">Total Registered</td><td style="border: 1px solid #444; padding: 10px; font-weight: bold;">${todayRecords.length}</td></tr>
+                <tr><td style="border: 1px solid #444; padding: 10px;">Served</td><td style="border: 1px solid #444; padding: 10px; color: #2ecc71;">${todayRecords.filter(r => r.status === 'Served').length}</td></tr>
+                <tr><td style="border: 1px solid #444; padding: 10px;">Waiting Left</td><td style="border: 1px solid #444; padding: 10px;">${todayRecords.filter(r => r.status === 'Waiting').length}</td></tr>
+                <tr><td style="border: 1px solid #444; padding: 10px;">Skipped/No-Show</td><td style="border: 1px solid #444; padding: 10px; color: #e74c3c;">${todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length}</td></tr>
+                <tr><td style="border: 1px solid #444; padding: 10px;">Priority (PWD/Senior)</td><td style="border: 1px solid #444; padding: 10px;">${todayRecords.filter(r => r.is_priority).length}</td></tr>
+                <tr><td style="border: 1px solid #444; padding: 10px;">Cases Filed</td><td style="border: 1px solid #444; padding: 10px; color: #3498db;">${todayRecords.filter(r => r.case_status === 'CASE FILED').length}</td></tr>
+            </table>`;
             
             document.getElementById('eodContent').innerHTML = html;
             openModal('modalEOD');
@@ -854,41 +1104,40 @@
         function exportEODToPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+            const todayStr = new Date().toISOString().split('T')[0];
             
-            doc.setFontSize(20);
-            doc.text("NBI Cybercrime Division", 20, 20);
-            doc.setFontSize(14);
-            doc.text("End-of-Day Summary Report", 20, 30);
-            doc.setFontSize(11);
-            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 40);
+            doc.setFontSize(16);
+            doc.text("NBI Cybercrime Division - End of Day Report", 14, 20);
+            doc.setFontSize(12);
+            doc.text(`Date: ${todayStr}`, 14, 30);
             
-            const total = document.getElementById('stat-registered').textContent;
-            const served = document.getElementById('stat-served').textContent;
-            const skipped = document.getElementById('stat-skipped').textContent;
-            const priority = document.getElementById('stat-priority').textContent;
-
-            doc.text(`Total Registered: ${total}`, 20, 60);
-            doc.text(`Total Served: ${served}`, 20, 70);
-            doc.text(`Total Skipped / No-show: ${skipped}`, 20, 80);
-            doc.text(`Priority Complainants: ${priority}`, 20, 90);
+            const todayRecords = allRecords.filter(r => r.created_at.startsWith(todayStr));
             
-            doc.save(`NBI_QMS_EOD_Report_${new Date().toISOString().split('T')[0]}.pdf`);
-            showToast('EOD Report PDF exported');
-            closeModal('modalEOD');
+            doc.autoTable({
+                startY: 40,
+                head: [['Metric', 'Count']],
+                body: [
+                    ['Total Registered', todayRecords.length],
+                    ['Served', todayRecords.filter(r => r.status === 'Served').length],
+                    ['Waiting Left', todayRecords.filter(r => r.status === 'Waiting').length],
+                    ['Skipped / No-show', todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length],
+                    ['Priority (PWD/Senior)', todayRecords.filter(r => r.is_priority).length],
+                    ['Cases Filed', todayRecords.filter(r => r.case_status === 'CASE FILED').length]
+                ]
+            });
+            
+            doc.save(`NBI_EOD_Report_${todayStr}.pdf`);
         }
 
-        // --- Utils ---
+        // --- Toasts ---
         function showToast(msg, isError = false) {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `toast ${isError ? 'error' : ''}`;
-            toast.innerHTML = `${isError ? '⚠️' : '✅'} ${msg}`;
+            toast.textContent = msg;
             container.appendChild(toast);
             
-            // Trigger animation
             setTimeout(() => toast.classList.add('show'), 10);
-            
-            // Remove after 3s
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
