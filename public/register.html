@@ -6,322 +6,734 @@
     <title>Digital Registration | NBI QMS</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
+        /* CSS reset & base handled by style.css */
+        body {
+            background-color: var(--primary-color);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .nbi-logo-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f39c12, #f1c40f);
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #0b1d3a;
+            font-size: 1.5rem;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.4);
+            border: 2px solid #fff;
+        }
+
         .register-container {
-            max-width: 1400px;
+            max-width: 1100px;
             width: 95vw;
             margin: 2rem auto;
             background: var(--card-bg);
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(241, 196, 15, 0.2);
             border-radius: 20px;
             padding: 3rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             backdrop-filter: blur(15px);
+            text-align: center;
         }
+
+        .brand-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-subtitle {
+            font-size: 1.1rem;
+            color: #a0aec0;
+            margin-bottom: 3rem;
+        }
+
         .form-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-            align-items: stretch;
+            gap: 1.5rem 1.2rem;
+            text-align: left;
         }
-        
-        /* Floating Labels CSS */
+
+        .field-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
         .floating-group {
             position: relative;
-            margin-bottom: 0;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.3);
             border-radius: 12px;
-            border: 1px solid var(--border-color);
-            transition: border-color 0.3s ease, background 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
         }
+
+        .floating-group.has-error {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+        }
+
         .floating-group:focus-within {
-            border-color: var(--secondary-color);
-            background: rgba(0,0,0,0.4);
-            box-shadow: 0 0 15px rgba(241, 196, 15, 0.1);
+            border-color: #f39c12;
+            background: rgba(0,0,0,0.5);
+            box-shadow: 0 0 12px rgba(243, 156, 18, 0.2);
         }
+
         .floating-input {
             width: 100%;
             padding: 1.8rem 1rem 0.6rem;
             border: none;
             background: transparent;
             color: white;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            font-family: inherit;
         }
+
+        .floating-input::placeholder {
+            color: transparent; /* Handled by label */
+        }
+
         .floating-input:focus {
             outline: none;
         }
+
         .floating-label {
             position: absolute;
             left: 1rem;
             top: 1.2rem;
             color: #a0aec0;
-            font-size: 1rem;
+            font-size: 0.95rem;
             pointer-events: none;
             transition: 0.2s ease all;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
+
         .floating-input:focus ~ .floating-label,
         .floating-input:not(:placeholder-shown) ~ .floating-label {
             top: 0.4rem;
-            font-size: 0.65rem;
-            color: var(--secondary-color);
+            font-size: 0.7rem;
+            color: #f39c12;
             font-weight: 800;
+            text-transform: uppercase;
         }
-        
+
+        .floating-group.has-error .floating-label {
+            color: #e74c3c;
+        }
+
         select.floating-input {
             appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: right 1rem center;
             background-size: 1em;
-            padding-top: 1.8rem;
+            cursor: pointer;
         }
+
         select.floating-input option {
-            background: var(--primary-color);
+            background: #0b1d3a;
             color: white;
         }
-        select.floating-input ~ .floating-label {
-            top: 0.4rem;
-            font-size: 0.65rem;
-            color: var(--secondary-color);
-            font-weight: 800;
+
+        .error-msg {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 0.3rem;
+            margin-top: 0.2rem;
+        }
+        .error-msg.active {
+            display: flex;
         }
 
         .span-2 { grid-column: span 2; }
         .span-3 { grid-column: span 3; }
         .full-width { grid-column: 1 / -1; }
 
-        /* Priority Card Redesign */
-        .priority-card {
+        /* Modern Toggle Switch for Priority */
+        .priority-wrapper {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
-            background: linear-gradient(135deg, rgba(241, 196, 15, 0.1), rgba(230, 126, 34, 0.05));
-            padding: 1rem 2rem;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(0,0,0,0.3));
+            padding: 1.2rem 2rem;
             border-radius: 12px;
-            border: 1px solid rgba(241, 196, 15, 0.3);
+            border: 1px solid rgba(243, 156, 18, 0.3);
             cursor: pointer;
             transition: all 0.3s ease;
-            height: 100%;
         }
-        .priority-card:hover {
-            background: linear-gradient(135deg, rgba(241, 196, 15, 0.2), rgba(230, 126, 34, 0.1));
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(241, 196, 15, 0.2);
+        .priority-wrapper:hover {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.15), rgba(0,0,0,0.4));
+            border-color: rgba(243, 156, 18, 0.5);
         }
-        .priority-card input[type="checkbox"] {
-            width: 28px;
-            height: 28px;
-            accent-color: var(--secondary-color);
-            cursor: pointer;
+        
+        .priority-text-block {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
         }
-        .priority-text {
-            color: var(--secondary-color);
+        
+        .priority-title {
+            color: #f39c12;
             font-weight: 800;
             font-size: 1.1rem;
             letter-spacing: 1px;
-            margin: 0;
-            text-transform: none;
+        }
+        
+        .priority-subtitle {
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #a0aec0;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #f39c12;
+            border-color: #f39c12;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+            background-color: #fff;
         }
 
         .btn-submit {
             width: 100%;
-            background: linear-gradient(135deg, var(--secondary-color), #f39c12);
-            color: var(--primary-color);
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: #0b1d3a;
             padding: 1.2rem;
             font-size: 1.2rem;
             font-weight: 800;
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-top: 1rem;
             transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.8rem;
+            height: 60px;
         }
-        .btn-submit:hover {
-            transform: translateY(-3px) scale(1.01);
-            box-shadow: 0 10px 30px rgba(241, 196, 15, 0.5);
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(243, 156, 18, 0.5);
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
         }
         
+        .btn-submit:disabled {
+            opacity: 0.8;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-submit.success-state {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+        }
+
+        /* Spinner CSS */
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(11, 29, 58, 0.3);
+            border-radius: 50%;
+            border-top-color: #0b1d3a;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Success Overlay */
         .overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(5, 14, 29, 0.95);
+            background: var(--primary-color);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 1000;
             text-align: center;
             padding: 2rem;
-            backdrop-filter: blur(10px);
+            overflow-y: auto;
         }
         .overlay.active { display: flex; }
-        .success-icon { font-size: 5rem; color: var(--success-color); margin-bottom: 1rem; }
-        .ticket-box {
-            background: var(--card-bg);
-            border: 2px dashed var(--secondary-color);
-            border-radius: 20px;
-            padding: 3rem;
-            margin: 2rem 0;
+        
+        .success-seal {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 3rem; margin-bottom: 2rem;
+            box-shadow: 0 0 30px rgba(46, 204, 113, 0.3);
+            flex-shrink: 0;
         }
-        .ticket-label { color: #a0aec0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1rem; }
-        .ticket-number { font-size: 3.5rem; font-weight: 800; color: var(--secondary-color); }
-        .ticket-queue { font-size: 1.2rem; color: white; margin-top: 1rem; }
+        
+        .success-title { font-size: 2.5rem; color: white; font-weight: 800; margin-bottom: 0.5rem; }
+        .success-subtitle { color: #a0aec0; font-size: 1.1rem; margin-bottom: 3rem; }
+        
+        .ticket-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 4rem 5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .ticket-priority-badge {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            background: #f39c12;
+            color: #0b1d3a;
+            font-weight: 800;
+            padding: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.9rem;
+            display: none;
+        }
 
+        .ticket-label { color: #a0aec0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1rem; font-weight: 600; }
+        .ticket-number { font-size: 4.5rem; font-weight: 800; color: #f39c12; letter-spacing: 2px; text-shadow: 0 0 20px rgba(243, 156, 18, 0.2); margin-bottom: 1rem; }
+        .ticket-queue { font-size: 1.3rem; color: white; font-weight: 500; line-height: 1.5; }
+        
+        .btn-register-another {
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-register-another:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+
+        /* Responsive Breakpoints */
         @media (max-width: 1024px) {
             .form-grid { grid-template-columns: repeat(2, 1fr); }
             .span-3 { grid-column: span 1; }
+            .priority-wrapper { grid-column: 1 / -1; }
         }
-        @media (max-width: 600px) {
-            .form-grid { grid-template-columns: 1fr; }
+        
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .span-2, .span-3 { grid-column: 1 / -1; }
+            .register-container { padding: 2rem 1.5rem; width: 100vw; border-radius: 0; border: none; margin: 0; min-height: 100vh; }
+            
+            /* Prevent iOS zoom */
+            .floating-input { font-size: 16px; padding: 2rem 1rem 0.8rem; }
+            
+            .brand-title { font-size: 1.6rem; }
+            .ticket-box { padding: 3rem 1.5rem; }
+            .ticket-number { font-size: 3rem; }
+            .success-title { font-size: 2rem; }
+            
+            .btn-submit { height: 56px; font-size: 1.1rem; }
         }
     </style>
 </head>
 <body>
-    <div class="staff-header" style="position: relative; top: 0; margin-top: 2rem;">
-        <div class="staff-title">NBI Cybercrime Division</div>
-        <div class="staff-subtitle">Digital Registration</div>
-    </div>
 
     <div class="register-container">
-        <form id="regForm">
+        <div class="nbi-logo-placeholder">NBI</div>
+        <div class="brand-title">Cybercrime Division</div>
+        <div class="brand-subtitle">Complainant Registration Form</div>
+
+        <form id="regForm" novalidate>
             <div class="form-grid">
-                <!-- Row 1 (4 Columns) -->
-                <div class="floating-group">
-                    <input type="text" class="floating-input" id="fullName" required placeholder=" " pattern="[A-Za-z\s\-\.]+" title="Letters, spaces, hyphens, and periods only">
-                    <label class="floating-label">Full Name *</label>
+                
+                <!-- Row 1 -->
+                <div class="field-wrapper span-2">
+                    <div class="floating-group" id="group-fullName">
+                        <input type="text" class="floating-input" id="fullName" placeholder=" " tabindex="1">
+                        <label class="floating-label">Full Name *</label>
+                    </div>
+                    <div class="error-msg" id="err-fullName">⚠ Please enter a valid full name (letters only)</div>
                 </div>
-                <div class="floating-group">
-                    <input type="tel" class="floating-input" id="contact" required placeholder=" " pattern="(09|\+639)\d{9}" title="Valid Philippine mobile number (e.g., 09171234567)">
-                    <label class="floating-label">Mobile Number *</label>
+                
+                <div class="field-wrapper">
+                    <div class="floating-group" id="group-contact">
+                        <input type="tel" class="floating-input" id="contact" placeholder=" " tabindex="2" maxlength="11">
+                        <label class="floating-label">Mobile Number *</label>
+                    </div>
+                    <div class="error-msg" id="err-contact">⚠ Please enter a valid Philippine mobile number (e.g. 09XXXXXXXXX)</div>
                 </div>
-                <div class="floating-group">
-                    <input type="email" class="floating-input" id="email" placeholder=" " pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" title="Valid email address with a domain (e.g., name@gmail.com)">
-                    <label class="floating-label">Email (Optional)</label>
-                </div>
-                <div class="floating-group">
-                    <input type="number" class="floating-input" id="age" required min="1" max="130" placeholder=" ">
-                    <label class="floating-label">Age *</label>
+                
+                <div class="field-wrapper">
+                    <div class="floating-group" id="group-email">
+                        <input type="email" class="floating-input" id="email" placeholder=" " tabindex="3">
+                        <label class="floating-label">Email (Optional)</label>
+                    </div>
+                    <div class="error-msg" id="err-email">⚠ Please enter a valid email address</div>
                 </div>
 
-                <!-- Row 2 (4 Columns) -->
-                <div class="floating-group">
-                    <input type="text" class="floating-input" id="address" required placeholder=" ">
-                    <label class="floating-label">Address *</label>
+                <!-- Row 2 -->
+                <div class="field-wrapper">
+                    <div class="floating-group" id="group-age">
+                        <input type="number" class="floating-input" id="age" placeholder=" " tabindex="4" min="1" max="120">
+                        <label class="floating-label">Age *</label>
+                    </div>
+                    <div class="error-msg" id="err-age">⚠ Please enter a valid age</div>
                 </div>
-                <div class="floating-group">
-                    <select class="floating-input" id="purpose">
-                        <option value="File a Complaint">File a Complaint</option>
-                        <option value="Inquire">Inquire</option>
-                        <option value="Follow-Up">Follow-Up</option>
-                    </select>
-                    <label class="floating-label">Purpose *</label>
+
+                <div class="field-wrapper span-2">
+                    <div class="floating-group" id="group-address">
+                        <input type="text" class="floating-input" id="address" placeholder=" " tabindex="5">
+                        <label class="floating-label">Complete Address *</label>
+                    </div>
+                    <div class="error-msg" id="err-address">⚠ Please enter your complete address</div>
                 </div>
-                <div class="floating-group">
-                    <select class="floating-input" id="civilStatus">
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                        <option value="Widowed">Widowed</option>
-                        <option value="Separated">Separated</option>
-                    </select>
-                    <label class="floating-label">Civil Status</label>
-                </div>
-                <div class="floating-group">
-                    <select class="floating-input" id="gender">
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
-                    <label class="floating-label">Gender</label>
+
+                <div class="field-wrapper">
+                    <div class="floating-group" id="group-purpose">
+                        <select class="floating-input" id="purpose" tabindex="6">
+                            <option value="" disabled selected hidden></option>
+                            <option value="File a Complaint">File a Complaint</option>
+                            <option value="Inquire">Inquire</option>
+                            <option value="Follow-Up">Follow-Up</option>
+                        </select>
+                        <label class="floating-label">Purpose *</label>
+                    </div>
+                    <div class="error-msg" id="err-purpose">⚠ Please select a purpose</div>
                 </div>
 
                 <!-- Row 3 -->
-                <div class="floating-group">
-                    <input type="text" class="floating-input" id="referredBy" placeholder=" ">
-                    <label class="floating-label">Referred By (Optional)</label>
+                <div class="field-wrapper">
+                    <div class="floating-group" id="group-civilStatus">
+                        <select class="floating-input" id="civilStatus" tabindex="7">
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Widowed">Widowed</option>
+                            <option value="Separated">Separated</option>
+                        </select>
+                        <label class="floating-label">Civil Status</label>
+                    </div>
+                    <div class="error-msg" id="err-civilStatus"></div>
                 </div>
-                
-                <label class="priority-card span-3" for="isPriority">
-                    <input type="checkbox" id="isPriority">
-                    <p class="priority-text">I am a PWD / Senior Citizen (Priority Lane)</p>
-                </label>
+
+                <div class="field-wrapper">
+                    <div class="floating-group" id="group-gender">
+                        <select class="floating-input" id="gender" tabindex="8">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                        <label class="floating-label">Gender</label>
+                    </div>
+                    <div class="error-msg" id="err-gender"></div>
+                </div>
+
+                <div class="field-wrapper">
+                    <div class="floating-group" id="group-referredBy">
+                        <input type="text" class="floating-input" id="referredBy" placeholder=" " tabindex="9">
+                        <label class="floating-label">Referred By (Optional)</label>
+                    </div>
+                    <div class="error-msg" id="err-referredBy"></div>
+                </div>
+
+                <!-- Priority Toggle -->
+                <div class="field-wrapper span-3">
+                    <label class="priority-wrapper" for="isPriority">
+                        <div class="priority-text-block">
+                            <span class="priority-title">PWD / Senior Citizen</span>
+                            <span class="priority-subtitle">Priority Lane Access</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="isPriority" tabindex="10">
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </label>
+                </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="btn-submit full-width">Submit Registration</button>
+                <div class="full-width" style="margin-top: 1rem;">
+                    <button type="submit" class="btn-submit" id="btnSubmit" tabindex="11">
+                        <span id="btnText">Submit Registration</span>
+                        <div class="spinner" id="btnSpinner"></div>
+                    </button>
+                    <div class="error-msg" id="err-server" style="justify-content: center; margin-top: 1rem; font-size: 1rem;"></div>
+                </div>
+
             </div>
         </form>
     </div>
 
+    <!-- Success Screen (Full Replacement) -->
     <div class="overlay" id="successOverlay">
-        <div class="success-icon">✓</div>
-        <h2>Registration Successful!</h2>
+        <div class="success-seal">✓</div>
+        <div class="success-title">Registration Successful</div>
+        <div class="success-subtitle">Your details have been securely recorded.</div>
+        
         <div class="ticket-box">
-            <div class="ticket-label">Your Queue Number</div>
+            <div class="ticket-priority-badge" id="successPriorityBadge">Priority Lane</div>
+            <div class="ticket-label">Control Number</div>
             <div class="ticket-number" id="successCcd">CCD-0000</div>
-            <div class="ticket-queue" id="successQueue">Please wait to be called...</div>
+            <div class="ticket-queue" id="successQueue">Please wait to be called.</div>
         </div>
-        <p style="color: #a0aec0; max-width: 400px; line-height: 1.5;">Please take a screenshot or note down your number. Please be attentive to the display screen in the waiting area.</p>
-        <button class="btn-submit" style="max-width: 300px; margin-top: 2rem;" onclick="location.reload()">Register Another</button>
+        
+        <button class="btn-register-another" onclick="location.reload()">Register Another Person</button>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
 
+        // Validation Rules
+        const rules = {
+            fullName: {
+                validate: (val) => val.trim().length >= 2 && /^[a-zA-Z\s]+$/.test(val),
+                errorEl: 'err-fullName',
+                groupEl: 'group-fullName'
+            },
+            contact: {
+                validate: (val) => /^09\d{9}$/.test(val.trim()),
+                errorEl: 'err-contact',
+                groupEl: 'group-contact'
+            },
+            email: {
+                validate: (val) => val.trim() === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+                errorEl: 'err-email',
+                groupEl: 'group-email'
+            },
+            age: {
+                validate: (val) => {
+                    const num = parseInt(val, 10);
+                    return !isNaN(num) && num >= 1 && num <= 120;
+                },
+                errorEl: 'err-age',
+                groupEl: 'group-age'
+            },
+            address: {
+                validate: (val) => val.trim().length >= 5,
+                errorEl: 'err-address',
+                groupEl: 'group-address'
+            },
+            purpose: {
+                validate: (val) => val !== '',
+                errorEl: 'err-purpose',
+                groupEl: 'group-purpose'
+            }
+        };
 
+        // Validate Single Field
+        function validateField(fieldId) {
+            if (!rules[fieldId]) return true;
+            
+            const el = document.getElementById(fieldId);
+            const val = el.value;
+            const isValid = rules[fieldId].validate(val);
+            
+            const group = document.getElementById(rules[fieldId].groupEl);
+            const err = document.getElementById(rules[fieldId].errorEl);
+            
+            if (!isValid) {
+                group.classList.add('has-error');
+                err.classList.add('active');
+                return false;
+            } else {
+                group.classList.remove('has-error');
+                err.classList.remove('active');
+                return true;
+            }
+        }
+
+        // Attach Listeners
+        Object.keys(rules).forEach(fieldId => {
+            const el = document.getElementById(fieldId);
+            // On Blur (leave field)
+            el.addEventListener('blur', () => validateField(fieldId));
+            // On Input (real-time correction)
+            el.addEventListener('input', () => {
+                const group = document.getElementById(rules[fieldId].groupEl);
+                if (group.classList.contains('has-error')) {
+                    validateField(fieldId);
+                }
+            });
+            // For Selects
+            if (el.tagName === 'SELECT') {
+                el.addEventListener('change', () => validateField(fieldId));
+            }
+        });
+
+        // Form Submit
         document.getElementById('regForm').addEventListener('submit', (e) => {
             e.preventDefault();
             
-            const submitBtn = e.target.querySelector('button[type="submit"]');
+            // Clear server error
+            const serverErr = document.getElementById('err-server');
+            serverErr.classList.remove('active');
+            
+            // Validate All
+            let isFormValid = true;
+            let firstInvalidEl = null;
+            
+            Object.keys(rules).forEach(fieldId => {
+                const isValid = validateField(fieldId);
+                if (!isValid) {
+                    isFormValid = false;
+                    if (!firstInvalidEl) firstInvalidEl = document.getElementById(fieldId);
+                }
+            });
+
+            if (!isFormValid) {
+                // Scroll to first error
+                firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalidEl.focus();
+                return;
+            }
+
+            // Button Loading State
+            const submitBtn = document.getElementById('btnSubmit');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            
             submitBtn.disabled = true;
-            submitBtn.textContent = "Processing...";
+            btnText.textContent = "Submitting...";
+            btnSpinner.style.display = "block";
 
             const formData = {
-                fullName: document.getElementById('fullName').value,
-                contact: document.getElementById('contact').value,
+                fullName: document.getElementById('fullName').value.trim(),
+                contact: document.getElementById('contact').value.trim(),
                 age: document.getElementById('age').value,
-                email: document.getElementById('email').value,
+                email: document.getElementById('email').value.trim(),
                 civilStatus: document.getElementById('civilStatus').value,
                 gender: document.getElementById('gender').value,
-                address: document.getElementById('address').value,
+                address: document.getElementById('address').value.trim(),
                 purpose: document.getElementById('purpose').value,
-                referredBy: document.getElementById('referredBy').value,
+                referredBy: document.getElementById('referredBy').value.trim(),
                 isPriority: document.getElementById('isPriority').checked
             };
 
+            // Timeout safety
+            const timeoutId = setTimeout(() => {
+                serverErr.innerHTML = "⚠ Server response timeout. Please ask staff for assistance.";
+                serverErr.classList.add('active');
+                resetButtonState();
+            }, 10000);
+
             socket.emit('submit_registration', formData, (response) => {
-                if (response.success) {
-                    document.getElementById('successCcd').textContent = response.ccdNo;
+                clearTimeout(timeoutId);
+                
+                if (response && response.success) {
+                    // Success State
+                    btnSpinner.style.display = "none";
+                    btnText.textContent = "✓ Success";
+                    submitBtn.classList.add('success-state');
                     
-                    let queueText = "";
-                    if (response.isPriority) {
-                        if (response.position === 0) {
-                            queueText = "You are next in the Priority Lane!";
-                        } else {
-                            queueText = `You are Priority #${response.position + 1} — ${response.position} priority complainant(s) ahead of you.`;
-                        }
-                    } else {
-                        if (response.position === 0) {
-                            queueText = "You are next in line!";
-                        } else {
-                            queueText = `There are ${response.position} people ahead of you in the queue.`;
-                        }
-                    }
-                    document.getElementById('successQueue').textContent = queueText;
-                    
-                    document.getElementById('successOverlay').classList.add('active');
+                    setTimeout(() => {
+                        showSuccessScreen(response, formData.isPriority);
+                    }, 800);
                 } else {
-                    alert('Registration failed. Please try again.');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = "Submit Registration";
+                    serverErr.innerHTML = "⚠ Something went wrong. Please ask the staff for assistance.";
+                    serverErr.classList.add('active');
+                    resetButtonState();
                 }
             });
+            
+            function resetButtonState() {
+                submitBtn.disabled = false;
+                btnText.textContent = "Submit Registration";
+                btnSpinner.style.display = "none";
+                submitBtn.classList.remove('success-state');
+            }
         });
+        
+        function showSuccessScreen(response, isPriority) {
+            document.getElementById('successCcd').textContent = response.ccdNo;
+            
+            if (isPriority) {
+                document.getElementById('successPriorityBadge').style.display = 'block';
+            }
+            
+            let queueText = "";
+            if (response.isPriority) {
+                if (response.position === 0) {
+                    queueText = "You are next in the Priority Lane!";
+                } else {
+                    queueText = `You are Priority #${response.position + 1} — ${response.position} priority complainant(s) ahead of you.`;
+                }
+            } else {
+                if (response.position === 0) {
+                    queueText = "You are next in line!";
+                } else {
+                    queueText = `There are ${response.position} people ahead of you in the queue.`;
+                }
+            }
+            document.getElementById('successQueue').textContent = queueText;
+            
+            document.getElementById('successOverlay').classList.add('active');
+        }
     </script>
 </body>
 </html>
