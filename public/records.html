@@ -53,7 +53,7 @@
             --input-bg: #FFFFFF;
             --modal-bg: #FDFCFA;
             --dropdown-bg: #FDFCFA;
-            --gold: #F0A500;
+            --gold: #B36B00; /* Darker amber for contrast against white */
             
             /* Status Badges Light */
             --status-served-bg: #D4F0DE; --status-served-txt: #1A7A3A; --status-served-border: #D4F0DE;
@@ -262,6 +262,7 @@
         
         .btn-primary { background: var(--gold); color: #1C1A16 !important; border-color: var(--gold) !important; }
         .btn-primary:hover { opacity: 0.9; }
+        body.light-mode .btn-primary { color: #FFFFFF !important; }
         
         .btn-danger { background: rgba(204, 34, 34, 0.1); color: var(--red) !important; border-color: rgba(204, 34, 34, 0.3) !important; }
         .btn-danger:hover { background: rgba(204, 34, 34, 0.2); }
@@ -380,7 +381,7 @@
     <div class="staff-nav no-print">
         <a href="/staff" class="nav-link">Queue Dashboard</a>
         <a href="/records" class="nav-link active">Database Records</a>
-        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode">☀️</button>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode" style="width: 40px; text-align: center;">🌙</button>
     </div>
 
     <div class="staff-container no-print" style="max-width: 1600px; padding: 2rem; margin: 0 auto;">
@@ -722,11 +723,11 @@
             body.classList.toggle('light-mode');
             const isLight = body.classList.contains('light-mode');
             localStorage.setItem('nbi_theme', isLight ? 'light' : 'dark');
-            document.getElementById('themeToggle').textContent = isLight ? '☀' : '☀️';
+            document.getElementById('themeToggle').textContent = isLight ? '☀️' : '🌙';
         }
         if (localStorage.getItem('nbi_theme') === 'light') {
             document.body.classList.add('light-mode');
-            document.getElementById('themeToggle').textContent = '☀';
+            document.getElementById('themeToggle').textContent = '☀️';
         }
 
         // --- Initialization ---
