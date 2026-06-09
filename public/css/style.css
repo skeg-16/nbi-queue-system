@@ -128,7 +128,7 @@ body {
     justify-content: center;
     text-align: center;
     z-index: 10;
-    padding-bottom: 4rem; /* Give space for the recent-container */
+    padding-bottom: 15rem; /* Increased space to clear the floating footer */
 }
 
 .serving-label {
