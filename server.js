@@ -179,6 +179,9 @@ io.on('connection', async (socket) => {
                     email: formData.email || null,
                     civil_status: formData.civilStatus,
                     gender: formData.gender,
+                    address: formData.address || 'N/A',
+                    purpose: formData.purpose || 'File a Complaint',
+                    referred_by: formData.referredBy || null,
                     is_priority: isPriority,
                     status: 'Waiting'
                 }

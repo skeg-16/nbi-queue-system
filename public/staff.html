@@ -313,10 +313,19 @@
         const waitingListEl = document.getElementById('waiting-list');
         const waitingCountEl = document.getElementById('waiting-count');
 
+        function shortenCcd(ccd) {
+            if (!ccd || ccd === '---') return '---';
+            const parts = ccd.split('-');
+            if (parts.length > 1) {
+                return '#' + parts[parts.length - 1];
+            }
+            return ccd;
+        }
+
         function renderStaffState(data) {
             // Update currently serving
             if (data.currentlyServing) {
-                currentCcdEl.textContent = data.currentlyServing.ccdNo;
+                currentCcdEl.textContent = shortenCcd(data.currentlyServing.ccdNo);
                 currentNameEl.textContent = data.currentlyServing.fullName;
                 if (data.currentlyServing.isPriority) {
                     priorityBadgeEl.innerHTML = '<span class="priority-badge">Priority PWD/Senior</span>';
@@ -344,7 +353,7 @@
                     
                     li.innerHTML = `
                         <div class="waiting-info">
-                            <span class="waiting-ccd">${person.ccdNo}</span>
+                            <span class="waiting-ccd">${shortenCcd(person.ccdNo)}</span>
                             <span class="waiting-name">${person.fullName}</span>
                         </div>
                         ${priorityHTML}

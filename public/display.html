@@ -95,6 +95,15 @@
             playNote(700, 0.4, 1.5); // F5
         }
 
+        function shortenCcd(ccd) {
+            if (!ccd || ccd === '---') return '---';
+            const parts = ccd.split('-');
+            if (parts.length > 1) {
+                return '#' + parts[parts.length - 1];
+            }
+            return ccd;
+        }
+
         socket.on('display_update', (data) => {
             if (data.skipMessage) {
                 // Show temporary skip message
@@ -103,11 +112,11 @@
                 
                 setTimeout(() => {
                     queueNumberEl.classList.remove('is-text');
-                    queueNumberEl.textContent = data.currentlyServing;
+                    queueNumberEl.textContent = shortenCcd(data.currentlyServing);
                 }, 3000);
             } else {
                 queueNumberEl.classList.remove('is-text');
-                queueNumberEl.textContent = data.currentlyServing;
+                queueNumberEl.textContent = shortenCcd(data.currentlyServing);
                 
                 if (data.isPriority) {
                     priorityBadgeEl.style.display = 'inline-block';
@@ -136,7 +145,7 @@
                 data.recentNumbers.forEach(num => {
                     const li = document.createElement('li');
                     li.className = 'recent-item';
-                    li.textContent = num;
+                    li.textContent = shortenCcd(num);
                     recentListEl.appendChild(li);
                 });
             }
