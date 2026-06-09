@@ -216,7 +216,7 @@
                     <button class="btn btn-next" id="btn-next">
                         <span class="btn-icon">➔</span>
                         <span class="btn-text">Call Next Number</span>
-                        <span class="btn-subtext">Auto-pulls 2 Regulars : 1 Priority</span>
+                        <span class="btn-subtext">Absolute Priority Ordering</span>
                     </button>
                     
                     <div class="secondary-controls">
@@ -237,6 +237,14 @@
             </div>
 
             <div class="right-column">
+                <!-- Queue Preview Panel -->
+                <div class="dashboard-card preview-card" style="margin-bottom: 2rem;">
+                    <div class="card-label" style="font-size: 1.1rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1rem;">Queue Preview (Next 5)</div>
+                    <div id="queue-preview-container" style="display:flex; gap: 1rem; overflow-x: auto; padding-top: 0.5rem; padding-bottom: 0.5rem;">
+                        <div style="color: #a0aec0;">Waiting...</div>
+                    </div>
+                </div>
+
                 <!-- Waiting List -->
                 <div class="dashboard-card waiting-card">
                     <div class="waiting-header">
@@ -286,13 +294,30 @@
                 priorityBadgeEl.innerHTML = '';
             }
 
-            // Update waiting list
+            // Update Queue Preview & Waiting List
+            const previewEl = document.getElementById('queue-preview-container');
+            previewEl.innerHTML = '';
+            
             waitingCountEl.textContent = `${data.waitingList.length} waiting`;
             waitingListEl.innerHTML = '';
             
             if (data.waitingList.length === 0) {
+                previewEl.innerHTML = '<div style="color: #a0aec0;">Queue is empty.</div>';
                 waitingListEl.innerHTML = '<li style="color: #a0aec0; text-align: center; padding: 2rem;">No one is currently waiting.</li>';
             } else {
+                // Populate Preview (next 5)
+                const next5 = data.waitingList.slice(0, 5);
+                next5.forEach((person, idx) => {
+                    const card = document.createElement('div');
+                    card.style.cssText = `min-width: 120px; background: rgba(0,0,0,0.3); border: 1px solid ${person.isPriority ? '#f39c12' : 'rgba(255,255,255,0.1)'}; padding: 1rem; border-radius: 8px; text-align: center;`;
+                    card.innerHTML = `
+                        <div style="font-size: 0.8rem; color: #a0aec0; margin-bottom: 0.5rem;">Next ${idx + 1}</div>
+                        <div style="font-weight: bold; font-size: 1.2rem; color: ${person.isPriority ? '#f39c12' : 'white'};">${shortenCcd(person.ccdNo)}</div>
+                    `;
+                    previewEl.appendChild(card);
+                });
+
+                // Populate full list
                 data.waitingList.forEach(person => {
                     const li = document.createElement('li');
                     li.className = `waiting-item ${person.isPriority ? 'is-priority' : ''}`;
@@ -304,7 +329,10 @@
                             <span class="waiting-ccd">${shortenCcd(person.ccdNo)}</span>
                             <span class="waiting-name">${person.fullName}</span>
                         </div>
-                        ${priorityHTML}
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            ${priorityHTML}
+                            <button onclick="socket.emit('serve_specific', '${person.id}')" style="background: rgba(46, 204, 113, 0.2); border: 1px solid rgba(46, 204, 113, 0.5); color: #2ecc71; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='rgba(46, 204, 113, 0.3)'" onmouseout="this.style.background='rgba(46, 204, 113, 0.2)'">Serve Now</button>
+                        </div>
                     `;
                     waitingListEl.appendChild(li);
                 });

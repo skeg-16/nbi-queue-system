@@ -299,10 +299,18 @@
                     document.getElementById('successCcd').textContent = response.ccdNo;
                     
                     let queueText = "";
-                    if (response.position === 0) {
-                        queueText = "You are next in line!";
+                    if (response.isPriority) {
+                        if (response.position === 0) {
+                            queueText = "You are next in the Priority Lane!";
+                        } else {
+                            queueText = `You are Priority #${response.position + 1} — ${response.position} priority complainant(s) ahead of you.`;
+                        }
                     } else {
-                        queueText = `There are ${response.position} people ahead of you in the queue.`;
+                        if (response.position === 0) {
+                            queueText = "You are next in line!";
+                        } else {
+                            queueText = `There are ${response.position} people ahead of you in the queue.`;
+                        }
                     }
                     document.getElementById('successQueue').textContent = queueText;
                     

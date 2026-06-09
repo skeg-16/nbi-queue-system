@@ -119,10 +119,12 @@
                 
                 if (data.isPriority) {
                     priorityBadgeEl.style.display = 'inline-block';
-                    queueNumberEl.style.color = 'var(--danger-color)';
-                    queueNumberEl.style.textShadow = '0 0 40px rgba(231, 76, 60, 0.4)';
+                    queueNumberEl.classList.add('priority');
+                    queueNumberEl.style.color = '';
+                    queueNumberEl.style.textShadow = '';
                 } else {
                     priorityBadgeEl.style.display = 'none';
+                    queueNumberEl.classList.remove('priority');
                     queueNumberEl.style.color = '';
                     queueNumberEl.style.textShadow = '';
                 }
