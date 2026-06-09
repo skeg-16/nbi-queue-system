@@ -361,10 +361,9 @@
                     </div>
                 </div>
 
-                <!-- Primary Action -->
                 <button class="btn btn-next" id="btn-next">
                     <span class="btn-text">Call Next Number</span>
-                    <span class="btn-subtext">Absolute Priority Ordering</span>
+                    <span class="btn-subtext" id="cycle-label">Absolute Priority Ordering</span>
                 </button>
                 
                 <!-- Secondary Actions -->
@@ -478,6 +477,10 @@
                 document.getElementById('stat-total').textContent = data.stats.total;
                 waitingCountEl.textContent = data.stats.waiting;
             }
+            
+            if (data.cycleLabel) {
+                document.getElementById('cycle-label').textContent = data.cycleLabel;
+            }
 
             // Update currently serving
             if (data.currentlyServing) {
@@ -514,7 +517,9 @@
                     if (index === 0) classes += ' next-up';
                     li.className = classes;
                     
-                    let priorityHTML = person.isPriority ? '<div class="waiting-badge">Priority</div>' : '';
+                    let priorityHTML = person.isPriority 
+                        ? '<div class="waiting-badge" style="background: rgba(243, 156, 18, 0.2); color: #f39c12;">[PRIORITY] PWD/Senior</div>' 
+                        : '<div class="waiting-badge" style="background: rgba(255,255,255,0.1); color: white;">[REGULAR] Lane</div>';
                     
                     // Estimate wait time (~5 mins per person ahead of them)
                     // For the first person, it's their turn next so "Next Up"

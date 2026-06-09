@@ -26,8 +26,41 @@ let state = {
     dailyCounter: 0,
     currentlyServing: null,
     recentServed: [],
-    regularConsecutiveCount: 0
+    priorityServedCount: 0
 };
+
+function getCycleSortedList(waitingList, initialPriorityCount) {
+    let priorityQueue = [];
+    let regularQueue = [];
+    
+    const sortedByTime = [...waitingList].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    
+    sortedByTime.forEach(r => {
+        if (r.is_priority) priorityQueue.push(r);
+        else regularQueue.push(r);
+    });
+
+    let result = [];
+    let currentPriorityCount = initialPriorityCount;
+    
+    while (priorityQueue.length > 0 || regularQueue.length > 0) {
+        if (currentPriorityCount < 2 && priorityQueue.length > 0) {
+            result.push(priorityQueue.shift());
+            currentPriorityCount++;
+        } else if (currentPriorityCount === 2 && regularQueue.length > 0) {
+            result.push(regularQueue.shift());
+            currentPriorityCount = 0;
+        } else if (currentPriorityCount === 2 && regularQueue.length === 0) {
+            result.push(priorityQueue.shift());
+            currentPriorityCount = 1; 
+        } else if (currentPriorityCount < 2 && priorityQueue.length === 0) {
+            result.push(regularQueue.shift());
+            currentPriorityCount = 0; 
+        }
+    }
+    
+    return result;
+}
 
 function getTodayDateStr() {
     const today = new Date();
@@ -181,7 +214,7 @@ app.delete('/api/records/today', async (req, res) => {
         
         state.currentlyServing = null;
         state.recentServed = [];
-        state.regularConsecutiveCount = 0;
+        state.priorityServedCount = 0;
         state.dailyCounter = 0;
         
         auditLog('Clear Today', `Cleared all records for ${todayStr}`);
@@ -220,12 +253,7 @@ async function broadcastStaffUpdate() {
         skipped: (allRegistrations || []).filter(r => r.status === 'Skipped').length
     };
 
-    const sortedList = waitingList.sort((a, b) => {
-        if (a.is_priority && !b.is_priority) return -1;
-        if (!a.is_priority && b.is_priority) return 1;
-        // fallback to created_at
-        return new Date(a.created_at) - new Date(b.created_at);
-    });
+    const sortedList = getCycleSortedList(waitingList, state.priorityServedCount);
         
     const formattedList = sortedList.map(r => ({
         id: r.id,
@@ -234,11 +262,25 @@ async function broadcastStaffUpdate() {
         isPriority: r.is_priority
     }));
 
+    let cycleLabel = "Next: Regular";
+    if (waitingList.length === 0) {
+        cycleLabel = "Queue Empty";
+    } else {
+        const nextPerson = sortedList[0];
+        if (nextPerson.is_priority) {
+            let slot = state.priorityServedCount === 2 ? 1 : state.priorityServedCount + 1;
+            cycleLabel = `Next: Priority (${slot}/2)`;
+        } else {
+            cycleLabel = `Next: Regular`;
+        }
+    }
+
     io.emit('staff_update', {
         currentlyServing: state.currentlyServing,
         waitingList: formattedList,
         recentServed: state.recentServed,
-        stats: stats
+        stats: stats,
+        cycleLabel: cycleLabel
     });
 }
 
@@ -295,14 +337,9 @@ io.on('connection', async (socket) => {
         const { data: waitingList } = await supabase
             .from('registrations')
             .select('*')
-            .eq('status', 'Waiting')
-            .order('created_at', { ascending: true });
+            .eq('status', 'Waiting');
             
-        const sortedList = (waitingList || []).sort((a, b) => {
-            if (a.is_priority && !b.is_priority) return -1;
-            if (!a.is_priority && b.is_priority) return 1;
-            return 0;
-        });
+        const sortedList = getCycleSortedList(waitingList || [], state.priorityServedCount);
         
         let position = sortedList.findIndex(r => r.id === data[0].id);
         if (position === -1) position = sortedList.length - 1;
@@ -336,8 +373,7 @@ io.on('connection', async (socket) => {
         const { data: waiting } = await supabase
             .from('registrations')
             .select('*')
-            .eq('status', 'Waiting')
-            .order('created_at', { ascending: true });
+            .eq('status', 'Waiting');
 
         if (!waiting || waiting.length === 0) {
             state.currentlyServing = null;
@@ -346,13 +382,18 @@ io.on('connection', async (socket) => {
             return;
         }
 
-        const sortedWaiting = waiting.sort((a, b) => {
-            if (a.is_priority && !b.is_priority) return -1;
-            if (!a.is_priority && b.is_priority) return 1;
-            return 0;
-        });
-
+        const sortedWaiting = getCycleSortedList(waiting, state.priorityServedCount);
         const nextPerson = sortedWaiting[0];
+
+        if (nextPerson.is_priority) {
+            if (state.priorityServedCount === 2) {
+                state.priorityServedCount = 1;
+            } else {
+                state.priorityServedCount++;
+            }
+        } else {
+            state.priorityServedCount = 0;
+        }
 
         await supabase
             .from('registrations')
@@ -384,8 +425,7 @@ io.on('connection', async (socket) => {
             const { data: waiting } = await supabase
                 .from('registrations')
                 .select('*')
-                .eq('status', 'Waiting')
-                .order('created_at', { ascending: true });
+                .eq('status', 'Waiting');
 
             if (!waiting || waiting.length === 0) {
                 await broadcastStaffUpdate();
@@ -393,13 +433,18 @@ io.on('connection', async (socket) => {
                 return;
             }
 
-            const sortedWaiting = waiting.sort((a, b) => {
-                if (a.is_priority && !b.is_priority) return -1;
-                if (!a.is_priority && b.is_priority) return 1;
-                return 0;
-            });
-
+            const sortedWaiting = getCycleSortedList(waiting, state.priorityServedCount);
             const nextPerson = sortedWaiting[0];
+
+            if (nextPerson.is_priority) {
+                if (state.priorityServedCount === 2) {
+                    state.priorityServedCount = 1;
+                } else {
+                    state.priorityServedCount++;
+                }
+            } else {
+                state.priorityServedCount = 0;
+            }
 
             await supabase
                 .from('registrations')
@@ -472,7 +517,7 @@ io.on('connection', async (socket) => {
             
         state.currentlyServing = null;
         state.recentServed = [];
-        state.regularConsecutiveCount = 0;
+        state.priorityServedCount = 0;
         state.dailyCounter = 0;
         
         await broadcastStaffUpdate();
