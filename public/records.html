@@ -6,173 +6,219 @@
     <title>Database Records | NBI QMS</title>
     <link rel="stylesheet" href="css/style.css">
     
-    <!-- SheetJS for Excel export -->
+    <!-- SheetJS for Excel & CSV export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- jsPDF and AutoTable for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     
     <style>
+        :root {
+            /* Dark Mode (Default) */
+            --bg-color: #050e1d;
+            --panel-bg: rgba(255,255,255,0.02);
+            --border-color: rgba(255,255,255,0.05);
+            --text-main: #ffffff;
+            --text-muted: #a0aec0;
+            --btn-bg: rgba(255,255,255,0.05);
+            --btn-border: rgba(255,255,255,0.15);
+            --btn-hover: rgba(255,255,255,0.1);
+            --table-hover: rgba(255,255,255,0.02);
+            --input-bg: rgba(0,0,0,0.4);
+            --modal-bg: #050e1d;
+            --dropdown-bg: #0b1d3a;
+            --gold: #f39c12;
+            --red: #CC2222;
+        }
+
+        body.light-mode {
+            --bg-color: #F4F2EE;
+            --panel-bg: #FAFAF8;
+            --border-color: #E8E4DC;
+            --text-main: #1A1A1A;
+            --text-muted: #5A5A5A;
+            --btn-bg: #FFFFFF;
+            --btn-border: #D1CDC4;
+            --btn-hover: #EAE6DF;
+            --table-hover: #F7F5F1;
+            --input-bg: #FFFFFF;
+            --modal-bg: #FAFAF8;
+            --dropdown-bg: #FFFFFF;
+            --gold: #d68910; /* Slightly darker gold for light mode text contrast */
+        }
+
         .staff-body {
-            background: #050e1d; /* Solid formal dark background */
+            background: var(--bg-color);
             font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .staff-nav {
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(5, 14, 29, 0.98);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
             padding: 1rem 0;
             position: sticky;
             top: 0;
             z-index: 50;
+            transition: background 0.3s ease;
         }
+
+        .theme-toggle {
+            position: absolute;
+            right: 2rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .theme-toggle:hover { color: var(--gold); }
 
         .summary-bar { 
             display: flex; justify-content: space-between; 
-            background: rgba(255,255,255,0.02); padding: 1.5rem 2.5rem; 
-            border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.05); 
+            background: var(--panel-bg); padding: 1.5rem 2.5rem; 
+            border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border-color); 
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
         .summary-stat { display: flex; flex-direction: column; align-items: center; gap: 0.5rem;}
-        .stat-value { font-size: 2.2rem; font-weight: 800; color: #f39c12; line-height: 1; }
-        .stat-label { font-size: 0.8rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;}
+        .stat-value { font-size: 2.2rem; font-weight: 800; color: var(--gold); line-height: 1; }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;}
         
         .toolbar-container {
-            display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; 
-            margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); padding: 1.5rem; 
-            border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); 
+            display: flex; justify-content: space-between; align-items: center; gap: 1rem; 
+            margin-bottom: 1.5rem; background: var(--panel-bg); padding: 1rem 1.5rem; 
+            border-radius: 8px; border: 1px solid var(--border-color); 
         }
 
-        .toolbar-group { display: flex; flex-direction: column; gap: 0.5rem; }
-        .toolbar-title { font-size: 0.75rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 0.2rem;}
         .toolbar-actions { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
         
-        .filter-select, .filter-input { 
-            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); 
-            color: white; padding: 0.6rem 1rem; border-radius: 6px; font-family: 'Inter', sans-serif;
-            font-size: 0.9rem; transition: border-color 0.2s;
+        .search-input {
+            background: var(--input-bg); border: 1px solid var(--border-color); 
+            color: var(--text-main); padding: 0.6rem 1rem; border-radius: 6px; 
+            font-family: 'Inter', sans-serif; font-size: 0.95rem; transition: border-color 0.2s;
+            width: 300px;
         }
-        .filter-select:focus, .filter-input:focus { outline: none; border-color: #f39c12; }
-        .filter-checkbox { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #a0aec0; font-size: 0.9rem; font-weight: 600; user-select: none; }
+        .search-input:focus { outline: none; border-color: var(--gold); }
         
         .btn-formal {
             padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-            border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: white; cursor: pointer; transition: all 0.2s;
+            border-radius: 6px; border: 1px solid var(--btn-border); background: var(--btn-bg); color: var(--text-main); 
+            cursor: pointer; transition: all 0.2s;
         }
-        .btn-formal:hover { background: rgba(255,255,255,0.08); }
-        .btn-primary { background: rgba(243, 156, 18, 0.15); color: #f39c12; border-color: rgba(243, 156, 18, 0.4); }
-        .btn-primary:hover { background: rgba(243, 156, 18, 0.25); }
-        .btn-danger { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border-color: rgba(231, 76, 60, 0.3); }
-        .btn-danger:hover { background: rgba(231, 76, 60, 0.2); }
+        .btn-formal:hover { background: var(--btn-hover); }
         
-        .table-container { overflow-x: auto; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; }
+        .btn-primary { background: rgba(243, 156, 18, 0.15); color: var(--gold); border-color: rgba(243, 156, 18, 0.4); }
+        .btn-primary:hover { background: rgba(243, 156, 18, 0.25); }
+        
+        .btn-danger { background: rgba(204, 34, 34, 0.1); color: var(--red); border-color: rgba(204, 34, 34, 0.3); }
+        .btn-danger:hover { background: rgba(204, 34, 34, 0.2); }
+
+        .filter-badge {
+            background: var(--gold); color: #fff; font-size: 0.7rem; font-weight: bold; 
+            padding: 2px 6px; border-radius: 10px; margin-left: 5px; display: inline-block;
+        }
+        
+        .clear-filters-link {
+            font-size: 0.8rem; color: var(--text-muted); cursor: pointer; text-decoration: underline; margin-left: 0.5rem;
+        }
+        .clear-filters-link:hover { color: var(--text-main); }
+        
+        /* Dropdowns */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content { 
+            display: none; position: absolute; top: 110%; left: 0; background-color: var(--dropdown-bg); min-width: 220px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; border-radius: 8px; border: 1px solid var(--border-color);
+            padding: 1rem; text-align: left;
+        }
+        .dropdown.right .dropdown-content { left: auto; right: 0; }
+        .dropdown.active .dropdown-content { display: block; }
+        
+        .dropdown-content button.menu-item {
+            color: var(--text-main); padding: 0.8rem 1rem; text-decoration: none; display: block; width: 100%; text-align: left; 
+            background: none; border: none; font-size: 0.85rem; font-weight: 500; cursor: pointer; border-bottom: 1px solid var(--border-color);
+        }
+        .dropdown-content button.menu-item:hover { background-color: var(--table-hover); color: var(--gold);}
+        
+        .filter-row { margin-bottom: 1rem; }
+        .filter-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 0.3rem; display: block;}
+        .filter-select, .filter-date { width: 100%; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.5rem; border-radius: 4px; }
+        
+        /* Table */
+        .table-container { overflow-x: auto; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; }
         .records-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;}
         .records-table th { 
-            padding: 1.2rem 1.5rem; color: #a0aec0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; white-space: nowrap;
+            padding: 1rem 1.2rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;
+            border-bottom: 1px solid var(--border-color); background: var(--bg-color); cursor: pointer; white-space: nowrap; position: sticky; top: 0;
         }
-        .records-table th:hover { color: white; }
-        .records-table td { padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.02); color: #e2e8f0; vertical-align: middle;}
+        .records-table th:hover { color: var(--text-main); }
+        .records-table td { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border-color); vertical-align: middle;}
+        .records-table tbody tr:hover { background: var(--table-hover); }
         
-        .records-table tbody tr:hover { background: rgba(255,255,255,0.02); }
-        
-        /* Refined Badges */
+        /* Badges */
         .badge { padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; white-space: nowrap;}
-        .badge-priority { background: rgba(243, 156, 18, 0.15); color: #f39c12; border: 1px solid rgba(243, 156, 18, 0.3); }
+        .badge-priority { background: var(--red); color: white; border: 1px solid #ff4444; }
         
         .status-badge { padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block;}
-        .status-waiting { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
-        .status-serving { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
+        .status-waiting { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
+        .status-serving { background: rgba(243, 156, 18, 0.15); color: var(--gold); border: 1px solid rgba(243, 156, 18, 0.3); }
         .status-served { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
         .status-skipped { background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.3); }
         .status-noshow { background: rgba(149, 165, 166, 0.15); color: #95a5a6; border: 1px solid rgba(149, 165, 166, 0.3); }
         
-        /* Case Management Row Indicators */
-        .case-badge { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px; margin-left: 0.5rem; letter-spacing: 0.5px;}
-        .case-filed { background: #3498db; color: white; }
-        .case-remarks { background: #7f8c8d; color: white; }
-
-        /* Dropdown Actions */
-        .dropdown { position: relative; display: inline-block; }
-        .dropdown-btn { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;}
-        .dropdown-btn:hover { background: rgba(255,255,255,0.1); }
-        .dropdown-content { 
-            display: none; position: absolute; right: 0; background-color: #0b1d3a; min-width: 180px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
-            overflow: hidden; text-align: left;
-        }
-        .dropdown-content button {
-            color: white; padding: 0.8rem 1rem; text-decoration: none; display: block; width: 100%; text-align: left; 
-            background: none; border: none; font-size: 0.85rem; font-weight: 500; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02);
-            font-family: 'Inter', sans-serif;
-        }
-        .dropdown-content button:hover { background-color: rgba(255,255,255,0.05); color: #f39c12;}
-        .dropdown-content button.danger:hover { color: #e74c3c; }
-        .dropdown.active .dropdown-content { display: block; }
+        body.light-mode .status-waiting { background: #E1F0FA; color: #2980b9; border-color: #B3D8F1; }
+        body.light-mode .status-serving { background: #FDF3E1; color: #d68910; border-color: #F8DCB3; }
+        body.light-mode .status-served { background: #E3F8EB; color: #27ae60; border-color: #B8EDCD; }
+        body.light-mode .status-skipped { background: #FCEAE8; color: #c0392b; border-color: #F6C8C3; }
         
+        /* Pagination */
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem; }
+        .page-controls { display: flex; gap: 0.4rem; align-items: center;}
+        .page-btn { 
+            background: var(--btn-bg); border: 1px solid var(--btn-border); color: var(--text-main); 
+            padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer; transition: all 0.2s; font-weight: 500;
+        }
+        .page-btn:hover:not(:disabled) { background: var(--btn-hover); }
+        .page-btn.active { background: var(--gold); color: #fff; border-color: var(--gold); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .jump-input { width: 50px; text-align: center; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.4rem; border-radius: 4px;}
+
         /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; display: none; justify-content: center; align-items: center; padding: 1rem; overflow-y: auto;}
-        .modal { background: #050e1d; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2.5rem; max-width: 700px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8); margin: auto; position: relative;}
-        .modal-header { margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
-        .modal-title { font-size: 1.4rem; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 1px;}
-        .modal-close { position: absolute; top: 2rem; right: 2rem; background: none; border: none; color: #a0aec0; font-size: 1.8rem; cursor: pointer; line-height: 1; }
-        .modal-close:hover { color: white; }
+        .modal { background: var(--modal-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 2.5rem; max-width: 600px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5); margin: auto; position: relative;}
+        .modal-header { margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; }
+        .modal-title { font-size: 1.4rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
+        .modal-close { position: absolute; top: 2rem; right: 2rem; background: none; border: none; color: var(--text-muted); font-size: 1.8rem; cursor: pointer; line-height: 1; }
+        .modal-close:hover { color: var(--text-main); }
         
-        /* Modal Tabs */
-        .modal-tabs { display: flex; gap: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 2rem; }
-        .modal-tab { background: none; border: none; color: #a0aec0; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; padding: 0.8rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; }
-        .modal-tab.active { color: #f39c12; border-bottom-color: #f39c12; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
         .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
         .form-group.full-width { grid-column: 1 / -1; }
-        .form-label { color: #a0aec0; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .form-input, .form-select, .form-textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.8rem; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.95rem; resize: vertical;}
-        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #f39c12; outline: none; }
+        .form-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .form-input, .form-select { width: 100%; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.8rem; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.95rem; }
+        .form-input:focus, .form-select:focus { border-color: var(--gold); outline: none; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); }
         
-        .evidence-checklist { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
-        .evidence-item { display: flex; align-items: center; gap: 0.5rem; color: white; font-size: 0.9rem; }
-        
-        .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
-        
-        /* View Details Data */
-        .detail-row { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 1rem 0; }
-        .detail-label { width: 35%; color: #a0aec0; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
-        .detail-value { width: 65%; color: white; font-weight: 500; font-size: 0.95rem;}
+        .detail-row { display: flex; border-bottom: 1px solid var(--border-color); padding: 1rem 0; }
+        .detail-label { width: 35%; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .detail-value { width: 65%; font-weight: 500; font-size: 0.95rem;}
 
-        /* Mobile Card Layout */
-        .mobile-cards { display: none; flex-direction: column; gap: 1rem; }
-        .record-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 1.5rem; }
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-        .card-ccd { color: #f39c12; font-weight: 800; font-size: 1.1rem; }
-        .card-name { color: white; font-weight: 700; font-size: 1.2rem; margin-top: 0.3rem;}
-        
-        @media (max-width: 1024px) {
-            .toolbar-container { flex-direction: column; align-items: stretch; }
-            .summary-bar { flex-wrap: wrap; gap: 1rem; }
-        }
-        
-        @media (max-width: 768px) {
-            .table-container { display: none; }
-            .mobile-cards { display: flex; }
-        }
-        
         .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.5rem; }
-        .toast { background: #2ecc71; color: #050e1d; padding: 1rem 1.5rem; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;}
-        
-        .col-hidden { display: none !important; }
-        
+        .toast { background: #2ecc71; color: #fff; padding: 1rem 1.5rem; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transform: translateX(120%); transition: transform 0.3s;}
+        .toast.show { transform: translateX(0); }
+        .toast.error { background: #e74c3c; }
+
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; color: black !important;}
             .records-table th, .records-table td { border: 1px solid #ccc; color: black !important; }
             .no-print { display: none !important; }
-            .dropdown { display: none !important; }
+            .staff-body { background: white; }
         }
     </style>
 </head>
@@ -180,6 +226,7 @@
     <div class="staff-nav no-print">
         <a href="/staff" class="nav-link">Queue Dashboard</a>
         <a href="/records" class="nav-link active">Database Records</a>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode">☀️</button>
     </div>
 
     <div class="staff-container no-print" style="max-width: 1600px; padding: 2rem; margin: 0 auto;">
@@ -195,60 +242,81 @@
                 <div class="stat-label">Served</div>
             </div>
             <div class="summary-stat">
-                <div class="stat-value" id="stat-waiting" style="color: white;">0</div>
+                <div class="stat-value" id="stat-waiting" style="color: #3498db;">0</div>
                 <div class="stat-label">Waiting</div>
             </div>
             <div class="summary-stat">
-                <div class="stat-value" id="stat-skipped" style="color: #95a5a6;">0</div>
+                <div class="stat-value" id="stat-skipped" style="color: #e74c3c;">0</div>
                 <div class="stat-label">Skipped</div>
             </div>
             <div class="summary-stat">
-                <div class="stat-value" id="stat-priority" style="color: #e74c3c;">0</div>
+                <div class="stat-value" id="stat-priority" style="color: var(--red);">0</div>
                 <div class="stat-label">Priority</div>
             </div>
         </div>
 
+        <!-- Single Row Toolbar -->
         <div class="toolbar-container">
-            <!-- Left Group: Filters -->
-            <div class="toolbar-group">
-                <div class="toolbar-title">Search & Filters</div>
-                <div class="toolbar-actions">
-                    <input type="text" id="searchInput" class="filter-input" placeholder="Search name, CCD, contact..." style="width: 250px;">
-                    <select id="filterStatus" class="filter-select">
-                        <option value="">All Statuses</option>
-                        <option value="Waiting">Waiting</option>
-                        <option value="Serving">Serving</option>
-                        <option value="Served">Served</option>
-                        <option value="Skipped">Skipped</option>
-                        <option value="No-show">No-show</option>
-                    </select>
-                    <input type="date" id="filterDateFrom" class="filter-input">
-                    <span style="color: #a0aec0;">to</span>
-                    <input type="date" id="filterDateTo" class="filter-input">
-                    <label class="filter-checkbox">
-                        <input type="checkbox" id="filterPriority"> Priority Only
-                    </label>
-                    <button class="btn-formal btn-primary" onclick="applyFiltersAndSort()">Apply Filters</button>
+            <div class="toolbar-actions" style="flex: 1;">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search name, CCD, contact, etc...">
+                
+                <div class="dropdown" id="filterDropdown">
+                    <button class="btn-formal dropdown-btn" onclick="toggleDropdown(event, 'filter-menu')">
+                        Filters ▾ <span id="filterBadge" class="filter-badge" style="display: none;">0</span>
+                    </button>
+                    <div class="dropdown-content" id="filter-menu" onclick="event.stopPropagation()">
+                        <div class="filter-row">
+                            <span class="filter-label">Status</span>
+                            <select id="filterStatus" class="filter-select">
+                                <option value="">All Statuses</option>
+                                <option value="Waiting">Waiting</option>
+                                <option value="Serving">Serving</option>
+                                <option value="Served">Served</option>
+                                <option value="Skipped">Skipped</option>
+                                <option value="No-show">No-show</option>
+                            </select>
+                        </div>
+                        <div class="filter-row">
+                            <span class="filter-label">Date From</span>
+                            <input type="date" id="filterDateFrom" class="filter-date">
+                        </div>
+                        <div class="filter-row">
+                            <span class="filter-label">Date To</span>
+                            <input type="date" id="filterDateTo" class="filter-date">
+                        </div>
+                        <div class="filter-row" style="margin-top: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 500; cursor: pointer;">
+                                <input type="checkbox" id="filterPriority"> Show Priority Only
+                            </label>
+                        </div>
+                    </div>
                 </div>
+                
+                <span class="clear-filters-link" id="clearFiltersBtn" onclick="clearFilters()" style="display: none;">Clear Filters</span>
             </div>
             
-            <!-- Right Group: Actions -->
-            <div class="toolbar-group">
-                <div class="toolbar-title">System Actions</div>
-                <div class="toolbar-actions" style="justify-content: flex-end;">
-                    <button class="btn-formal" onclick="exportToExcel()">Export Excel</button>
-                    <button class="btn-formal" onclick="exportToPDF()">Export PDF</button>
-                    <button class="btn-formal" onclick="window.print()">Print</button>
-                    <button class="btn-formal" onclick="generateEODReport()">End of Day Report</button>
-                    
-                    <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.2); margin: 0 0.5rem;"></div>
-                    
-                    <label class="filter-checkbox" title="Auto-refresh every 30 seconds" style="margin-right: 0.5rem;">
-                        <input type="checkbox" id="autoRefreshToggle"> Auto-refresh
-                    </label>
-                    <button class="btn-formal" onclick="fetchRecords(true)">Refresh</button>
-                    <button class="btn-formal btn-danger" onclick="clearTodaysRecords()">Clear Today</button>
+            <div class="toolbar-actions" style="justify-content: flex-end;">
+                <span id="lastUpdated" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem;"></span>
+                
+                <div class="dropdown right" id="exportDropdown">
+                    <button class="btn-formal dropdown-btn" onclick="toggleDropdown(event, 'export-menu')">Export ▾</button>
+                    <div class="dropdown-content" id="export-menu">
+                        <button class="menu-item" onclick="exportToExcel()">Export as Excel (.xlsx)</button>
+                        <button class="menu-item" onclick="exportToCSV()">Export as CSV (.csv)</button>
+                        <button class="menu-item" onclick="exportToWord()">Export as Word (.docx)</button>
+                        <button class="menu-item" onclick="exportToPDF()">Export as PDF (.pdf)</button>
+                        <button class="menu-item" onclick="window.print()">Print View</button>
+                    </div>
                 </div>
+                
+                <button class="btn-formal btn-primary" onclick="generateEODReport()">End of Day Report</button>
+                <div style="width: 1px; height: 30px; background: var(--border-color); margin: 0 0.5rem;"></div>
+                
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted); cursor: pointer;">
+                    <input type="checkbox" id="autoRefreshToggle"> Auto-refresh
+                </label>
+                <button class="btn-formal" onclick="fetchRecords(true)">Refresh</button>
+                <button class="btn-formal btn-danger" onclick="clearTodaysRecords()">Clear Today</button>
             </div>
         </div>
 
@@ -257,165 +325,34 @@
             <table class="records-table" id="recordsTable">
                 <thead>
                     <tr>
-                        <th onclick="handleSort('created_at', 0)">Date & Time ▼</th>
-                        <th onclick="handleSort('ccd_no', 1)">CCD No.</th>
-                        <th onclick="handleSort('full_name', 2)">Full Name</th>
-                        <th onclick="handleSort('age', 3)">Age</th>
-                        <th onclick="handleSort('contact', 4)">Contact</th>
-                        <th onclick="handleSort('status', 5)">Status</th>
+                        <th onclick="handleSort('created_at', 0)">Date & Time <span id="sort-0">▼</span></th>
+                        <th onclick="handleSort('ccd_no', 1)">CCD No. <span id="sort-1"></span></th>
+                        <th onclick="handleSort('full_name', 2)">Full Name <span id="sort-2"></span></th>
+                        <th onclick="handleSort('age', 3)">Age <span id="sort-3"></span></th>
+                        <th onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></th>
+                        <th onclick="handleSort('status', 5)">Status <span id="sort-5"></span></th>
                         <th class="no-print" style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="recordsBody">
-                    <tr><td colspan="7" style="text-align: center; padding: 3rem; color: #a0aec0;">Loading official records...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">Loading cached records...</td></tr>
                 </tbody>
             </table>
         </div>
         
-        <!-- Mobile Cards -->
-        <div class="mobile-cards" id="mobileCardsContainer">
-            <!-- Rendered via JS -->
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; padding: 1.5rem 0; color: #a0aec0; font-size: 0.9rem;">
+        <div class="pagination-container">
             <div id="recordCount">Showing 0 records</div>
-            <div id="pageControls" style="display: flex; gap: 0.5rem;"></div>
+            <div class="page-controls">
+                <button class="page-btn" id="btnPrev" onclick="changePage(currentPage - 1)">Prev</button>
+                <div id="pageNumbers" style="display: flex; gap: 0.2rem;"></div>
+                <button class="page-btn" id="btnNext" onclick="changePage(currentPage + 1)">Next</button>
+                <span style="margin-left: 1rem;">Jump to:</span>
+                <input type="number" class="jump-input" id="jumpPage" min="1" onkeypress="if(event.key==='Enter') changePage(parseInt(this.value))">
+            </div>
         </div>
     </div>
 
     <!-- Modals -->
-
-    <!-- Case Management Modal -->
-    <div class="modal-overlay" id="modalCase">
-        <div class="modal" style="max-width: 800px;">
-            <div class="modal-header" style="margin-bottom: 1rem;">
-                <div class="modal-title">Case Management File</div>
-                <button class="modal-close" onclick="closeModal('modalCase')">&times;</button>
-            </div>
-            
-            <div class="modal-tabs">
-                <button class="modal-tab active" onclick="switchCaseTab('details')" id="tab-btn-details">Case Details (Actionable)</button>
-                <button class="modal-tab" onclick="switchCaseTab('remarks')" id="tab-btn-remarks">Agent Remarks (Non-Actionable)</button>
-            </div>
-            
-            <input type="hidden" id="caseRecordId">
-
-            <!-- Tab 1: Case Details -->
-            <div class="tab-content active" id="tab-details">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Case Status</label>
-                        <select id="caseStatus" class="form-select">
-                            <option value="Open">Open</option>
-                            <option value="Under Investigation">Under Investigation</option>
-                            <option value="For Referral">For Referral</option>
-                            <option value="Resolved">Resolved</option>
-                            <option value="Closed">Closed</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Type of Cybercrime</label>
-                        <select id="caseType" class="form-select">
-                            <option value="">-- Select Type --</option>
-                            <option value="Online Scam / Estafa">Online Scam / Estafa</option>
-                            <option value="Identity Theft">Identity Theft</option>
-                            <option value="Cyber Harassment / Bullying">Cyber Harassment / Bullying</option>
-                            <option value="Unauthorized Access / Hacking">Unauthorized Access / Hacking</option>
-                            <option value="Child Exploitation Material">Child Exploitation Material</option>
-                            <option value="Online Libel">Online Libel</option>
-                            <option value="Investment Fraud">Investment Fraud</option>
-                            <option value="Others">Others</option>
-                        </select>
-                    </div>
-                    <div class="form-group full-width" id="caseTypeOtherGroup" style="display: none;">
-                        <label class="form-label">Specify Other Type</label>
-                        <input type="text" id="caseTypeOther" class="form-input">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Incident Date</label>
-                        <input type="date" id="caseIncidentDate" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Assigned Agent</label>
-                        <input type="text" id="caseAgent" class="form-input" placeholder="Agent Name">
-                    </div>
-                    
-                    <div class="form-group full-width">
-                        <label class="form-label">Incident Description *</label>
-                        <textarea id="caseDescription" class="form-textarea" rows="4" placeholder="Detailed description of the report..."></textarea>
-                    </div>
-                    
-                    <div class="form-group full-width">
-                        <label class="form-label">Evidence Submitted</label>
-                        <div class="evidence-checklist">
-                            <label class="evidence-item"><input type="checkbox" id="evScreenshots"> Screenshots</label>
-                            <label class="evidence-item"><input type="checkbox" id="evChatLogs"> Chat Logs</label>
-                            <label class="evidence-item"><input type="checkbox" id="evReceipts"> Transaction Receipts</label>
-                            <label class="evidence-item"><input type="checkbox" id="evEmail"> Email Headers</label>
-                            <label class="evidence-item"><input type="checkbox" id="evOther"> Others</label>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Referred To</label>
-                        <input type="text" id="caseReferred" class="form-input" placeholder="e.g. PNP, DOJ, Other Unit">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Follow-up Date</label>
-                        <input type="date" id="caseFollowup" class="form-input">
-                    </div>
-                    
-                    <div class="form-group full-width">
-                        <label class="form-label">Next Action Required</label>
-                        <textarea id="caseNextAction" class="form-textarea" rows="2" placeholder="What needs to happen next?"></textarea>
-                    </div>
-                </div>
-                
-                <div class="modal-footer">
-                    <button class="btn-formal" onclick="closeModal('modalCase')">Cancel</button>
-                    <button class="btn-formal btn-primary" onclick="saveCaseData('details')">Save Case Details</button>
-                </div>
-            </div>
-
-            <!-- Tab 2: Agent Remarks -->
-            <div class="tab-content" id="tab-remarks">
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label class="form-label">Remarks Type</label>
-                        <select id="remarksType" class="form-select">
-                            <option value="">-- Select Type --</option>
-                            <option value="Not Actionable - Informed and Advised">Not Actionable - Informed and Advised</option>
-                            <option value="Misdirected - Referred to Correct Office">Misdirected - Referred to Correct Office</option>
-                            <option value="Inquiry Only - No Complaint Filed">Inquiry Only - No Complaint Filed</option>
-                            <option value="Duplicate Complaint">Duplicate Complaint</option>
-                            <option value="Withdrew Complaint">Withdrew Complaint</option>
-                            <option value="Others">Others</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group full-width">
-                        <label class="form-label">Agent Remarks</label>
-                        <textarea id="remarksText" class="form-textarea" rows="5" placeholder="Notes regarding the interaction..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Handling Agent</label>
-                        <input type="text" id="remarksAgent" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Date & Time</label>
-                        <input type="text" id="remarksDate" class="form-input" readonly disabled value="Will be auto-filled">
-                    </div>
-                </div>
-                
-                <div class="modal-footer">
-                    <button class="btn-formal" onclick="closeModal('modalCase')">Cancel</button>
-                    <button class="btn-formal" style="background: rgba(149, 165, 166, 0.2); border-color: rgba(149, 165, 166, 0.5);" onclick="saveCaseData('remarks')">Save Remarks</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- View Details Modal -->
     <div class="modal-overlay" id="modalView">
@@ -491,7 +428,7 @@
                         <input type="text" id="editReferred" class="form-input">
                     </div>
                     <div class="form-group full-width">
-                        <label class="filter-checkbox" style="color: white;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-main); font-weight: 500;">
                             <input type="checkbox" id="editPriority"> PWD / Senior Citizen Priority
                         </label>
                     </div>
@@ -506,7 +443,7 @@
 
     <!-- Change Status Modal -->
     <div class="modal-overlay" id="modalStatus">
-        <div class="modal" style="max-width: 400px;">
+        <div class="modal" style="max-width: 450px;">
             <div class="modal-header">
                 <div class="modal-title">Change Status</div>
                 <button class="modal-close" onclick="closeModal('modalStatus')">&times;</button>
@@ -540,7 +477,7 @@
                 <div class="modal-title">End-of-Day Report</div>
                 <button class="modal-close" onclick="closeModal('modalEOD')">&times;</button>
             </div>
-            <div id="eodContent" style="color: white; line-height: 1.6; font-size: 1.1rem;"></div>
+            <div id="eodContent" style="line-height: 1.6; font-size: 1.1rem;"></div>
             <div class="modal-footer">
                 <button class="btn-formal" onclick="closeModal('modalEOD')">Close</button>
                 <button class="btn-formal btn-primary" onclick="exportEODToPDF()">Export EOD PDF</button>
@@ -552,47 +489,107 @@
 
     <script>
         // --- State ---
-        let allRecords = [];
+        let allRecords = []; // The cache
         let filteredRecords = [];
+        let lastFetchTime = null;
         
         let currentPage = 1;
-        const recordsPerPage = 20;
+        const recordsPerPage = 25;
         
         let sortColumn = 'created_at';
         let sortAsc = false;
         
         let autoRefreshInterval = null;
+        let searchTimeout = null;
 
-        // --- Init ---
+        // --- Theme Logic ---
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('light-mode');
+            const isLight = body.classList.contains('light-mode');
+            localStorage.setItem('nbi_theme', isLight ? 'light' : 'dark');
+            document.getElementById('themeToggle').textContent = isLight ? '🌙' : '☀️';
+        }
+        if (localStorage.getItem('nbi_theme') === 'light') {
+            document.body.classList.add('light-mode');
+            document.getElementById('themeToggle').textContent = '🌙';
+        }
+
+        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             fetchRecords();
-            document.getElementById('caseType').addEventListener('change', (e) => {
-                document.getElementById('caseTypeOtherGroup').style.display = e.target.value === 'Others' ? 'flex' : 'none';
-            });
             
             // Close dropdowns when clicking outside
             document.addEventListener('click', (e) => {
-                if (!e.target.matches('.dropdown-btn')) {
+                if (!e.target.closest('.dropdown')) {
                     document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
                 }
             });
+
+            // Debounced Auto-Search
+            document.getElementById('searchInput').addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    applyFiltersAndSort();
+                }, 300);
+            });
+
+            // Auto-filter on select/change
+            document.getElementById('filterStatus').addEventListener('change', applyFiltersAndSort);
+            document.getElementById('filterDateFrom').addEventListener('change', applyFiltersAndSort);
+            document.getElementById('filterDateTo').addEventListener('change', applyFiltersAndSort);
+            document.getElementById('filterPriority').addEventListener('change', applyFiltersAndSort);
+
+            // Auto-refresh toggle
+            document.getElementById('autoRefreshToggle').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    autoRefreshInterval = setInterval(() => fetchRecords(false), 30000);
+                    showToast('Auto-refresh enabled (30s)');
+                } else {
+                    clearInterval(autoRefreshInterval);
+                    showToast('Auto-refresh disabled');
+                }
+            });
+
+            // Clock for cache warning
+            setInterval(updateCacheWarning, 60000);
         });
 
-        // --- Core ---
+        function toggleDropdown(event, id) {
+            event.stopPropagation();
+            const parent = event.currentTarget.closest('.dropdown');
+            const wasActive = parent.classList.contains('active');
+            document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+            if (!wasActive) parent.classList.add('active');
+        }
+
+        // --- Data Fetching (Cache) ---
         async function fetchRecords(showToastFlag = false) {
             try {
                 const response = await fetch('/api/records');
                 const result = await response.json();
                 if (result.success) {
                     allRecords = result.data;
+                    lastFetchTime = new Date();
                     updateSummaryBar();
                     applyFiltersAndSort();
-                    if (showToastFlag) showToast('Records refreshed successfully');
+                    updateCacheWarning();
+                    if (showToastFlag) showToast('Records synced successfully');
                 }
             } catch (err) {
                 console.error(err);
                 showToast('Error connecting to server', true);
             }
+        }
+
+        function updateCacheWarning() {
+            if (!lastFetchTime) return;
+            const now = new Date();
+            const diffMins = Math.floor((now - lastFetchTime) / 60000);
+            const timeStr = lastFetchTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            let text = `Last updated: ${timeStr}`;
+            if (diffMins >= 5) text += ` ⚠️ Data may be outdated (${diffMins}m ago)`;
+            document.getElementById('lastUpdated').textContent = text;
         }
 
         function updateSummaryBar() {
@@ -606,6 +603,15 @@
             document.getElementById('stat-priority').textContent = todayRecords.filter(r => r.is_priority).length;
         }
 
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterDateFrom').value = '';
+            document.getElementById('filterDateTo').value = '';
+            document.getElementById('filterPriority').checked = false;
+            applyFiltersAndSort();
+        }
+
         function applyFiltersAndSort() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('filterStatus').value;
@@ -613,6 +619,25 @@
             const to = document.getElementById('filterDateTo').value;
             const prio = document.getElementById('filterPriority').checked;
             
+            // Count active filters
+            let activeFilters = 0;
+            if(status) activeFilters++;
+            if(from) activeFilters++;
+            if(to) activeFilters++;
+            if(prio) activeFilters++;
+            
+            const badge = document.getElementById('filterBadge');
+            const clearBtn = document.getElementById('clearFiltersBtn');
+            if (activeFilters > 0) {
+                badge.style.display = 'inline-block';
+                badge.textContent = activeFilters;
+                clearBtn.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+                clearBtn.style.display = term ? 'inline' : 'none';
+            }
+
+            // Filter
             filteredRecords = allRecords.filter(r => {
                 if (status && r.status !== status) return false;
                 if (prio && !r.is_priority) return false;
@@ -622,11 +647,16 @@
                 if (term) {
                     return r.full_name.toLowerCase().includes(term) ||
                            r.ccd_no.toLowerCase().includes(term) ||
-                           (r.contact && r.contact.includes(term));
+                           (r.contact && r.contact.includes(term)) ||
+                           (r.email && r.email.toLowerCase().includes(term)) ||
+                           (r.address && r.address.toLowerCase().includes(term)) ||
+                           r.status.toLowerCase().includes(term) ||
+                           r.age.toString().includes(term);
                 }
                 return true;
             });
             
+            // Sort
             filteredRecords.sort((a, b) => {
                 let valA = a[sortColumn];
                 let valB = b[sortColumn];
@@ -640,34 +670,27 @@
             
             currentPage = 1;
             renderTable();
+            renderPagination();
         }
 
         function handleSort(col, thIndex) {
-            if (sortColumn === col) {
-                sortAsc = !sortAsc;
-            } else {
-                sortColumn = col;
-                sortAsc = true;
-            }
+            if (sortColumn === col) sortAsc = !sortAsc;
+            else { sortColumn = col; sortAsc = true; }
             
-            const ths = document.querySelectorAll('#recordsTable th');
-            ths.forEach(th => th.innerHTML = th.innerHTML.replace(' ▲', '').replace(' ▼', ''));
-            ths[thIndex].innerHTML += sortAsc ? ' ▲' : ' ▼';
+            const ths = document.querySelectorAll('#recordsTable th span');
+            ths.forEach(span => span.textContent = '');
+            ths[thIndex].textContent = sortAsc ? ' ▲' : ' ▼';
             
             applyFiltersAndSort();
         }
 
         function renderTable() {
             const tbody = document.getElementById('recordsBody');
-            const mobileContainer = document.getElementById('mobileCardsContainer');
             tbody.innerHTML = '';
-            mobileContainer.innerHTML = '';
             
             if (filteredRecords.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 3rem; color: #a0aec0;">No records found matching filters.</td></tr>';
-                mobileContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: #a0aec0;">No records found.</div>';
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">No records found matching filters.</td></tr>`;
                 document.getElementById('recordCount').textContent = "Showing 0 records";
-                document.getElementById('pageControls').innerHTML = "";
                 return;
             }
             
@@ -676,7 +699,7 @@
             const paginated = filteredRecords.slice(start, end);
             
             paginated.forEach(r => {
-                const isPrio = r.is_priority ? '<span class="badge badge-priority">Priority</span>' : '';
+                const isPrio = r.is_priority ? '<span class="badge badge-priority">PRIORITY</span>' : '';
                 const dateStr = new Date(r.created_at).toLocaleString('en-PH', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'});
                 
                 let statusClass = 'status-waiting';
@@ -685,82 +708,67 @@
                 if(r.status === 'Skipped') statusClass = 'status-skipped';
                 if(r.status === 'No-show') statusClass = 'status-noshow';
 
-                let caseBadge = '';
-                if (r.case_status === 'CASE FILED') caseBadge = '<span class="case-badge case-filed">FILED</span>';
-                if (r.case_status === 'REMARKS ADDED') caseBadge = '<span class="case-badge case-remarks">REMARKS</span>';
-                
-                // Desktop Table Row
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${dateStr}</td>
-                    <td style="font-weight: 700; color: #f39c12;">${r.ccd_no} ${isPrio}</td>
-                    <td style="font-weight: 600; color: white;">${r.full_name}</td>
+                    <td style="font-weight: 800; color: var(--gold);">${r.ccd_no} ${isPrio}</td>
+                    <td style="font-weight: 700;">${r.full_name}</td>
                     <td>${r.age}</td>
                     <td>${r.contact}</td>
-                    <td><span class="status-badge ${statusClass}">${r.status}</span> ${caseBadge}</td>
+                    <td><span class="status-badge ${statusClass}">${r.status}</span></td>
                     <td class="no-print" style="text-align: right;">
-                        <div class="dropdown">
-                            <button class="dropdown-btn" onclick="toggleDropdown(event, 'dd-${r.id}')">Actions ▾</button>
+                        <div class="dropdown right">
+                            <button class="btn-formal" onclick="toggleDropdown(event, 'dd-${r.id}')" style="padding: 0.4rem 0.8rem;">Actions ▾</button>
                             <div class="dropdown-content" id="dd-${r.id}">
-                                <button onclick="viewDetails('${r.id}')">View Full Details</button>
-                                <button onclick="openManageCase('${r.id}')">Manage Case File</button>
-                                <button onclick="openEdit('${r.id}')">Edit Record</button>
-                                <button onclick="openStatus('${r.id}', '${r.status}')">Change Status</button>
-                                <button class="danger" onclick="deleteRecord('${r.id}')">Delete Record</button>
+                                <button class="menu-item" onclick="viewDetails('${r.id}')">View Full Details</button>
+                                <button class="menu-item" onclick="openEdit('${r.id}')">Edit Record</button>
+                                <button class="menu-item" onclick="openStatus('${r.id}', '${r.status}')">Change Status</button>
+                                <button class="menu-item danger" onclick="deleteRecord('${r.id}')" style="color: var(--red);">Delete Record</button>
                             </div>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
-
-                // Mobile Card
-                const card = document.createElement('div');
-                card.className = 'record-card';
-                card.innerHTML = `
-                    <div class="card-header">
-                        <div>
-                            <div class="card-ccd">${r.ccd_no} ${isPrio}</div>
-                            <div class="card-name">${r.full_name}</div>
-                            <div style="color: #a0aec0; font-size: 0.8rem; margin-top: 0.2rem;">${dateStr}</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="margin-bottom: 0.5rem;"><span class="status-badge ${statusClass}">${r.status}</span></div>
-                            <div>${caseBadge}</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-                        <button class="btn-formal" onclick="viewDetails('${r.id}')">Details</button>
-                        <button class="btn-formal" onclick="openManageCase('${r.id}')">Case</button>
-                        <button class="btn-formal" onclick="openStatus('${r.id}', '${r.status}')">Status</button>
-                    </div>
-                `;
-                mobileContainer.appendChild(card);
             });
             
-            document.getElementById('recordCount').textContent = `Showing ${start + 1}-${Math.min(end, filteredRecords.length)} of ${filteredRecords.length} records`;
+            document.getElementById('recordCount').textContent = `Showing ${start + 1}–${Math.min(end, filteredRecords.length)} of ${filteredRecords.length} records`;
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
+            const container = document.getElementById('pageNumbers');
+            container.innerHTML = '';
             
-            // Pagination controls
-            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
-            let pagesHtml = '';
-            for(let i=1; i<=totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                    pagesHtml += `<button class="btn-formal ${i === currentPage ? 'btn-primary' : ''}" style="padding: 0.4rem 0.8rem;" onclick="goToPage(${i})">${i}</button>`;
-                } else if (i === currentPage - 2 || i === currentPage + 2) {
-                    pagesHtml += `<span style="color: #a0aec0;">...</span>`;
-                }
+            document.getElementById('btnPrev').disabled = currentPage === 1;
+            document.getElementById('btnNext').disabled = currentPage === totalPages;
+            
+            // Logic for up to 5 page pills
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+            
+            if (startPage > 1) {
+                container.innerHTML += `<button class="page-btn" onclick="changePage(1)">1</button>`;
+                if (startPage > 2) container.innerHTML += `<span style="padding: 0.4rem;">...</span>`;
             }
-            document.getElementById('pageControls').innerHTML = pagesHtml;
+            
+            for(let i = startPage; i <= endPage; i++) {
+                container.innerHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) container.innerHTML += `<span style="padding: 0.4rem;">...</span>`;
+                container.innerHTML += `<button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
+            }
         }
 
-        function toggleDropdown(event, id) {
-            event.stopPropagation();
-            document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
-            document.getElementById(id).parentElement.classList.toggle('active');
-        }
-
-        function goToPage(p) {
+        function changePage(p) {
+            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
+            if (p < 1 || p > totalPages || isNaN(p)) return;
             currentPage = p;
+            document.getElementById('jumpPage').value = '';
             renderTable();
+            renderPagination();
         }
 
         // --- Modals Base ---
@@ -773,172 +781,22 @@
             document.body.style.overflow = '';
         }
 
-        // --- Case Management ---
-        function switchCaseTab(tab) {
-            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById(`tab-btn-${tab}`).classList.add('active');
-            document.getElementById(`tab-${tab}`).classList.add('active');
-        }
-
-        async function openManageCase(id) {
-            document.getElementById('caseRecordId').value = id;
-            
-            // Clear forms
-            document.getElementById('caseStatus').value = 'Open';
-            document.getElementById('caseType').value = '';
-            document.getElementById('caseTypeOther').value = '';
-            document.getElementById('caseTypeOtherGroup').style.display = 'none';
-            document.getElementById('caseIncidentDate').value = '';
-            document.getElementById('caseAgent').value = '';
-            document.getElementById('caseDescription').value = '';
-            document.querySelectorAll('.evidence-item input').forEach(c => c.checked = false);
-            document.getElementById('caseReferred').value = '';
-            document.getElementById('caseFollowup').value = '';
-            document.getElementById('caseNextAction').value = '';
-            
-            document.getElementById('remarksType').value = '';
-            document.getElementById('remarksText').value = '';
-            document.getElementById('remarksAgent').value = '';
-            document.getElementById('remarksDate').value = new Date().toLocaleString();
-
-            // Load from server
-            try {
-                const res = await fetch(`/api/cases/${id}`);
-                const data = await res.json();
-                if (data.success && data.data) {
-                    const c = data.data;
-                    switchCaseTab(c.tab || 'details');
-                    
-                    if (c.tab === 'details') {
-                        document.getElementById('caseStatus').value = c.status || 'Open';
-                        document.getElementById('caseType').value = c.type || '';
-                        if(c.type === 'Others') {
-                            document.getElementById('caseTypeOtherGroup').style.display = 'flex';
-                            document.getElementById('caseTypeOther').value = c.typeOther || '';
-                        }
-                        document.getElementById('caseIncidentDate').value = c.incidentDate || '';
-                        document.getElementById('caseAgent').value = c.agent || '';
-                        document.getElementById('caseDescription').value = c.description || '';
-                        if(c.evidence) {
-                            c.evidence.forEach(ev => {
-                                const el = document.getElementById(ev);
-                                if(el) el.checked = true;
-                            });
-                        }
-                        document.getElementById('caseReferred').value = c.referred || '';
-                        document.getElementById('caseFollowup').value = c.followup || '';
-                        document.getElementById('caseNextAction').value = c.nextAction || '';
-                    } else if (c.tab === 'remarks') {
-                        document.getElementById('remarksType').value = c.type || '';
-                        document.getElementById('remarksText').value = c.remarks || '';
-                        document.getElementById('remarksAgent').value = c.agent || '';
-                        document.getElementById('remarksDate').value = c.date || new Date().toLocaleString();
-                    }
-                } else {
-                    switchCaseTab('details'); // default
-                }
-            } catch (e) { console.error(e); }
-
-            openModal('modalCase');
-        }
-
-        async function saveCaseData(tab) {
-            const id = document.getElementById('caseRecordId').value;
-            let payload = { tab: tab };
-            
-            if (tab === 'details') {
-                payload.status = document.getElementById('caseStatus').value;
-                payload.type = document.getElementById('caseType').value;
-                payload.typeOther = document.getElementById('caseTypeOther').value;
-                payload.incidentDate = document.getElementById('caseIncidentDate').value;
-                payload.agent = document.getElementById('caseAgent').value;
-                payload.description = document.getElementById('caseDescription').value;
-                
-                if (!payload.description.trim()) {
-                    alert("Incident Description is required.");
-                    return;
-                }
-                
-                payload.evidence = Array.from(document.querySelectorAll('.evidence-item input:checked')).map(el => el.id);
-                payload.referred = document.getElementById('caseReferred').value;
-                payload.followup = document.getElementById('caseFollowup').value;
-                payload.nextAction = document.getElementById('caseNextAction').value;
-            } else {
-                payload.type = document.getElementById('remarksType').value;
-                payload.remarks = document.getElementById('remarksText').value;
-                payload.agent = document.getElementById('remarksAgent').value;
-                payload.date = new Date().toLocaleString();
-                
-                if (!payload.remarks.trim()) {
-                    alert("Remarks text is required.");
-                    return;
-                }
-            }
-
-            try {
-                const response = await fetch(`/api/cases/${id}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                if (result.success) {
-                    showToast('Case file saved successfully');
-                    closeModal('modalCase');
-                    fetchRecords(); // Refresh to get badges
-                } else {
-                    showToast('Failed to save case', true);
-                }
-            } catch (err) {
-                showToast('Server error', true);
-            }
-        }
-
-        // --- Other Row Actions ---
-        async function viewDetails(id) {
+        // --- Row Actions ---
+        function viewDetails(id) {
             const r = allRecords.find(x => x.id === id);
             if (!r) return;
             
             const dateStr = new Date(r.created_at).toLocaleString('en-PH');
-            let caseHtml = '';
-            
-            try {
-                const res = await fetch(`/api/cases/${id}`);
-                const data = await res.json();
-                if (data.success && data.data) {
-                    const c = data.data;
-                    caseHtml = `<div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                        <h4 style="color: #f39c12; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">Case Management Record</h4>`;
-                    
-                    if (c.tab === 'details') {
-                        caseHtml += `
-                            <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${c.status}</div></div>
-                            <div class="detail-row"><div class="detail-label">Type</div><div class="detail-value">${c.type === 'Others' ? c.typeOther : c.type}</div></div>
-                            <div class="detail-row"><div class="detail-label">Assigned Agent</div><div class="detail-value">${c.agent || 'N/A'}</div></div>
-                            <div class="detail-row"><div class="detail-label">Description</div><div class="detail-value" style="white-space: pre-wrap;">${c.description}</div></div>
-                        </div>`;
-                    } else {
-                        caseHtml += `
-                            <div class="detail-row"><div class="detail-label">Remarks Type</div><div class="detail-value">${c.type}</div></div>
-                            <div class="detail-row"><div class="detail-label">Agent Notes</div><div class="detail-value" style="white-space: pre-wrap;">${c.remarks}</div></div>
-                            <div class="detail-row"><div class="detail-label">Logged By</div><div class="detail-value">${c.agent || 'N/A'}</div></div>
-                        </div>`;
-                    }
-                }
-            } catch(e) {}
-            
             const html = `
-                <div class="detail-row"><div class="detail-label">Control No.</div><div class="detail-value" style="color: #f39c12; font-weight: 800;">${r.ccd_no}</div></div>
+                <div class="detail-row"><div class="detail-label">Control No.</div><div class="detail-value" style="color: var(--gold); font-weight: 800;">${r.ccd_no}</div></div>
                 <div class="detail-row"><div class="detail-label">Registration</div><div class="detail-value">${dateStr}</div></div>
-                <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${r.status} ${r.is_priority ? '(Priority)' : ''}</div></div>
+                <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${r.status} ${r.is_priority ? '<span class="badge badge-priority" style="margin-left:5px;">Priority</span>' : ''}</div></div>
                 <div class="detail-row"><div class="detail-label">Full Name</div><div class="detail-value">${r.full_name}</div></div>
                 <div class="detail-row"><div class="detail-label">Demographics</div><div class="detail-value">${r.age} yrs • ${r.gender} • ${r.civil_status}</div></div>
                 <div class="detail-row"><div class="detail-label">Contact Info</div><div class="detail-value">${r.contact} <br> ${r.email || 'No email provided'}</div></div>
                 <div class="detail-row"><div class="detail-label">Address</div><div class="detail-value">${r.address}</div></div>
                 <div class="detail-row"><div class="detail-label">Purpose</div><div class="detail-value">${r.purpose}</div></div>
                 <div class="detail-row"><div class="detail-label">Referred By</div><div class="detail-value">${r.referred_by || 'N/A'}</div></div>
-                ${caseHtml}
             `;
             document.getElementById('viewDetailsContent').innerHTML = html;
             openModal('modalView');
@@ -986,7 +844,7 @@
                 if ((await response.json()).success) {
                     showToast('Record updated');
                     closeModal('modalEdit');
-                    fetchRecords();
+                    fetchRecords(); // re-fetch to sync cache
                 } else { showToast('Update failed', true); }
             } catch(err) { showToast('Server error', true); }
         }
@@ -1041,11 +899,10 @@
             } catch(err) { showToast('Server error', true); }
         }
 
-        // --- Exports ---
-        function exportToExcel() {
-            if (filteredRecords.length === 0) return alert("No records to export.");
-            const exportData = filteredRecords.map(r => ({
-                "Date & Time": new Date(r.created_at).toLocaleString(),
+        // --- Export & Reports ---
+        function getExportData() {
+            return filteredRecords.map(r => ({
+                "Date & Time": new Date(r.created_at).toLocaleString('en-PH'),
                 "CCD No.": r.ccd_no,
                 "Full Name": r.full_name,
                 "Age": r.age,
@@ -1055,32 +912,92 @@
                 "Address": r.address,
                 "Purpose": r.purpose,
                 "Priority": r.is_priority ? "YES" : "NO",
-                "Queue Status": r.status,
-                "Case Status": r.case_status || 'NO ACTION YET'
+                "Queue Status": r.status
             }));
-            const ws = XLSX.utils.json_to_sheet(exportData);
+        }
+
+        function exportToExcel() {
+            if (filteredRecords.length === 0) return alert("No records to export.");
+            const ws = XLSX.utils.json_to_sheet(getExportData());
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Records");
             XLSX.writeFile(wb, `NBI_Records_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function exportToCSV() {
+            if (filteredRecords.length === 0) return alert("No records to export.");
+            const ws = XLSX.utils.json_to_sheet(getExportData());
+            const csv = XLSX.utils.sheet_to_csv(ws);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `NBI_Records_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
         }
 
         function exportToPDF() {
             if (filteredRecords.length === 0) return alert("No records to export.");
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
-            doc.text(`NBI Cybercrime Division - Records (${new Date().toISOString().split('T')[0]})`, 14, 15);
+            doc.setFontSize(16);
+            doc.text("NBI Cybercrime Division - Official Records", 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Generated: ${new Date().toLocaleString('en-PH')}`, 14, 22);
             
             const tableData = filteredRecords.map(r => [
-                new Date(r.created_at).toLocaleString(), r.ccd_no, r.full_name, r.age, r.contact, r.status, r.case_status || 'NO ACTION'
+                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no, r.full_name, r.age, r.contact, r.status
             ]);
             
             doc.autoTable({
-                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Contact', 'Status', 'Case']],
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Contact', 'Status']],
                 body: tableData,
-                startY: 20,
+                startY: 28,
                 styles: { fontSize: 8 }
             });
             doc.save(`NBI_Records_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        function exportToWord() {
+            if (filteredRecords.length === 0) return alert("No records to export.");
+            
+            let html = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>NBI Records</title>
+            <style>
+                body { font-family: Arial, sans-serif; }
+                h1 { text-align: center; color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 10pt; }
+                th { background-color: #f2f2f2; }
+            </style>
+            </head>
+            <body>
+                <h1>NBI Cybercrime Division - Official Records</h1>
+                <p><strong>Generated on:</strong> ${new Date().toLocaleString('en-PH')}</p>
+                <table>
+                    <tr>
+                        <th>Date & Time</th><th>CCD No.</th><th>Full Name</th>
+                        <th>Age</th><th>Contact</th><th>Status</th><th>Priority</th>
+                    </tr>`;
+            
+            filteredRecords.forEach(r => {
+                html += `<tr>
+                    <td>${new Date(r.created_at).toLocaleString('en-PH')}</td>
+                    <td>${r.ccd_no}</td>
+                    <td>${r.full_name}</td>
+                    <td>${r.age}</td>
+                    <td>${r.contact}</td>
+                    <td>${r.status}</td>
+                    <td>${r.is_priority ? 'YES' : 'NO'}</td>
+                </tr>`;
+            });
+            html += `</table></body></html>`;
+            
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `NBI_Records_${new Date().toISOString().split('T')[0]}.doc`;
+            link.click();
         }
 
         function generateEODReport() {
@@ -1089,12 +1006,11 @@
             
             let html = `<div style="margin-bottom: 20px;"><strong>Date:</strong> ${todayStr}</div>`;
             html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                <tr><td style="border: 1px solid #444; padding: 10px;">Total Registered</td><td style="border: 1px solid #444; padding: 10px; font-weight: bold;">${todayRecords.length}</td></tr>
-                <tr><td style="border: 1px solid #444; padding: 10px;">Served</td><td style="border: 1px solid #444; padding: 10px; color: #2ecc71;">${todayRecords.filter(r => r.status === 'Served').length}</td></tr>
-                <tr><td style="border: 1px solid #444; padding: 10px;">Waiting Left</td><td style="border: 1px solid #444; padding: 10px;">${todayRecords.filter(r => r.status === 'Waiting').length}</td></tr>
-                <tr><td style="border: 1px solid #444; padding: 10px;">Skipped/No-Show</td><td style="border: 1px solid #444; padding: 10px; color: #e74c3c;">${todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length}</td></tr>
-                <tr><td style="border: 1px solid #444; padding: 10px;">Priority (PWD/Senior)</td><td style="border: 1px solid #444; padding: 10px;">${todayRecords.filter(r => r.is_priority).length}</td></tr>
-                <tr><td style="border: 1px solid #444; padding: 10px;">Cases Filed</td><td style="border: 1px solid #444; padding: 10px; color: #3498db;">${todayRecords.filter(r => r.case_status === 'CASE FILED').length}</td></tr>
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Total Registered</td><td style="border: 1px solid var(--border-color); padding: 10px; font-weight: bold;">${todayRecords.length}</td></tr>
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Served</td><td style="border: 1px solid var(--border-color); padding: 10px; color: #2ecc71;">${todayRecords.filter(r => r.status === 'Served').length}</td></tr>
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Waiting Left</td><td style="border: 1px solid var(--border-color); padding: 10px;">${todayRecords.filter(r => r.status === 'Waiting').length}</td></tr>
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Skipped/No-Show</td><td style="border: 1px solid var(--border-color); padding: 10px; color: #e74c3c;">${todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length}</td></tr>
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Priority (PWD/Senior)</td><td style="border: 1px solid var(--border-color); padding: 10px;">${todayRecords.filter(r => r.is_priority).length}</td></tr>
             </table>`;
             
             document.getElementById('eodContent').innerHTML = html;
@@ -1121,8 +1037,7 @@
                     ['Served', todayRecords.filter(r => r.status === 'Served').length],
                     ['Waiting Left', todayRecords.filter(r => r.status === 'Waiting').length],
                     ['Skipped / No-show', todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length],
-                    ['Priority (PWD/Senior)', todayRecords.filter(r => r.is_priority).length],
-                    ['Cases Filed', todayRecords.filter(r => r.case_status === 'CASE FILED').length]
+                    ['Priority (PWD/Senior)', todayRecords.filter(r => r.is_priority).length]
                 ]
             });
             

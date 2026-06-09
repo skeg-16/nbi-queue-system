@@ -132,41 +132,6 @@ app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', '
 app.get('/records', (req, res) => res.sendFile(path.join(__dirname, 'public', 'records.html')));
 app.get('/', (req, res) => res.redirect('/register'));
 
-app.get('/ping', (req, res) => res.status(200).send('pong'));
-
-// Case Management Storage
-const casesFile = path.join(__dirname, 'cases.json');
-
-function loadCases() {
-    if (fs.existsSync(casesFile)) {
-        try {
-            return JSON.parse(fs.readFileSync(casesFile, 'utf8'));
-        } catch(e) { return {}; }
-    }
-    return {};
-}
-
-function saveCases(data) {
-    fs.writeFileSync(casesFile, JSON.stringify(data, null, 2));
-}
-
-app.get('/api/cases/:id', (req, res) => {
-    const cases = loadCases();
-    res.json({ success: true, data: cases[req.params.id] || null });
-});
-
-app.post('/api/cases/:id', (req, res) => {
-    try {
-        const cases = loadCases();
-        cases[req.params.id] = req.body;
-        saveCases(cases);
-        auditLog('Manage Case', `Updated case file for ID ${req.params.id}`);
-        res.json({ success: true });
-    } catch(err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
 // API Endpoint for Database Records Interface
 app.get('/api/records', async (req, res) => {
     try {
@@ -177,18 +142,7 @@ app.get('/api/records', async (req, res) => {
             
         if (error) throw error;
         
-        const cases = loadCases();
-        const recordsWithCases = data.map(record => {
-            const caseData = cases[record.id];
-            let caseStatus = 'NO ACTION YET';
-            if (caseData) {
-                if (caseData.tab === 'details') caseStatus = 'CASE FILED';
-                else if (caseData.tab === 'remarks') caseStatus = 'REMARKS ADDED';
-            }
-            return { ...record, case_status: caseStatus };
-        });
-        
-        res.json({ success: true, data: recordsWithCases });
+        res.json({ success: true, data: data });
     } catch (err) {
         console.error("Error fetching records:", err);
         res.status(500).json({ success: false, error: "Database fetch failed" });
