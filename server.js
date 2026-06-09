@@ -3,6 +3,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -113,6 +114,96 @@ app.get('/api/records', async (req, res) => {
     } catch (err) {
         console.error("Error fetching records:", err);
         res.status(500).json({ success: false, error: "Database fetch failed" });
+    }
+});
+
+// Advanced API Endpoints for Enhanced Records Page
+function auditLog(action, details) {
+    const logFile = path.join(__dirname, 'audit_log.json');
+    const entry = {
+        timestamp: new Date().toISOString(),
+        action: action,
+        details: details
+    };
+    let logs = [];
+    if (fs.existsSync(logFile)) {
+        try {
+            logs = JSON.parse(fs.readFileSync(logFile, 'utf8'));
+        } catch(e) {}
+    }
+    logs.unshift(entry);
+    if (logs.length > 500) logs.pop();
+    fs.writeFileSync(logFile, JSON.stringify(logs, null, 2));
+}
+
+app.get('/api/audit', (req, res) => {
+    const logFile = path.join(__dirname, 'audit_log.json');
+    if (fs.existsSync(logFile)) {
+        res.json({ success: true, data: JSON.parse(fs.readFileSync(logFile, 'utf8')) });
+    } else {
+        res.json({ success: true, data: [] });
+    }
+});
+
+app.put('/api/records/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        const { error } = await supabase.from('registrations').update(updates).eq('id', id);
+        if (error) throw error;
+        auditLog('Edit Record', `Edited record ID ${id}`);
+        res.json({ success: true });
+        broadcastStaffUpdate();
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.put('/api/records/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const { error } = await supabase.from('registrations').update({ status }).eq('id', id);
+        if (error) throw error;
+        auditLog('Change Status', `Changed status to ${status} for ID ${id}`);
+        res.json({ success: true });
+        broadcastStaffUpdate();
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/records/today', async (req, res) => {
+    try {
+        const todayStr = getTodayDateStr();
+        const { error } = await supabase.from('registrations').delete().like('ccd_no', `%${todayStr}%`);
+        if (error) throw error;
+        
+        state.currentlyServing = null;
+        state.recentServed = [];
+        state.regularConsecutiveCount = 0;
+        state.dailyCounter = 0;
+        
+        auditLog('Clear Today', `Cleared all records for ${todayStr}`);
+        res.json({ success: true });
+        
+        await broadcastStaffUpdate();
+        broadcastDisplayUpdate(false);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/records/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('registrations').delete().eq('id', id);
+        if (error) throw error;
+        auditLog('Delete Record', `Deleted record ID ${id}`);
+        res.json({ success: true });
+        broadcastStaffUpdate();
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

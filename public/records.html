@@ -5,110 +5,895 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database Records | NBI QMS</title>
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF and AutoTable for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        .summary-bar { display: flex; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 1.5rem 2rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border-color); }
+        .summary-stat { display: flex; flex-direction: column; align-items: center; }
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--secondary-color); line-height: 1; margin-bottom: 0.3rem;}
+        .stat-label { font-size: 0.85rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color); }
+        .filter-group { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        .filter-select, .filter-input { background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: white; padding: 0.6rem 1rem; border-radius: 8px; font-family: 'Inter', sans-serif;}
+        .filter-checkbox { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: white; user-select: none; }
+        
+        .action-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .btn-small { padding: 0.6rem 1.2rem; font-size: 0.9rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white; cursor: pointer; transition: all 0.2s; font-weight: 500; display: flex; align-items: center; gap: 0.4rem; }
+        .btn-small:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+        .btn-primary-small { background: var(--secondary-color); color: var(--primary-color); border: none; font-weight: 700; }
+        .btn-primary-small:hover { background: #f39c12; }
+        .btn-danger-small { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border-color: rgba(231, 76, 60, 0.4); }
+        .btn-danger-small:hover { background: rgba(231, 76, 60, 0.2); }
+        
+        .records-table th { cursor: pointer; user-select: none; white-space: nowrap; }
+        .records-table th:hover { background: rgba(255,255,255,0.05); }
+        .sort-icon { display: inline-block; width: 1em; text-align: center; color: var(--secondary-color); margin-left: 0.3rem; font-size: 0.8em; }
+        
+        .records-table tbody tr { transition: background 0.2s; }
+        .records-table tbody tr:hover { background: rgba(255,255,255,0.05); }
+        .records-table tbody tr.is-priority { background: rgba(241, 196, 15, 0.05); border-left: 4px solid var(--secondary-color); }
+        .records-table tbody tr.is-priority:hover { background: rgba(241, 196, 15, 0.1); }
+        
+        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 0; color: #a0aec0; }
+        .page-controls { display: flex; gap: 0.3rem; }
+        .page-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
+        .page-btn.active { background: var(--secondary-color); color: var(--primary-color); font-weight: bold; border: none; }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .row-actions { display: flex; gap: 0.5rem; justify-content: center; }
+        .row-action-btn { background: none; border: none; cursor: pointer; padding: 0.3rem; font-size: 1.1rem; border-radius: 4px; transition: background 0.2s; }
+        .row-action-btn:hover { background: rgba(255,255,255,0.1); }
+        
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; display: none; justify-content: center; align-items: center; padding: 1rem; }
+        .modal { background: #050e1d; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 2rem; max-width: 600px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: white; }
+        .modal-close { background: none; border: none; color: #a0aec0; font-size: 1.8rem; cursor: pointer; line-height: 1; }
+        .modal-close:hover { color: white; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-label { color: #a0aec0; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .form-input, .form-select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.8rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 1rem; }
+        .form-input:focus, .form-select:focus { border-color: var(--secondary-color); outline: none; }
+        
+        .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        
+        /* Toast */
+        .toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: var(--success-color); color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 0.8rem; font-weight: 600; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .toast.show { transform: translateX(0); }
+        .toast.error { background: #e74c3c; }
+        
+        .col-hidden { display: none !important; }
+        .columns-dropdown { position: relative; }
+        .columns-menu { position: absolute; top: 120%; right: 0; background: #0b1d3a; border: 1px solid var(--border-color); padding: 1rem; border-radius: 12px; display: none; flex-direction: column; gap: 0.8rem; z-index: 50; box-shadow: 0 10px 40px rgba(0,0,0,0.8); width: 220px; }
+        .columns-menu.show { display: flex; }
+        
+        /* Status badge additions */
+        .status-noshow { background: rgba(149, 165, 166, 0.2); color: #95a5a6; border: 1px solid rgba(149, 165, 166, 0.4); }
+        
+        /* View Details specifically */
+        .detail-row { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 0.8rem 0; }
+        .detail-label { width: 40%; color: #a0aec0; font-weight: 600; font-size: 0.9rem; }
+        .detail-value { width: 60%; color: white; font-weight: 500; }
+        
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; color: black; background: white; }
+            .records-table { border-collapse: collapse; width: 100%; }
+            .records-table th, .records-table td { border: 1px solid #ccc; padding: 8px; color: black !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
 </head>
 <body class="staff-body">
-    <div class="staff-nav">
+    <div class="staff-nav no-print">
         <a href="/staff" class="nav-link">Queue Dashboard</a>
         <a href="/records" class="nav-link active">Database Records</a>
     </div>
 
-    <div class="staff-container" style="max-width: 1400px; padding: 2rem; margin: 0 auto;">
-        <div class="staff-header" style="position: static; margin-bottom: 2rem; text-align: center;">
-            <div class="staff-title">NBI Cybercrime Division</div>
-            <div class="staff-subtitle">Registration Database Records</div>
+    <div class="staff-container no-print" style="max-width: 1600px; padding: 2rem; margin: 0 auto;">
+        
+        <!-- Summary Bar -->
+        <div class="summary-bar">
+            <div class="summary-stat">
+                <div class="stat-value" id="stat-registered">0</div>
+                <div class="stat-label">Total Registered Today</div>
+            </div>
+            <div class="summary-stat">
+                <div class="stat-value" id="stat-served" style="color: var(--success-color);">0</div>
+                <div class="stat-label">Served</div>
+            </div>
+            <div class="summary-stat">
+                <div class="stat-value" id="stat-waiting" style="color: white;">0</div>
+                <div class="stat-label">Waiting</div>
+            </div>
+            <div class="summary-stat">
+                <div class="stat-value" id="stat-skipped" style="color: #95a5a6;">0</div>
+                <div class="stat-label">Skipped / No-show</div>
+            </div>
+            <div class="summary-stat">
+                <div class="stat-value" id="stat-priority" style="color: #e74c3c;">0</div>
+                <div class="stat-label">PWD / Senior Priority</div>
+            </div>
         </div>
 
-        <div class="records-toolbar">
-            <input type="text" id="searchInput" class="form-control search-input" placeholder="Search by CCD No. or Name...">
-            <button class="btn-refresh" onclick="fetchRecords()">⟳ Refresh</button>
+        <div class="toolbar">
+            <div class="filter-group">
+                <input type="text" id="searchInput" class="filter-input" placeholder="Search any field..." style="width: 250px;">
+                <select id="filterStatus" class="filter-select">
+                    <option value="">All Statuses</option>
+                    <option value="Waiting">Waiting</option>
+                    <option value="Serving">Serving</option>
+                    <option value="Served">Served</option>
+                    <option value="Skipped">Skipped</option>
+                    <option value="No-show">No-show</option>
+                </select>
+                <input type="date" id="filterDateFrom" class="filter-input" title="From Date">
+                <span style="color: #a0aec0;">to</span>
+                <input type="date" id="filterDateTo" class="filter-input" title="To Date">
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filterPriority"> Show Priority Only
+                </label>
+            </div>
+            
+            <div class="action-group">
+                <div class="columns-dropdown">
+                    <button class="btn-small" onclick="toggleColumnsMenu()">⚙ Columns</button>
+                    <div class="columns-menu" id="columnsMenu">
+                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="0" checked> Date & Time</label>
+                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="1" checked> CCD No.</label>
+                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="2" checked> Full Name</label>
+                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="3" checked> Age</label>
+                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="4" checked> Contact</label>
+                        <label class="filter-checkbox"><input type="checkbox" class="col-toggle" value="5" checked> Status</label>
+                    </div>
+                </div>
+                
+                <button class="btn-small btn-primary-small" onclick="exportToExcel()" title="Export filtered records to Excel">📊 Export Excel</button>
+                <button class="btn-small" onclick="exportToPDF()" title="Export filtered records to PDF">📄 Export PDF</button>
+                <button class="btn-small" onclick="window.print()" title="Print table">🖨 Print</button>
+                <button class="btn-small" onclick="generateEODReport()" title="Generate End-of-Day Summary">📝 EOD Report</button>
+                
+                <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.2); margin: 0 0.5rem;"></div>
+                
+                <label class="filter-checkbox" title="Auto-refresh every 30 seconds" style="margin-right: 0.5rem;">
+                    <input type="checkbox" id="autoRefreshToggle"> Auto-refresh
+                </label>
+                <button class="btn-small" onclick="fetchRecords(true)">⟳ Refresh</button>
+                <button class="btn-small btn-danger-small" onclick="clearTodaysRecords()" title="Permanently delete today's records">🗑 Clear Today</button>
+            </div>
         </div>
 
-        <div class="table-container">
-            <table class="records-table">
+        <div class="table-container" id="print-area">
+            <h2 class="print-only" style="display: none; text-align: center; margin-bottom: 20px; color: black;">NBI Cybercrime Division - Database Records</h2>
+            <table class="records-table" id="recordsTable">
                 <thead>
                     <tr>
-                        <th>Date & Time</th>
-                        <th>CCD No.</th>
-                        <th>Full Name</th>
-                        <th>Age</th>
-                        <th>Contact</th>
-                        <th>Status</th>
+                        <th onclick="handleSort('created_at', 0)">Date & Time <span class="sort-icon" id="sort-0">▼</span></th>
+                        <th onclick="handleSort('ccd_no', 1)">CCD No. <span class="sort-icon" id="sort-1"></span></th>
+                        <th onclick="handleSort('full_name', 2)">Full Name <span class="sort-icon" id="sort-2"></span></th>
+                        <th onclick="handleSort('age', 3)">Age <span class="sort-icon" id="sort-3"></span></th>
+                        <th onclick="handleSort('contact', 4)">Contact <span class="sort-icon" id="sort-4"></span></th>
+                        <th onclick="handleSort('status', 5)">Status <span class="sort-icon" id="sort-5"></span></th>
+                        <th class="no-print" style="text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="recordsBody">
-                    <tr><td colspan="6" style="text-align: center; padding: 3rem; color: #a0aec0;">Loading records...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; padding: 3rem; color: #a0aec0;">Loading records...</td></tr>
                 </tbody>
             </table>
         </div>
+        
+        <div class="pagination">
+            <div id="recordCount">Showing 0 records</div>
+            <div class="page-controls" id="pageControls">
+                <!-- Pagination buttons generated here -->
+            </div>
+        </div>
     </div>
 
-    <script>
-        let allRecords = [];
+    <!-- View Details Modal -->
+    <div class="modal-overlay" id="modalView">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Complainant Details</div>
+                <button class="modal-close" onclick="closeModal('modalView')">&times;</button>
+            </div>
+            <div id="viewDetailsContent"></div>
+            <div class="modal-footer">
+                <button class="btn-small" onclick="closeModal('modalView')">Close</button>
+            </div>
+        </div>
+    </div>
 
-        async function fetchRecords() {
+    <!-- Edit Record Modal -->
+    <div class="modal-overlay" id="modalEdit">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Edit Record</div>
+                <button class="modal-close" onclick="closeModal('modalEdit')">&times;</button>
+            </div>
+            <form id="editForm" onsubmit="submitEdit(event)">
+                <input type="hidden" id="editId">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="editName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Age</label>
+                        <input type="number" id="editAge" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contact</label>
+                        <input type="text" id="editContact" class="form-input" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="editEmail" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gender</label>
+                        <select id="editGender" class="form-select">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Civil Status</label>
+                        <select id="editCivil" class="form-select">
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Widowed">Widowed</option>
+                            <option value="Divorced">Divorced</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Address</label>
+                        <input type="text" id="editAddress" class="form-input">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Purpose</label>
+                        <input type="text" id="editPurpose" class="form-input">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-small" onclick="closeModal('modalEdit')">Cancel</button>
+                    <button type="submit" class="btn-small btn-primary-small">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Status Override Modal -->
+    <div class="modal-overlay" id="modalStatus">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <div class="modal-title">Override Status</div>
+                <button class="modal-close" onclick="closeModal('modalStatus')">&times;</button>
+            </div>
+            <input type="hidden" id="statusId">
+            <div class="form-group">
+                <label class="form-label">Select New Status</label>
+                <select id="newStatus" class="form-select">
+                    <option value="Waiting">Waiting</option>
+                    <option value="Serving">Serving</option>
+                    <option value="Served">Served</option>
+                    <option value="Skipped">Skipped</option>
+                    <option value="No-show">No-show</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-small" onclick="closeModal('modalStatus')">Cancel</button>
+                <button class="btn-small btn-primary-small" onclick="submitStatus()">Update Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EOD Report Modal -->
+    <div class="modal-overlay" id="modalEOD">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">End-of-Day Report</div>
+                <button class="modal-close" onclick="closeModal('modalEOD')">&times;</button>
+            </div>
+            <div id="eodContent" style="color: white; line-height: 1.6; font-size: 1.1rem;"></div>
+            <div class="modal-footer">
+                <button class="btn-small" onclick="closeModal('modalEOD')">Close</button>
+                <button class="btn-small btn-primary-small" onclick="exportEODToPDF()">Export EOD PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // --- State ---
+        let allRecords = [];
+        let filteredRecords = [];
+        
+        let currentPage = 1;
+        const recordsPerPage = 20;
+        
+        let sortColumn = 'created_at';
+        let sortAsc = false;
+        
+        let autoRefreshInterval = null;
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchRecords();
+            setupEventListeners();
+        });
+
+        // --- Fetch & Process ---
+        async function fetchRecords(showToastFlag = false) {
             try {
                 const response = await fetch('/api/records');
                 const result = await response.json();
                 if (result.success) {
                     allRecords = result.data;
-                    renderTable(allRecords);
+                    updateSummaryBar();
+                    applyFiltersAndSort();
+                    if (showToastFlag) showToast('Records refreshed successfully');
                 } else {
-                    alert('Failed to fetch records.');
+                    showToast('Failed to fetch records', true);
                 }
             } catch (err) {
                 console.error(err);
-                alert('Error fetching database records.');
+                showToast('Error connecting to server', true);
             }
         }
 
-        function renderTable(records) {
+        function updateSummaryBar() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayRecords = allRecords.filter(r => r.created_at.startsWith(todayStr));
+            
+            document.getElementById('stat-registered').textContent = todayRecords.length;
+            document.getElementById('stat-served').textContent = todayRecords.filter(r => r.status === 'Served').length;
+            document.getElementById('stat-waiting').textContent = todayRecords.filter(r => r.status === 'Waiting').length;
+            document.getElementById('stat-skipped').textContent = todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length;
+            document.getElementById('stat-priority').textContent = todayRecords.filter(r => r.is_priority).length;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', applyFiltersAndSort);
+            document.getElementById('filterStatus').addEventListener('change', applyFiltersAndSort);
+            document.getElementById('filterDateFrom').addEventListener('change', applyFiltersAndSort);
+            document.getElementById('filterDateTo').addEventListener('change', applyFiltersAndSort);
+            document.getElementById('filterPriority').addEventListener('change', applyFiltersAndSort);
+            
+            document.getElementById('autoRefreshToggle').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    autoRefreshInterval = setInterval(() => fetchRecords(), 30000);
+                    showToast('Auto-refresh enabled (30s)');
+                } else {
+                    clearInterval(autoRefreshInterval);
+                    showToast('Auto-refresh disabled');
+                }
+            });
+
+            // Column toggles
+            document.querySelectorAll('.col-toggle').forEach(chk => {
+                chk.addEventListener('change', (e) => {
+                    const colIndex = parseInt(e.target.value);
+                    const table = document.getElementById('recordsTable');
+                    const ths = table.querySelectorAll('th');
+                    if (e.target.checked) {
+                        ths[colIndex].classList.remove('col-hidden');
+                        table.querySelectorAll(`tbody tr td:nth-child(${colIndex + 1})`).forEach(td => td.classList.remove('col-hidden'));
+                    } else {
+                        ths[colIndex].classList.add('col-hidden');
+                        table.querySelectorAll(`tbody tr td:nth-child(${colIndex + 1})`).forEach(td => td.classList.add('col-hidden'));
+                    }
+                });
+            });
+
+            // Close columns menu if clicked outside
+            document.addEventListener('click', (e) => {
+                const menu = document.getElementById('columnsMenu');
+                if (!e.target.closest('.columns-dropdown') && menu.classList.contains('show')) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            // Close modals on outside click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        function toggleColumnsMenu() {
+            document.getElementById('columnsMenu').classList.toggle('show');
+        }
+
+        // --- Filtering & Sorting ---
+        function applyFiltersAndSort() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('filterStatus').value;
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo = document.getElementById('filterDateTo').value;
+            const priorityOnly = document.getElementById('filterPriority').checked;
+
+            filteredRecords = allRecords.filter(r => {
+                // Search
+                const searchable = `${r.ccd_no} ${r.full_name} ${r.contact} ${r.age} ${r.status}`.toLowerCase();
+                if (term && !searchable.includes(term)) return false;
+                
+                // Status
+                if (status && r.status !== status) return false;
+                
+                // Priority
+                if (priorityOnly && !r.is_priority) return false;
+                
+                // Date
+                const rDate = r.created_at.split('T')[0];
+                if (dateFrom && rDate < dateFrom) return false;
+                if (dateTo && rDate > dateTo) return false;
+                
+                return true;
+            });
+
+            // Sorting
+            filteredRecords.sort((a, b) => {
+                let valA = a[sortColumn];
+                let valB = b[sortColumn];
+                
+                if (sortColumn === 'age') {
+                    valA = parseInt(valA) || 0;
+                    valB = parseInt(valB) || 0;
+                } else {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            currentPage = 1; // Reset to first page
+            renderTable();
+        }
+
+        function handleSort(colName, colIndex) {
+            if (sortColumn === colName) {
+                sortAsc = !sortAsc;
+            } else {
+                sortColumn = colName;
+                sortAsc = true;
+            }
+            
+            // Update icons
+            document.querySelectorAll('.sort-icon').forEach(icon => icon.textContent = '');
+            document.getElementById(`sort-${colIndex}`).textContent = sortAsc ? '▲' : '▼';
+            
+            applyFiltersAndSort();
+        }
+
+        // --- Rendering & Pagination ---
+        function renderTable() {
             const tbody = document.getElementById('recordsBody');
             tbody.innerHTML = '';
 
-            if (records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 3rem; color: #a0aec0;">No records found.</td></tr>';
+            const total = filteredRecords.length;
+            
+            if (total === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 4rem; color: #a0aec0; font-size: 1.1rem;">
+                    <div>🔍</div>
+                    No records found matching your filters.<br>
+                    <button class="btn-small" style="margin: 1rem auto 0;" onclick="clearFilters()">Clear Filters</button>
+                </td></tr>`;
+                document.getElementById('recordCount').textContent = 'Showing 0 records';
+                renderPagination(0);
                 return;
             }
 
-            records.forEach(r => {
+            const totalPages = Math.ceil(total / recordsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+            
+            const startIdx = (currentPage - 1) * recordsPerPage;
+            const endIdx = Math.min(startIdx + recordsPerPage, total);
+            const pageData = filteredRecords.slice(startIdx, endIdx);
+
+            document.getElementById('recordCount').textContent = `Showing ${startIdx + 1}–${endIdx} of ${total} records`;
+
+            pageData.forEach(r => {
                 const tr = document.createElement('tr');
+                if (r.is_priority) tr.classList.add('is-priority');
                 
                 // Format Date
                 const dateObj = new Date(r.created_at);
                 const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 
-                // Priority Badge
-                const priorityBadge = r.is_priority ? `<span class="badge priority-badge">PWD/Senior</span>` : '';
+                const priorityBadge = r.is_priority ? `<span class="badge priority-badge" style="margin-left: 0.5rem; font-size: 0.7rem; padding: 0.2rem 0.5rem;">PWD/Senior</span>` : '';
 
                 // Status Badge class
                 let statusClass = 'status-waiting';
                 if (r.status === 'Serving') statusClass = 'status-serving';
                 if (r.status === 'Served') statusClass = 'status-served';
                 if (r.status === 'Skipped') statusClass = 'status-skipped';
+                if (r.status === 'No-show') statusClass = 'status-noshow';
+
+                // Check hidden columns
+                const cols = document.querySelectorAll('.col-toggle');
+                const h = (idx) => cols[idx].checked ? '' : 'class="col-hidden"';
 
                 tr.innerHTML = `
-                    <td style="color: #a0aec0;">${dateStr}</td>
-                    <td style="font-family: monospace; font-weight: 600; color: var(--secondary-color);">${r.ccd_no}</td>
-                    <td style="font-weight: bold;">${r.full_name} ${priorityBadge}</td>
-                    <td>${r.age}</td>
-                    <td style="color: #a0aec0;">${r.contact}</td>
-                    <td><span class="status-badge ${statusClass}">${r.status}</span></td>
+                    <td ${h(0)} style="color: #a0aec0;">${dateStr}</td>
+                    <td ${h(1)} style="font-family: monospace; font-weight: 600; color: var(--secondary-color);">${r.ccd_no}</td>
+                    <td ${h(2)} style="font-weight: bold;">${r.full_name} ${priorityBadge}</td>
+                    <td ${h(3)}>${r.age}</td>
+                    <td ${h(4)} style="color: #a0aec0;">${r.contact}</td>
+                    <td ${h(5)}><span class="status-badge ${statusClass}">${r.status}</span></td>
+                    <td class="no-print" style="text-align: center;">
+                        <div class="row-actions">
+                            <button class="row-action-btn" title="View Details" onclick="openViewModal('${r.id}')">👁</button>
+                            <button class="row-action-btn" title="Edit Record" onclick="openEditModal('${r.id}')">✏️</button>
+                            <button class="row-action-btn" title="Override Status" onclick="openStatusModal('${r.id}')">🔄</button>
+                            <button class="row-action-btn" title="Delete Record" style="color: #e74c3c;" onclick="deleteRecord('${r.id}')">🗑</button>
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
+            
+            renderPagination(totalPages);
         }
 
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = allRecords.filter(r => 
-                r.full_name.toLowerCase().includes(term) || 
-                r.ccd_no.toLowerCase().includes(term)
-            );
-            renderTable(filtered);
-        });
+        function renderPagination(totalPages) {
+            const container = document.getElementById('pageControls');
+            container.innerHTML = '';
+            
+            if (totalPages <= 1) return;
 
-        // Initial fetch
-        fetchRecords();
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'page-btn';
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { currentPage--; renderTable(); };
+            container.appendChild(prevBtn);
+
+            // Simple pagination: show all if < 7, else show ends + current
+            for (let i = 1; i <= totalPages; i++) {
+                if (totalPages > 7) {
+                    if (i !== 1 && i !== totalPages && (i < currentPage - 1 || i > currentPage + 1)) {
+                        if (i === 2 || i === totalPages - 1) {
+                            const span = document.createElement('span');
+                            span.textContent = '...';
+                            span.style.padding = '0.4rem';
+                            container.appendChild(span);
+                        }
+                        continue;
+                    }
+                }
+                
+                const btn = document.createElement('button');
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.onclick = () => { currentPage = i; renderTable(); };
+                container.appendChild(btn);
+            }
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'page-btn';
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => { currentPage++; renderTable(); };
+            container.appendChild(nextBtn);
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterDateFrom').value = '';
+            document.getElementById('filterDateTo').value = '';
+            document.getElementById('filterPriority').checked = false;
+            applyFiltersAndSort();
+        }
+
+        // --- Row Actions & Modals ---
+        function getRecord(id) {
+            return allRecords.find(r => r.id === id);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function openViewModal(id) {
+            const r = getRecord(id);
+            if (!r) return;
+            const container = document.getElementById('viewDetailsContent');
+            
+            const fields = [
+                { label: 'Date/Time', val: new Date(r.created_at).toLocaleString() },
+                { label: 'CCD No.', val: r.ccd_no },
+                { label: 'Full Name', val: r.full_name },
+                { label: 'Priority / PWD', val: r.is_priority ? 'Yes' : 'No' },
+                { label: 'Age', val: r.age },
+                { label: 'Gender', val: r.gender },
+                { label: 'Civil Status', val: r.civil_status },
+                { label: 'Contact No.', val: r.contact },
+                { label: 'Email', val: r.email || 'N/A' },
+                { label: 'Address', val: r.address || 'N/A' },
+                { label: 'Purpose', val: r.purpose || 'N/A' },
+                { label: 'Referred By', val: r.referred_by || 'N/A' },
+                { label: 'Current Status', val: r.status }
+            ];
+
+            container.innerHTML = fields.map(f => `
+                <div class="detail-row">
+                    <div class="detail-label">${f.label}</div>
+                    <div class="detail-value">${f.val}</div>
+                </div>
+            `).join('');
+            
+            openModal('modalView');
+        }
+
+        function openEditModal(id) {
+            const r = getRecord(id);
+            if (!r) return;
+            document.getElementById('editId').value = r.id;
+            document.getElementById('editName').value = r.full_name;
+            document.getElementById('editAge').value = r.age;
+            document.getElementById('editContact').value = r.contact;
+            document.getElementById('editEmail').value = r.email || '';
+            document.getElementById('editGender').value = r.gender;
+            document.getElementById('editCivil').value = r.civil_status;
+            document.getElementById('editAddress').value = r.address || '';
+            document.getElementById('editPurpose').value = r.purpose || '';
+            openModal('modalEdit');
+        }
+
+        async function submitEdit(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const updates = {
+                full_name: document.getElementById('editName').value,
+                age: parseInt(document.getElementById('editAge').value, 10),
+                contact: document.getElementById('editContact').value,
+                email: document.getElementById('editEmail').value,
+                gender: document.getElementById('editGender').value,
+                civil_status: document.getElementById('editCivil').value,
+                address: document.getElementById('editAddress').value,
+                purpose: document.getElementById('editPurpose').value
+            };
+
+            try {
+                const res = await fetch(`/api/records/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Record updated successfully');
+                    closeModal('modalEdit');
+                    fetchRecords(); // Refresh data
+                } else throw new Error(data.error);
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        function openStatusModal(id) {
+            const r = getRecord(id);
+            if (!r) return;
+            document.getElementById('statusId').value = r.id;
+            document.getElementById('newStatus').value = r.status;
+            openModal('modalStatus');
+        }
+
+        async function submitStatus() {
+            const id = document.getElementById('statusId').value;
+            const status = document.getElementById('newStatus').value;
+            try {
+                const res = await fetch(`/api/records/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Status updated successfully');
+                    closeModal('modalStatus');
+                    fetchRecords();
+                } else throw new Error(data.error);
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function deleteRecord(id) {
+            if (!confirm('Are you sure you want to completely delete this record? This cannot be undone.')) return;
+            try {
+                const res = await fetch(`/api/records/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Record deleted');
+                    fetchRecords();
+                } else throw new Error(data.error);
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function clearTodaysRecords() {
+            if (!confirm('WARNING: You are about to permanently delete ALL records generated today. Are you absolutely sure?')) return;
+            const doubleCheck = prompt('Type "DELETE" to confirm clearing today\'s records:');
+            if (doubleCheck !== 'DELETE') {
+                showToast('Action cancelled', true);
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/records/today`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Today\'s records cleared successfully');
+                    fetchRecords();
+                } else throw new Error(data.error);
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        // --- Export Functions ---
+        function exportToExcel() {
+            if (filteredRecords.length === 0) {
+                showToast('No records to export', true);
+                return;
+            }
+            // Prepare clean data array
+            const data = filteredRecords.map(r => ({
+                'Date & Time': new Date(r.created_at).toLocaleString(),
+                'CCD No.': r.ccd_no,
+                'Full Name': r.full_name,
+                'Priority': r.is_priority ? 'Yes' : 'No',
+                'Age': r.age,
+                'Gender': r.gender,
+                'Contact': r.contact,
+                'Status': r.status,
+                'Address': r.address || '',
+                'Purpose': r.purpose || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Records");
+            XLSX.writeFile(wb, `NBI_QMS_Records_${new Date().toISOString().split('T')[0]}.xlsx`);
+            showToast('Excel file exported');
+        }
+
+        function exportToPDF() {
+            if (filteredRecords.length === 0) {
+                showToast('No records to export', true);
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            doc.setFontSize(16);
+            doc.text("NBI Cybercrime Division - Registration Records", 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+
+            const tableData = filteredRecords.map(r => [
+                new Date(r.created_at).toLocaleString(),
+                r.ccd_no,
+                r.full_name + (r.is_priority ? ' (Priority)' : ''),
+                r.age,
+                r.contact,
+                r.status
+            ]);
+
+            doc.autoTable({
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Contact', 'Status']],
+                body: tableData,
+                startY: 25,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [11, 29, 58] }
+            });
+
+            doc.save(`NBI_QMS_Records_${new Date().toISOString().split('T')[0]}.pdf`);
+            showToast('PDF file exported');
+        }
+
+        function generateEODReport() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayRecords = allRecords.filter(r => r.created_at.startsWith(todayStr));
+            
+            if(todayRecords.length === 0) {
+                showToast("No records found for today to generate report.", true);
+                return;
+            }
+
+            const total = todayRecords.length;
+            const served = todayRecords.filter(r => r.status === 'Served').length;
+            const skipped = todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length;
+            const priority = todayRecords.filter(r => r.is_priority).length;
+            
+            const html = `
+                <h3>Daily Summary: ${new Date().toLocaleDateString()}</h3>
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 1rem 0;">
+                <p><strong>Total Registered:</strong> ${total}</p>
+                <p><strong>Total Served:</strong> <span style="color: var(--success-color);">${served}</span></p>
+                <p><strong>Total Skipped/No-show:</strong> <span style="color: #95a5a6;">${skipped}</span></p>
+                <p><strong>Priority (PWD/Senior) Complainants:</strong> <span style="color: #e74c3c;">${priority}</span></p>
+                <p><strong>Completion Rate:</strong> ${Math.round((served / total) * 100)}%</p>
+            `;
+            
+            document.getElementById('eodContent').innerHTML = html;
+            openModal('modalEOD');
+        }
+
+        function exportEODToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(20);
+            doc.text("NBI Cybercrime Division", 20, 20);
+            doc.setFontSize(14);
+            doc.text("End-of-Day Summary Report", 20, 30);
+            doc.setFontSize(11);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 40);
+            
+            const total = document.getElementById('stat-registered').textContent;
+            const served = document.getElementById('stat-served').textContent;
+            const skipped = document.getElementById('stat-skipped').textContent;
+            const priority = document.getElementById('stat-priority').textContent;
+
+            doc.text(`Total Registered: ${total}`, 20, 60);
+            doc.text(`Total Served: ${served}`, 20, 70);
+            doc.text(`Total Skipped / No-show: ${skipped}`, 20, 80);
+            doc.text(`Priority Complainants: ${priority}`, 20, 90);
+            
+            doc.save(`NBI_QMS_EOD_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+            showToast('EOD Report PDF exported');
+            closeModal('modalEOD');
+        }
+
+        // --- Utils ---
+        function showToast(msg, isError = false) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'error' : ''}`;
+            toast.innerHTML = `${isError ? '⚠️' : '✅'} ${msg}`;
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
     </script>
 </body>
 </html>
