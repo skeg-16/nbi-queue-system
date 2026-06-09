@@ -1,20 +1,28 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
-const fs = require('fs');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const DATA_FILE = path.join(__dirname, 'data.json');
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
 
-// Application State
+if (!supabaseUrl || !supabaseKey) {
+    console.error("FATAL ERROR: SUPABASE_URL and SUPABASE_KEY must be set in .env");
+    process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Application State (in-memory caching for speed)
 let state = {
     dateStr: getTodayDateStr(),
     dailyCounter: 0,
-    registrations: [],
     currentlyServing: null,
     recentServed: [],
     regularConsecutiveCount: 0
@@ -25,72 +33,94 @@ function getTodayDateStr() {
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 }
 
-// Load state from file if it exists
-function loadState() {
+// Initialize server state from Supabase
+async function initServer() {
     try {
-        if (fs.existsSync(DATA_FILE)) {
-            const data = fs.readFileSync(DATA_FILE, 'utf8');
-            const savedState = JSON.parse(data);
-            
-            // Check if day changed to reset counter
-            const todayStr = getTodayDateStr();
-            if (savedState.dateStr !== todayStr) {
-                state.dateStr = todayStr;
-                state.dailyCounter = 0;
-                // Keep history or clear? Let's keep today's only for queue, or just keep all but we only queue "Waiting" ones
-            } else {
-                state.dateStr = savedState.dateStr;
-                state.dailyCounter = savedState.dailyCounter || 0;
-            }
-            
-            state.registrations = savedState.registrations || [];
-            state.currentlyServing = savedState.currentlyServing || null;
-            state.recentServed = savedState.recentServed || [];
-            state.regularConsecutiveCount = savedState.regularConsecutiveCount || 0;
-            
-            console.log('Loaded state from data.json');
+        const todayStr = getTodayDateStr();
+        const { data, error } = await supabase
+            .from('registrations')
+            .select('ccd_no')
+            .like('ccd_no', `CCD-${todayStr}-%`)
+            .order('created_at', { ascending: false })
+            .limit(1);
+        
+        if (data && data.length > 0) {
+            const lastCcd = data[0].ccd_no; 
+            const parts = lastCcd.split('-');
+            const num = parseInt(parts[parts.length - 1], 10);
+            state.dailyCounter = isNaN(num) ? 0 : num;
         }
+        
+        const { data: servedData } = await supabase
+            .from('registrations')
+            .select('*')
+            .eq('status', 'Served')
+            .order('created_at', { ascending: false })
+            .limit(4);
+        
+        if (servedData) {
+            state.recentServed = servedData.map(r => ({
+                ccdNo: r.ccd_no,
+                isPriority: r.is_priority
+            }));
+        }
+        
+        const { data: servingData } = await supabase
+            .from('registrations')
+            .select('*')
+            .eq('status', 'Serving')
+            .limit(1);
+        
+        if (servingData && servingData.length > 0) {
+            const r = servingData[0];
+            state.currentlyServing = {
+                id: r.id,
+                ccdNo: r.ccd_no,
+                fullName: r.full_name,
+                isPriority: r.is_priority,
+                status: r.status
+            };
+        }
+        console.log(`Server initialized. Daily Counter: ${state.dailyCounter}`);
     } catch (err) {
-        console.error('Error loading state:', err);
+        console.error("Failed to initialize server from Supabase:", err);
     }
 }
-
-// Save state to file
-function saveState() {
-    try {
-        fs.writeFileSync(DATA_FILE, JSON.stringify(state, null, 2));
-    } catch (err) {
-        console.error('Error saving state:', err);
-    }
-}
-
-// Initialize state on startup
-loadState();
+initServer();
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json()); // to parse JSON bodies if needed
+app.use(express.json());
 
 app.get('/display', (req, res) => res.sendFile(path.join(__dirname, 'public', 'display.html')));
 app.get('/staff', (req, res) => res.sendFile(path.join(__dirname, 'public', 'staff.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
-app.get('/', (req, res) => res.redirect('/register')); // Default to register for users
+app.get('/', (req, res) => res.redirect('/register'));
 
-// Keep-alive endpoint to prevent Render from sleeping
 app.get('/ping', (req, res) => res.status(200).send('pong'));
 
-// Helper to broadcast full state to staff
-function broadcastStaffUpdate() {
-    const waitingList = state.registrations.filter(r => r.status === 'Waiting');
+async function broadcastStaffUpdate() {
+    const { data: waitingList } = await supabase
+        .from('registrations')
+        .select('*')
+        .eq('status', 'Waiting')
+        .order('created_at', { ascending: true });
+        
+    const formattedList = (waitingList || []).map(r => ({
+        id: r.id,
+        ccdNo: r.ccd_no,
+        fullName: r.full_name,
+        isPriority: r.is_priority
+    }));
+
     io.emit('staff_update', {
         currentlyServing: state.currentlyServing,
-        waitingList: waitingList,
+        waitingList: formattedList,
         recentServed: state.recentServed,
         regularConsecutiveCount: state.regularConsecutiveCount
     });
 }
 
-// Helper to broadcast display update
 function broadcastDisplayUpdate(triggerChime = false, skipMessage = null) {
     const data = {
         currentlyServing: state.currentlyServing ? state.currentlyServing.ccdNo : '---',
@@ -102,28 +132,15 @@ function broadcastDisplayUpdate(triggerChime = false, skipMessage = null) {
     io.emit('display_update', data);
 }
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     console.log('A user connected:', socket.id);
 
-    // Initial load for clients
-    socket.emit('staff_update', {
-        currentlyServing: state.currentlyServing,
-        waitingList: state.registrations.filter(r => r.status === 'Waiting'),
-        recentServed: state.recentServed,
-        regularConsecutiveCount: state.regularConsecutiveCount
-    });
-    
-    socket.emit('display_update', {
-        currentlyServing: state.currentlyServing ? state.currentlyServing.ccdNo : '---',
-        isPriority: state.currentlyServing ? state.currentlyServing.isPriority : false,
-        recentNumbers: state.recentServed.map(r => r.ccdNo),
-        triggerChime: false,
-        skipMessage: null
-    });
+    // Initial load for connecting client
+    await broadcastStaffUpdate();
+    broadcastDisplayUpdate(false);
 
     // Handle New Registration
-    socket.on('submit_registration', (formData, callback) => {
-        // Double check date
+    socket.on('submit_registration', async (formData, callback) => {
         const todayStr = getTodayDateStr();
         if (state.dateStr !== todayStr) {
             state.dateStr = todayStr;
@@ -132,41 +149,51 @@ io.on('connection', (socket) => {
 
         state.dailyCounter++;
         const ccdNo = `CCD-${todayStr}-${String(state.dailyCounter).padStart(4, '0')}`;
+        const isPriority = formData.isPriority === true || formData.isPriority === 'true';
         
-        const newReg = {
-            ccdNo: ccdNo,
-            fullName: formData.fullName,
-            contact: formData.contact,
-            age: formData.age,
-            email: formData.email,
-            civilStatus: formData.civilStatus,
-            gender: formData.gender,
-            isPriority: formData.isPriority === true || formData.isPriority === 'true',
-            status: 'Waiting',
-            timestamp: Date.now()
-        };
+        const { data, error } = await supabase
+            .from('registrations')
+            .insert([
+                {
+                    ccd_no: ccdNo,
+                    full_name: formData.fullName,
+                    contact: formData.contact,
+                    age: parseInt(formData.age, 10),
+                    email: formData.email || null,
+                    civil_status: formData.civilStatus,
+                    gender: formData.gender,
+                    is_priority: isPriority,
+                    status: 'Waiting'
+                }
+            ])
+            .select();
 
-        state.registrations.push(newReg);
-        saveState();
+        const { count } = await supabase
+            .from('registrations')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'Waiting');
 
-        // Calculate queue position
-        const waitingList = state.registrations.filter(r => r.status === 'Waiting');
-        const position = waitingList.length;
+        const position = Math.max(0, (count || 1) - 1);
 
-        // Callback to the registering client
         if (callback) {
-            callback({ success: true, ccdNo: ccdNo, position: position });
+            if (error) {
+                console.error("Insert Error:", error);
+                callback({ success: false });
+            } else {
+                callback({ success: true, ccdNo: ccdNo, position: position });
+            }
         }
-
-        // Broadcast to staff dashboard
-        broadcastStaffUpdate();
+        await broadcastStaffUpdate();
     });
 
     // Handle "Next" logic with 2:1 algorithm
-    socket.on('next', () => {
+    socket.on('next', async () => {
         if (state.currentlyServing) {
-            // Mark previous as served
-            state.currentlyServing.status = 'Served';
+            await supabase
+                .from('registrations')
+                .update({ status: 'Served' })
+                .eq('id', state.currentlyServing.id);
+                
             state.recentServed.unshift({
                 ccdNo: state.currentlyServing.ccdNo,
                 isPriority: state.currentlyServing.isPriority
@@ -174,69 +201,84 @@ io.on('connection', (socket) => {
             if (state.recentServed.length > 4) state.recentServed.pop();
         }
 
-        const waiting = state.registrations.filter(r => r.status === 'Waiting');
-        if (waiting.length === 0) {
+        const { data: waiting } = await supabase
+            .from('registrations')
+            .select('*')
+            .eq('status', 'Waiting')
+            .order('created_at', { ascending: true });
+
+        if (!waiting || waiting.length === 0) {
             state.currentlyServing = null;
-            saveState();
-            broadcastStaffUpdate();
+            await broadcastStaffUpdate();
             broadcastDisplayUpdate(false);
             return;
         }
 
-        const regularsWaiting = waiting.filter(r => !r.isPriority);
-        const prioritiesWaiting = waiting.filter(r => r.isPriority);
+        const regularsWaiting = waiting.filter(r => !r.is_priority);
+        const prioritiesWaiting = waiting.filter(r => r.is_priority);
 
         let nextPerson = null;
 
-        // The 2:1 Rule Logic
         if (state.regularConsecutiveCount >= 2 && prioritiesWaiting.length > 0) {
-            // Time for a priority
             nextPerson = prioritiesWaiting[0];
             state.regularConsecutiveCount = 0;
         } else if (regularsWaiting.length > 0) {
-            // Normal flow, pull regular
             nextPerson = regularsWaiting[0];
             state.regularConsecutiveCount++;
         } else if (prioritiesWaiting.length > 0) {
-            // No regulars waiting, but priorities exist
             nextPerson = prioritiesWaiting[0];
             state.regularConsecutiveCount = 0;
         }
 
         if (nextPerson) {
-            nextPerson.status = 'Serving';
-            state.currentlyServing = nextPerson;
-            console.log(`Now serving: ${nextPerson.ccdNo}`);
+            await supabase
+                .from('registrations')
+                .update({ status: 'Serving' })
+                .eq('id', nextPerson.id);
+                
+            state.currentlyServing = {
+                id: nextPerson.id,
+                ccdNo: nextPerson.ccd_no,
+                fullName: nextPerson.full_name,
+                isPriority: nextPerson.is_priority,
+                status: 'Serving'
+            };
+            console.log(`Now serving: ${nextPerson.ccd_no}`);
         } else {
             state.currentlyServing = null;
         }
 
-        saveState();
-        broadcastStaffUpdate();
-        broadcastDisplayUpdate(true); // true to play chime
+        await broadcastStaffUpdate();
+        broadcastDisplayUpdate(true);
     });
 
-    socket.on('skip', () => {
+    socket.on('skip', async () => {
         if (state.currentlyServing) {
             const skippedCcd = state.currentlyServing.ccdNo;
-            state.currentlyServing.status = 'Skipped';
+            await supabase
+                .from('registrations')
+                .update({ status: 'Skipped' })
+                .eq('id', state.currentlyServing.id);
+                
             state.currentlyServing = null;
             
-            // Immediately pull next
-            const waiting = state.registrations.filter(r => r.status === 'Waiting');
-            if (waiting.length === 0) {
-                saveState();
-                broadcastStaffUpdate();
+            const { data: waiting } = await supabase
+                .from('registrations')
+                .select('*')
+                .eq('status', 'Waiting')
+                .order('created_at', { ascending: true });
+
+            if (!waiting || waiting.length === 0) {
+                await broadcastStaffUpdate();
                 broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Queue Empty`);
                 return;
             }
 
-            const regularsWaiting = waiting.filter(r => !r.isPriority);
-            const prioritiesWaiting = waiting.filter(r => r.isPriority);
+            const regularsWaiting = waiting.filter(r => !r.is_priority);
+            const prioritiesWaiting = waiting.filter(r => r.is_priority);
 
             let nextPerson = null;
 
-            // Apply same 2:1 rule for skip
             if (state.regularConsecutiveCount >= 2 && prioritiesWaiting.length > 0) {
                 nextPerson = prioritiesWaiting[0];
                 state.regularConsecutiveCount = 0;
@@ -249,34 +291,44 @@ io.on('connection', (socket) => {
             }
 
             if (nextPerson) {
-                nextPerson.status = 'Serving';
-                state.currentlyServing = nextPerson;
-                console.log(`Skipped to: ${nextPerson.ccdNo}`);
+                await supabase
+                    .from('registrations')
+                    .update({ status: 'Serving' })
+                    .eq('id', nextPerson.id);
+                    
+                state.currentlyServing = {
+                    id: nextPerson.id,
+                    ccdNo: nextPerson.ccd_no,
+                    fullName: nextPerson.full_name,
+                    isPriority: nextPerson.is_priority,
+                    status: 'Serving'
+                };
+                console.log(`Skipped to: ${nextPerson.ccd_no}`);
             }
             
-            saveState();
-            broadcastStaffUpdate();
+            await broadcastStaffUpdate();
             broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Now Serving ${state.currentlyServing ? state.currentlyServing.ccdNo : ''}`);
         }
     });
 
     socket.on('recall', () => {
         if (state.currentlyServing) {
-            broadcastDisplayUpdate(true); // trigger chime again
+            broadcastDisplayUpdate(true);
         }
     });
 
-    socket.on('reset', () => {
-        // Mark all as skipped or just clear? We should keep data for reporting, just clear active queue?
-        // Let's clear the queue for simplicity in this prototype.
-        state.registrations = [];
+    socket.on('reset', async () => {
+        await supabase
+            .from('registrations')
+            .update({ status: 'Skipped' })
+            .in('status', ['Waiting', 'Serving']);
+            
         state.currentlyServing = null;
         state.recentServed = [];
         state.regularConsecutiveCount = 0;
         state.dailyCounter = 0;
-        saveState();
         
-        broadcastStaffUpdate();
+        await broadcastStaffUpdate();
         broadcastDisplayUpdate(false);
     });
 
