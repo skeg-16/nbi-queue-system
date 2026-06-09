@@ -234,6 +234,8 @@ body {
     display: flex;
     gap: 1.5rem;
     justify-content: center;
+    list-style: none;
+    align-items: center;
 }
 
 .recent-item {
@@ -241,9 +243,13 @@ body {
     font-weight: 600;
     color: rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0.05);
-    padding: 0.5rem 1.5rem;
+    padding: 0.8rem 1.5rem;
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.05);
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* --------------------
