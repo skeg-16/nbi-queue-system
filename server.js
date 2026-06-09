@@ -135,6 +135,7 @@ app.get('/api/records', async (req, res) => {
             
         if (error) throw error;
         
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         res.json({ success: true, data: data });
     } catch (err) {
         console.error("Error fetching records:", err);
@@ -237,39 +238,6 @@ app.put('/api/records/:id/status', async (req, res) => {
     }
 });
 
-app.delete('/api/records/today', async (req, res) => {
-    try {
-        const todayStr = getTodayDateStr();
-        const { error } = await supabase.from('registrations').delete().like('ccd_no', `%${todayStr}%`);
-        if (error) throw error;
-        
-        state.currentlyServing = null;
-        state.recentServed = [];
-        state.priorityServedCount = 0;
-        state.dailyCounter = 0;
-        
-        auditLog('Clear Today', `Cleared all records for ${todayStr}`);
-        res.json({ success: true });
-        
-        await broadcastStaffUpdate();
-        broadcastDisplayUpdate(false);
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-app.delete('/api/records/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { error } = await supabase.from('registrations').delete().eq('id', id);
-        if (error) throw error;
-        auditLog('Delete Record', `Deleted record ID ${id}`);
-        res.json({ success: true });
-        broadcastStaffUpdate();
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
 
 async function broadcastStaffUpdate() {
     const todayStr = getTodayDateStr();

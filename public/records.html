@@ -870,7 +870,7 @@
         // --- Data Fetching (Cache) ---
         async function fetchRecords(silent = false) {
             try {
-                const response = await fetch('/api/records');
+                const response = await fetch(`/api/records?t=${Date.now()}`);
                 if (!response.ok) throw new Error("Network response was not ok");
                 const result = await response.json();
                 if (result.success) {
