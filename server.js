@@ -208,16 +208,23 @@ app.delete('/api/records/:id', async (req, res) => {
 });
 
 async function broadcastStaffUpdate() {
-    const { data: waitingList } = await supabase
+    const { data: allRegistrations } = await supabase
         .from('registrations')
-        .select('*')
-        .eq('status', 'Waiting')
-        .order('created_at', { ascending: true });
+        .select('status, is_priority, id, ccd_no, full_name, created_at');
         
-    const sortedList = (waitingList || []).sort((a, b) => {
+    const waitingList = (allRegistrations || []).filter(r => r.status === 'Waiting');
+    const stats = {
+        total: allRegistrations ? allRegistrations.length : 0,
+        waiting: waitingList.length,
+        served: (allRegistrations || []).filter(r => r.status === 'Served').length,
+        skipped: (allRegistrations || []).filter(r => r.status === 'Skipped').length
+    };
+
+    const sortedList = waitingList.sort((a, b) => {
         if (a.is_priority && !b.is_priority) return -1;
         if (!a.is_priority && b.is_priority) return 1;
-        return 0;
+        // fallback to created_at
+        return new Date(a.created_at) - new Date(b.created_at);
     });
         
     const formattedList = sortedList.map(r => ({
@@ -231,7 +238,7 @@ async function broadcastStaffUpdate() {
         currentlyServing: state.currentlyServing,
         waitingList: formattedList,
         recentServed: state.recentServed,
-        regularConsecutiveCount: state.regularConsecutiveCount
+        stats: stats
     });
 }
 

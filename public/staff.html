@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queue Controller</title>
+    <title>Staff Controller | NBI QMS</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
         .staff-body {
@@ -12,11 +12,13 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
         }
 
         .staff-nav {
             display: flex;
             justify-content: center;
+            align-items: center;
             background: rgba(5, 14, 29, 0.95);
             border-bottom: 1px solid var(--border-color);
             padding: 1rem 0;
@@ -25,20 +27,51 @@
             z-index: 50;
             backdrop-filter: blur(10px);
         }
+        
+        .nav-links-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-grow: 1;
+        }
+
+        .connection-indicator-wrapper {
+            position: absolute;
+            right: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #a0aec0;
+            font-weight: 600;
+        }
+
+        .connection-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            box-shadow: 0 0 8px #e74c3c;
+            transition: all 0.3s ease;
+        }
+
+        .connection-dot.connected {
+            background-color: #2ecc71;
+            box-shadow: 0 0 8px #2ecc71;
+        }
 
         .staff-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 4rem 2rem 3rem;
+            padding: 2rem 2rem 3rem;
         }
 
         .staff-header {
             text-align: center;
             margin-bottom: 2rem;
-            margin-top: 1.5rem;
         }
 
-        .staff-title { font-size: 2.5rem; color: var(--secondary-color); font-weight: 800; letter-spacing: 2px; text-transform: uppercase;}
+        .staff-title { font-size: 2.2rem; color: #f39c12; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;}
 
         .dashboard-layout {
             display: grid;
@@ -50,7 +83,7 @@
         .left-column {
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 1.5rem;
         }
 
         .right-column {
@@ -61,146 +94,263 @@
 
         .dashboard-card {
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 20px;
-            padding: 2.5rem;
+            padding: 2rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             backdrop-filter: blur(15px);
             width: 100%;
         }
 
-        /* Top: Serving Section */
+        /* Serving Section */
         .serving-card {
             text-align: center;
-            background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(0,0,0,0.3));
+            background: linear-gradient(145deg, rgba(243, 156, 18, 0.05), rgba(0,0,0,0.3));
+            border-color: rgba(243, 156, 18, 0.2);
         }
         .card-label {
-            font-size: 1.2rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 1.5rem;
+            font-size: 1.1rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 1rem;
         }
         .status-display {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1rem;
+            gap: 0.5rem;
         }
         .status-number {
-            font-size: 6.5rem; font-weight: 800; color: var(--secondary-color);
-            text-shadow: 0 0 40px rgba(241, 196, 15, 0.3); line-height: 1; margin-bottom: 0.5rem;
+            font-size: 5.5rem; font-weight: 800; color: #f39c12;
+            text-shadow: 0 0 40px rgba(243, 156, 18, 0.3); line-height: 1; margin-bottom: 0.5rem;
         }
-        .status-name { font-size: 2.8rem; font-weight: 600; color: white; margin-bottom: 0.5rem;}
+        .status-name { font-size: 2.2rem; font-weight: 600; color: white;}
 
         .priority-badge {
-            display: inline-block; background: var(--danger-color); color: white;
-            padding: 0.5rem 1.5rem; border-radius: 50px; font-weight: 800; font-size: 1.1rem;
+            display: inline-block; background: #f39c12; color: #0b1d3a;
+            padding: 0.4rem 1.2rem; border-radius: 50px; font-weight: 800; font-size: 1rem;
             text-transform: uppercase; letter-spacing: 2px;
-            box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
+            margin-bottom: 1rem;
         }
 
-        /* Middle: Controls Section */
-        .controls-card {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            padding: 3rem;
-        }
+        /* Controls Section */
         .btn {
-            border-radius: 15px; cursor: pointer; transition: all 0.3s ease;
-            display: flex; align-items: center; justify-content: center;
-            color: white; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; border: none;
+            user-select: none;
         }
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        .btn:disabled {
+            opacity: 0.7; cursor: not-allowed;
+        }
+
         .btn-next {
-            background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.1));
-            border: 1px solid rgba(46, 204, 113, 0.5);
-            padding: 2.5rem;
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+            color: #0b1d3a;
+            padding: 2rem;
             width: 100%;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.5rem;
+            box-shadow: 0 8px 25px rgba(243, 156, 18, 0.3);
+            min-height: 120px;
         }
-        .btn-next:hover {
-            background: linear-gradient(135deg, rgba(46, 204, 113, 0.4), rgba(39, 174, 96, 0.2));
-            box-shadow: 0 10px 40px rgba(46, 204, 113, 0.4);
-            transform: translateY(-3px);
+        .btn-next:hover:not(:disabled) {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            box-shadow: 0 12px 35px rgba(243, 156, 18, 0.5);
+            transform: translateY(-2px);
         }
-        .btn-next .btn-icon { font-size: 3.5rem; color: var(--success-color); margin-bottom: 0; }
-        .btn-next .btn-text { font-size: 2.5rem; font-weight: 800; color: var(--success-color); }
-        .btn-next .btn-subtext { font-size: 1.1rem; color: #a0aec0; margin-top: 0; }
+        .btn-next .btn-icon { font-size: 3rem; margin-bottom: 0; line-height: 1; }
+        .btn-next .btn-text { font-size: 2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;}
+        .btn-next .btn-subtext { font-size: 1rem; font-weight: 600; opacity: 0.8; }
         
-        .secondary-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; width: 100%; }
-        .secondary-controls .btn { padding: 1.5rem; flex-direction: row; gap: 1rem; background: rgba(255,255,255,0.05); }
+        .secondary-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; }
         
-        .btn-recall { border: 1px solid rgba(155, 89, 182, 0.4); }
-        .btn-recall .btn-icon, .btn-recall .btn-text { color: var(--recall-color); }
-        .btn-recall:hover { background: rgba(155, 89, 182, 0.2); box-shadow: 0 5px 20px rgba(155, 89, 182, 0.3); transform: translateY(-2px); }
-        
-        .btn-skip { border: 1px solid rgba(149, 165, 166, 0.4); }
-        .btn-skip .btn-icon, .btn-skip .btn-text { color: var(--skip-color); }
-        .btn-skip:hover { background: rgba(149, 165, 166, 0.2); box-shadow: 0 5px 20px rgba(149, 165, 166, 0.3); transform: translateY(-2px); }
-        
-        .btn-reset { border: 1px solid rgba(231, 76, 60, 0.4); }
-        .btn-reset .btn-icon, .btn-reset .btn-text { color: var(--danger-color); }
-        .btn-reset:hover { background: rgba(231, 76, 60, 0.2); box-shadow: 0 5px 20px rgba(231, 76, 60, 0.3); transform: translateY(-2px); }
-        
-        .btn .btn-text { font-size: 1.4rem; font-weight: 600; }
-        .btn .btn-icon { font-size: 1.8rem; margin-bottom: 0; }
+        .btn-secondary {
+            padding: 1.2rem; flex-direction: row; gap: 0.8rem;
+            font-size: 1.2rem; font-weight: 700; color: white;
+            min-height: 60px;
+        }
 
-        /* Bottom: Waiting List */
-        .waiting-card { padding: 2rem 3rem; height: 100%; display: flex; flex-direction: column; }
-        .waiting-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);
-            font-size: 1.3rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1.5rem;
+        .btn-skip { 
+            background: rgba(149, 165, 166, 0.2); border: 1px solid rgba(149, 165, 166, 0.4); 
         }
-        .waiting-count-badge { background: rgba(255,255,255,0.1); padding: 0.4rem 1.2rem; border-radius: 50px; color: white; font-weight: bold; }
+        .btn-skip:hover:not(:disabled) { background: rgba(149, 165, 166, 0.3); }
+
+        .btn-reset { 
+            background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.4); 
+            color: #e74c3c;
+        }
+        .btn-reset:hover:not(:disabled) { background: rgba(231, 76, 60, 0.3); }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            width: 100%;
+        }
+        .stat-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        #stat-waiting { color: #f39c12; }
+        #stat-served { color: #2ecc71; }
+        #stat-skipped { color: #e74c3c; }
+
+        /* Waiting List */
+        .waiting-card { padding: 2rem; height: 100%; display: flex; flex-direction: column; }
         
-        .waiting-list { list-style: none; padding: 0; margin: 0; max-height: 700px; overflow-y: auto; padding-right: 1rem; flex-grow: 1; }
+        .waiting-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 0.8rem; }
         .waiting-item {
             background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
-            padding: 1.2rem 2rem; border-radius: 12px; margin-bottom: 1rem;
+            padding: 1.2rem 1.5rem; border-radius: 12px;
             display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.2s;
         }
+        
         .waiting-item.is-priority {
-            border-left: 6px solid var(--danger-color);
-            background: linear-gradient(90deg, rgba(231, 76, 60, 0.1) 0%, rgba(0,0,0,0.3) 100%);
-        }
-        .waiting-info { display: flex; flex-direction: column; gap: 0.4rem; }
-        .waiting-ccd { color: var(--secondary-color); font-weight: 800; font-size: 1.3rem; }
-        .waiting-name { color: white; font-weight: 500; font-size: 1.4rem; }
-        .waiting-badge {
-            background: rgba(231, 76, 60, 0.2); color: var(--danger-color);
-            padding: 0.4rem 1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 800;
-            text-transform: uppercase; letter-spacing: 1.5px;
+            border-left: 6px solid #f39c12;
+            background: linear-gradient(90deg, rgba(243, 156, 18, 0.1) 0%, rgba(0,0,0,0.3) 100%);
         }
 
-        /* Responsive Overrides */
-        @media (max-width: 1024px) {
-            .dashboard-layout { grid-template-columns: 1fr; }
-            .staff-container { max-width: 900px; }
-            .waiting-list { max-height: 500px; }
+        /* Next Up Highlight */
+        .waiting-item.next-up {
+            border: 1px solid rgba(46, 204, 113, 0.5);
+            box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.1);
+            background: linear-gradient(90deg, rgba(46, 204, 113, 0.1) 0%, rgba(0,0,0,0.3) 100%);
         }
-        @media (max-width: 768px) {
-            .secondary-controls { grid-template-columns: 1fr; }
-            .status-number { font-size: 4rem; }
-            .status-name { font-size: 2rem; }
-            .staff-container { padding: 5rem 1.5rem 2rem; }
-            .controls-card { padding: 1.5rem; }
-            .waiting-card { padding: 1.5rem; }
-            .serving-card { padding: 1.5rem; }
+        .waiting-item.next-up.is-priority {
+            border-left: 6px solid #f39c12;
+            border-top: 1px solid rgba(243, 156, 18, 0.5);
+            border-bottom: 1px solid rgba(243, 156, 18, 0.5);
+            border-right: 1px solid rgba(243, 156, 18, 0.5);
+            box-shadow: inset 0 0 20px rgba(243, 156, 18, 0.15);
+        }
+
+        .waiting-info { display: flex; flex-direction: column; gap: 0.2rem; }
+        .waiting-ccd { color: white; font-weight: 800; font-size: 1.2rem; }
+        .waiting-name { color: #a0aec0; font-weight: 500; font-size: 1rem; }
+        .wait-time { font-size: 0.8rem; color: #f39c12; margin-top: 0.3rem; font-weight: 600; }
+        
+        .waiting-badge {
+            background: rgba(243, 156, 18, 0.2); color: #f39c12;
+            padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .btn-serve-now {
+            background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.4); 
+            color: #2ecc71; padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; 
+            font-weight: 700; font-size: 0.9rem; transition: all 0.2s; white-space: nowrap;
+        }
+        .btn-serve-now:hover {
+            background: rgba(46, 204, 113, 0.3);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #a0aec0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        .empty-icon {
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+
+        /* Reset Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: var(--card-bg); border: 1px solid var(--danger-color);
+            padding: 2.5rem; border-radius: 16px; text-align: center; max-width: 400px;
+            box-shadow: 0 10px 40px rgba(231, 76, 60, 0.3);
+        }
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 1rem; }
+        .modal-text { color: #a0aec0; line-height: 1.5; margin-bottom: 2rem; }
+        .modal-actions { display: flex; gap: 1rem; }
+        .btn-cancel { flex: 1; padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer; font-weight: 600;}
+        .btn-confirm-danger { flex: 1; padding: 1rem; border-radius: 8px; border: none; background: var(--danger-color); color: white; cursor: pointer; font-weight: 800;}
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .dashboard-layout { gap: 1.5rem; }
+            .btn-next { padding: 1.5rem; min-height: 100px;}
+            .btn-next .btn-icon { font-size: 2.5rem; }
+            .btn-next .btn-text { font-size: 1.6rem; }
+            .status-number { font-size: 4.5rem; }
+            .status-name { font-size: 1.8rem; }
+        }
+        
+        @media (max-width: 640px) {
+            .staff-container { padding: 1.5rem 1rem; }
+            .dashboard-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+            
+            .left-column { gap: 1rem; }
+            
+            .dashboard-card { padding: 1.5rem; }
+            
+            .btn-next { min-height: 90px; padding: 1rem; }
+            .btn-next .btn-icon { font-size: 2rem; }
+            .btn-next .btn-text { font-size: 1.8rem; }
+            .btn-next .btn-subtext { font-size: 0.9rem; }
+            
+            .btn-secondary { min-height: 56px; font-size: 1.1rem; }
+            
+            .stats-row { gap: 0.5rem; }
+            .stat-card { padding: 0.8rem 0.5rem; }
+            .stat-value { font-size: 1.4rem; }
+            .stat-label { font-size: 0.7rem; }
+            
+            .waiting-item { flex-direction: column; align-items: flex-start; gap: 1rem; padding: 1rem; }
+            .waiting-item > div:last-child { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+            .btn-serve-now { width: 100%; text-align: center; }
+            
+            .connection-indicator-wrapper { position: static; margin-left: auto; margin-right: 1rem; }
+            .staff-nav { justify-content: flex-start; padding-left: 1rem; }
+            .nav-links-container { justify-content: flex-start; gap: 1rem; }
         }
     </style>
 </head>
 <body class="staff-body">
     <div class="staff-nav">
-        <a href="/staff" class="nav-link active">Queue Dashboard</a>
-        <a href="/records" class="nav-link">Database Records</a>
+        <div class="nav-links-container">
+            <a href="/staff" class="nav-link active">Dashboard</a>
+            <a href="/records" class="nav-link">Records</a>
+        </div>
+        <div class="connection-indicator-wrapper">
+            <span id="conn-text">Connecting...</span>
+            <div class="connection-dot" id="conn-dot"></div>
+        </div>
     </div>
     
     <div class="staff-container">
-        <div class="staff-header">
-            <div class="staff-title">Controller Panel</div>
-        </div>
-
         <div class="dashboard-layout">
             <div class="left-column">
+                
                 <!-- Currently Serving -->
                 <div class="dashboard-card serving-card">
                     <div class="card-label">Currently Serving</div>
@@ -211,50 +361,72 @@
                     </div>
                 </div>
 
-                <!-- Controls -->
-                <div class="dashboard-card controls-card">
-                    <button class="btn btn-next" id="btn-next">
-                        <span class="btn-icon">➔</span>
-                        <span class="btn-text">Call Next Number</span>
-                        <span class="btn-subtext">Absolute Priority Ordering</span>
+                <!-- Primary Action -->
+                <button class="btn btn-next" id="btn-next">
+                    <span class="btn-text">Call Next Number</span>
+                    <span class="btn-subtext">Absolute Priority Ordering</span>
+                </button>
+                
+                <!-- Secondary Actions -->
+                <div class="secondary-controls">
+                    <button class="btn btn-secondary btn-skip" id="btn-skip">
+                        <span class="btn-text">Skip Person</span>
                     </button>
-                    
-                    <div class="secondary-controls">
-                        <button class="btn btn-recall" id="btn-recall">
-                            <span class="btn-icon">↺</span>
-                            <span class="btn-text">Recall</span>
-                        </button>
-                        <button class="btn btn-skip" id="btn-skip">
-                            <span class="btn-icon">⏭</span>
-                            <span class="btn-text">Skip</span>
-                        </button>
-                        <button class="btn btn-reset" id="btn-reset">
-                            <span class="btn-icon">⚠</span>
-                            <span class="btn-text">Reset</span>
-                        </button>
+                    <button class="btn btn-secondary btn-reset" id="btn-reset">
+                        <span class="btn-text">Reset Queue</span>
+                    </button>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-waiting">0</div>
+                        <div class="stat-label">Wait</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-served">0</div>
+                        <div class="stat-label">Served</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-skipped">0</div>
+                        <div class="stat-label">Skip</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">Total</div>
                     </div>
                 </div>
+
             </div>
 
             <div class="right-column">
-                <!-- Queue Preview Panel -->
-                <div class="dashboard-card preview-card" style="margin-bottom: 2rem;">
-                    <div class="card-label" style="font-size: 1.1rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1rem;">Queue Preview (Next 5)</div>
-                    <div id="queue-preview-container" style="display:flex; gap: 1rem; overflow-x: auto; padding-top: 0.5rem; padding-bottom: 0.5rem;">
-                        <div style="color: #a0aec0;">Waiting...</div>
-                    </div>
-                </div>
-
-                <!-- Waiting List -->
+                <!-- Queue Preview List -->
                 <div class="dashboard-card waiting-card">
-                    <div class="waiting-header">
-                        <span>Live Waiting List</span>
-                        <span id="waiting-count" class="waiting-count-badge">0 waiting</span>
+                    <div class="card-label" style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <span>Queue Preview</span>
+                        <span style="color: white; font-weight: bold; background: rgba(255,255,255,0.1); padding: 0.2rem 0.8rem; border-radius: 50px;" id="waiting-count">0</span>
                     </div>
+                    
                     <ul class="waiting-list" id="waiting-list">
                         <!-- Populated via JS -->
+                        <div class="empty-state">
+                            <div class="empty-icon">⏳</div>
+                            <div>Connecting to server...</div>
+                        </div>
                     </ul>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Modal -->
+    <div class="modal-overlay" id="resetModal">
+        <div class="modal-box">
+            <div class="modal-title">Reset Entire Queue?</div>
+            <div class="modal-text">Are you sure you want to completely wipe the queue? This action cannot be undone and will delete all today's registrations.</div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeResetModal()">Cancel</button>
+                <button class="btn-confirm-danger" onclick="confirmReset()">Wipe Database</button>
             </div>
         </div>
     </div>
@@ -263,11 +435,30 @@
     <script>
         const socket = io();
         
+        // Elements
         const currentCcdEl = document.getElementById('current-ccd');
         const currentNameEl = document.getElementById('current-name');
         const priorityBadgeEl = document.getElementById('priority-badge-container');
         const waitingListEl = document.getElementById('waiting-list');
         const waitingCountEl = document.getElementById('waiting-count');
+        const btnNext = document.getElementById('btn-next');
+        const btnSkip = document.getElementById('btn-skip');
+        
+        // Connection Logic
+        const connDot = document.getElementById('conn-dot');
+        const connText = document.getElementById('conn-text');
+        
+        socket.on('connect', () => {
+            connDot.classList.add('connected');
+            connText.textContent = 'Live';
+            connText.style.color = '#2ecc71';
+        });
+        
+        socket.on('disconnect', () => {
+            connDot.classList.remove('connected');
+            connText.textContent = 'Offline';
+            connText.style.color = '#e74c3c';
+        });
 
         function shortenCcd(ccd) {
             if (!ccd || ccd === '---') return '---';
@@ -279,12 +470,21 @@
         }
 
         function renderStaffState(data) {
+            // Update Stats
+            if (data.stats) {
+                document.getElementById('stat-waiting').textContent = data.stats.waiting;
+                document.getElementById('stat-served').textContent = data.stats.served;
+                document.getElementById('stat-skipped').textContent = data.stats.skipped;
+                document.getElementById('stat-total').textContent = data.stats.total;
+                waitingCountEl.textContent = data.stats.waiting;
+            }
+
             // Update currently serving
             if (data.currentlyServing) {
                 currentCcdEl.textContent = shortenCcd(data.currentlyServing.ccdNo);
                 currentNameEl.textContent = data.currentlyServing.fullName;
                 if (data.currentlyServing.isPriority) {
-                    priorityBadgeEl.innerHTML = '<span class="priority-badge">Priority PWD/Senior</span>';
+                    priorityBadgeEl.innerHTML = '<div class="priority-badge">Priority PWD/Senior</div>';
                 } else {
                     priorityBadgeEl.innerHTML = '';
                 }
@@ -294,44 +494,41 @@
                 priorityBadgeEl.innerHTML = '';
             }
 
-            // Update Queue Preview & Waiting List
-            const previewEl = document.getElementById('queue-preview-container');
-            previewEl.innerHTML = '';
-            
-            waitingCountEl.textContent = `${data.waitingList.length} waiting`;
+            // Update Queue Preview
             waitingListEl.innerHTML = '';
             
-            if (data.waitingList.length === 0) {
-                previewEl.innerHTML = '<div style="color: #a0aec0;">Queue is empty.</div>';
-                waitingListEl.innerHTML = '<li style="color: #a0aec0; text-align: center; padding: 2rem;">No one is currently waiting.</li>';
+            if (!data.waitingList || data.waitingList.length === 0) {
+                waitingListEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">✓</div>
+                        <div>No complainants in queue. Waiting for registrations.</div>
+                    </div>
+                `;
             } else {
-                // Populate Preview (next 5)
-                const next5 = data.waitingList.slice(0, 5);
-                next5.forEach((person, idx) => {
-                    const card = document.createElement('div');
-                    card.style.cssText = `min-width: 120px; background: rgba(0,0,0,0.3); border: 1px solid ${person.isPriority ? '#f39c12' : 'rgba(255,255,255,0.1)'}; padding: 1rem; border-radius: 8px; text-align: center;`;
-                    card.innerHTML = `
-                        <div style="font-size: 0.8rem; color: #a0aec0; margin-bottom: 0.5rem;">Next ${idx + 1}</div>
-                        <div style="font-weight: bold; font-size: 1.2rem; color: ${person.isPriority ? '#f39c12' : 'white'};">${shortenCcd(person.ccdNo)}</div>
-                    `;
-                    previewEl.appendChild(card);
-                });
-
-                // Populate full list
-                data.waitingList.forEach(person => {
+                data.waitingList.forEach((person, index) => {
                     const li = document.createElement('li');
-                    li.className = `waiting-item ${person.isPriority ? 'is-priority' : ''}`;
+                    
+                    // Base classes
+                    let classes = 'waiting-item';
+                    if (person.isPriority) classes += ' is-priority';
+                    if (index === 0) classes += ' next-up';
+                    li.className = classes;
                     
                     let priorityHTML = person.isPriority ? '<div class="waiting-badge">Priority</div>' : '';
+                    
+                    // Estimate wait time (~5 mins per person ahead of them)
+                    // For the first person, it's their turn next so "Next Up"
+                    let waitText = index === 0 ? "Up Next" : `Est. wait: ~${index * 5} mins`;
                     
                     li.innerHTML = `
                         <div class="waiting-info">
                             <span class="waiting-ccd">${shortenCcd(person.ccdNo)}</span>
                             <span class="waiting-name">${person.fullName}</span>
+                            <span class="wait-time">${waitText}</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="display: flex; gap: 1rem; align-items: center; width: auto;">
                             ${priorityHTML}
-                            <button onclick="socket.emit('serve_specific', '${person.id}')" style="background: rgba(46, 204, 113, 0.2); border: 1px solid rgba(46, 204, 113, 0.5); color: #2ecc71; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='rgba(46, 204, 113, 0.3)'" onmouseout="this.style.background='rgba(46, 204, 113, 0.2)'">Serve Now</button>
+                            <button class="btn-serve-now" onclick="serveNow('${person.id}')">Serve Now</button>
                         </div>
                     `;
                     waitingListEl.appendChild(li);
@@ -343,27 +540,50 @@
             renderStaffState(data);
         });
 
-        document.getElementById('btn-next').addEventListener('click', () => {
+        // Button Actions with loading states
+        function setButtonLoading(btn, text) {
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="btn-text">${text}</span>`;
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }, 1500); // 1.5s debounce/loading
+        }
+
+        btnNext.addEventListener('click', () => {
+            setButtonLoading(btnNext, "Loading...");
             socket.emit('next');
         });
 
-        document.getElementById('btn-recall').addEventListener('click', () => {
-            if (currentCcdEl.textContent !== '---') {
-                socket.emit('recall');
-            }
+        btnSkip.addEventListener('click', () => {
+            if (currentCcdEl.textContent === '---') return;
+            setButtonLoading(btnSkip, "Skipping...");
+            socket.emit('skip');
         });
 
-        document.getElementById('btn-skip').addEventListener('click', () => {
-            if (confirm('Are you sure you want to skip the current person?')) {
-                socket.emit('skip');
+        // Serve Now Override
+        window.serveNow = function(id) {
+            if (confirm("Yank this person out of line and serve them immediately?")) {
+                socket.emit('serve_specific', id);
             }
-        });
+        };
 
+        // Reset Modal Logic
+        const resetModal = document.getElementById('resetModal');
+        
         document.getElementById('btn-reset').addEventListener('click', () => {
-            if (confirm('Are you sure you want to completely clear the entire queue database?')) {
-                socket.emit('reset');
-            }
+            resetModal.classList.add('active');
         });
+        
+        window.closeResetModal = function() {
+            resetModal.classList.remove('active');
+        }
+        
+        window.confirmReset = function() {
+            socket.emit('reset');
+            closeResetModal();
+        }
     </script>
 </body>
 </html>
