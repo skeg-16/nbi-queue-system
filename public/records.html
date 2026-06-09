@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Records | NBI QMS</title>
+    <title>Complaint Registry | NBI QMS</title>
     <link rel="stylesheet" href="css/style.css">
     
     <!-- SheetJS for Excel & CSV export -->
@@ -24,6 +24,7 @@
             --btn-border: rgba(255,255,255,0.15);
             --btn-hover: rgba(255,255,255,0.1);
             --table-hover: rgba(255,255,255,0.02);
+            --table-alt: transparent;
             --input-bg: rgba(0,0,0,0.4);
             --modal-bg: #050e1d;
             --dropdown-bg: #0b1d3a;
@@ -34,17 +35,18 @@
         body.light-mode {
             --bg-color: #F4F2EE;
             --panel-bg: #FAFAF8;
-            --border-color: #E8E4DC;
+            --border-color: #D1CDC4;
             --text-main: #1A1A1A;
             --text-muted: #5A5A5A;
-            --btn-bg: #FFFFFF;
+            --btn-bg: #FAFAF8;
             --btn-border: #D1CDC4;
             --btn-hover: #EAE6DF;
-            --table-hover: #F7F5F1;
+            --table-hover: #EAE6DF;
+            --table-alt: #F7F5F1;
             --input-bg: #FFFFFF;
             --modal-bg: #FAFAF8;
             --dropdown-bg: #FFFFFF;
-            --gold: #d68910; /* Slightly darker gold for light mode text contrast */
+            --gold: #c27000; /* Darker gold for text contrast */
         }
 
         .staff-body {
@@ -66,6 +68,22 @@
             z-index: 50;
             transition: background 0.3s ease;
         }
+        
+        .staff-nav .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .staff-nav .nav-link:hover { color: var(--text-main); }
+        .staff-nav .nav-link.active { color: var(--gold); border-bottom-color: var(--gold); }
 
         .theme-toggle {
             position: absolute;
@@ -79,23 +97,74 @@
         }
         .theme-toggle:hover { color: var(--gold); }
 
+        /* Formal Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.3rem;
+        }
+        .page-subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Daily Ledger Navigation */
+        .ledger-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .ledger-date {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .ledger-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .ledger-btn:hover:not(:disabled) { color: var(--gold); }
+        .ledger-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
         .summary-bar { 
             display: flex; justify-content: space-between; 
             background: var(--panel-bg); padding: 1.5rem 2.5rem; 
-            border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border-color); 
+            border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid var(--border-color); 
             transition: background 0.3s ease, border-color 0.3s ease;
         }
         .summary-stat { display: flex; flex-direction: column; align-items: center; gap: 0.5rem;}
         .stat-value { font-size: 2.2rem; font-weight: 800; color: var(--gold); line-height: 1; }
         .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;}
+        .stats-context { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; font-style: italic; }
         
+        /* Single Row Toolbar Alignment */
         .toolbar-container {
             display: flex; justify-content: space-between; align-items: center; gap: 1rem; 
             margin-bottom: 1.5rem; background: var(--panel-bg); padding: 1rem 1.5rem; 
             border-radius: 8px; border: 1px solid var(--border-color); 
         }
 
-        .toolbar-actions { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
+        .toolbar-actions { display: flex; gap: 0.8rem; align-items: center; }
         
         .search-input {
             background: var(--input-bg); border: 1px solid var(--border-color); 
@@ -108,7 +177,7 @@
         .btn-formal {
             padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
             border-radius: 6px; border: 1px solid var(--btn-border); background: var(--btn-bg); color: var(--text-main); 
-            cursor: pointer; transition: all 0.2s;
+            cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;
         }
         .btn-formal:hover { background: var(--btn-hover); }
         
@@ -153,10 +222,12 @@
         .records-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;}
         .records-table th { 
             padding: 1rem 1.2rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;
-            border-bottom: 1px solid var(--border-color); background: var(--bg-color); cursor: pointer; white-space: nowrap; position: sticky; top: 0;
+            border-bottom: 1px solid var(--border-color); background: var(--panel-bg); cursor: pointer; white-space: nowrap; position: sticky; top: 0;
         }
         .records-table th:hover { color: var(--text-main); }
         .records-table td { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border-color); vertical-align: middle;}
+        
+        .records-table tbody tr:nth-child(even) { background: var(--table-alt); }
         .records-table tbody tr:hover { background: var(--table-hover); }
         
         /* Badges */
@@ -174,6 +245,7 @@
         body.light-mode .status-serving { background: #FDF3E1; color: #d68910; border-color: #F8DCB3; }
         body.light-mode .status-served { background: #E3F8EB; color: #27ae60; border-color: #B8EDCD; }
         body.light-mode .status-skipped { background: #FCEAE8; color: #c0392b; border-color: #F6C8C3; }
+        body.light-mode .status-noshow { background: #F2F4F4; color: #7f8c8d; border-color: #D5DBDB; }
         
         /* Pagination */
         .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem; }
@@ -211,6 +283,7 @@
         .toast { background: #2ecc71; color: #fff; padding: 1rem 1.5rem; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transform: translateX(120%); transition: transform 0.3s;}
         .toast.show { transform: translateX(0); }
         .toast.error { background: #e74c3c; }
+        .toast.warning { background: #e67e22; }
 
         @media print {
             body * { visibility: hidden; }
@@ -231,6 +304,19 @@
 
     <div class="staff-container no-print" style="max-width: 1600px; padding: 2rem; margin: 0 auto;">
         
+        <!-- Formal Page Header -->
+        <div class="page-header">
+            <div class="page-title">NBI Cybercrime Division — Complaint Registry</div>
+            <div class="page-subtitle">Digital Complainant Database & Records Management</div>
+        </div>
+
+        <!-- Ledger Navigation -->
+        <div class="ledger-nav">
+            <button class="ledger-btn" onclick="changeDate(-1)">← Previous Day</button>
+            <div class="ledger-date" id="ledgerDateDisplay">Loading...</div>
+            <button class="ledger-btn" id="btnNextDay" onclick="changeDate(1)">Next Day →</button>
+        </div>
+
         <!-- Summary Bar -->
         <div class="summary-bar">
             <div class="summary-stat">
@@ -254,6 +340,7 @@
                 <div class="stat-label">Priority</div>
             </div>
         </div>
+        <div class="stats-context" id="statsContext">Showing records for today</div>
 
         <!-- Single Row Toolbar -->
         <div class="toolbar-container">
@@ -276,14 +363,8 @@
                                 <option value="No-show">No-show</option>
                             </select>
                         </div>
-                        <div class="filter-row">
-                            <span class="filter-label">Date From</span>
-                            <input type="date" id="filterDateFrom" class="filter-date">
-                        </div>
-                        <div class="filter-row">
-                            <span class="filter-label">Date To</span>
-                            <input type="date" id="filterDateTo" class="filter-date">
-                        </div>
+                        <!-- Date range filters inside popover can remain for custom global searching if needed, 
+                             but the primary mode is the daily ledger view -->
                         <div class="filter-row" style="margin-top: 1rem;">
                             <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 500; cursor: pointer;">
                                 <input type="checkbox" id="filterPriority"> Show Priority Only
@@ -296,7 +377,7 @@
             </div>
             
             <div class="toolbar-actions" style="justify-content: flex-end;">
-                <span id="lastUpdated" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem;"></span>
+                <span id="lastUpdated" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem;">Connecting...</span>
                 
                 <div class="dropdown right" id="exportDropdown">
                     <button class="btn-formal dropdown-btn" onclick="toggleDropdown(event, 'export-menu')">Export ▾</button>
@@ -312,11 +393,7 @@
                 <button class="btn-formal btn-primary" onclick="generateEODReport()">End of Day Report</button>
                 <div style="width: 1px; height: 30px; background: var(--border-color); margin: 0 0.5rem;"></div>
                 
-                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-muted); cursor: pointer;">
-                    <input type="checkbox" id="autoRefreshToggle"> Auto-refresh
-                </label>
-                <button class="btn-formal" onclick="fetchRecords(true)">Refresh</button>
-                <button class="btn-formal btn-danger" onclick="clearTodaysRecords()">Clear Today</button>
+                <button class="btn-formal btn-danger" onclick="openCloseDayModal()" title="Closes today's session. Data is preserved.">Close Day</button>
             </div>
         </div>
 
@@ -353,6 +430,26 @@
     </div>
 
     <!-- Modals -->
+
+    <!-- Close Day Confirmation Modal -->
+    <div class="modal-overlay" id="modalCloseDay">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-title" style="color: var(--red);">Close Today's Session?</div>
+                <button class="modal-close" onclick="closeModal('modalCloseDay')">&times;</button>
+            </div>
+            <div style="line-height: 1.6; color: var(--text-main); margin-bottom: 2rem;">
+                This will mark today's session (<strong id="closeDayDateText"></strong>) as closed.
+                <br><br>
+                All records will be preserved and accessible in history.
+                The queue counter will be reset for the next business day.
+            </div>
+            <div class="modal-footer">
+                <button class="btn-formal" onclick="closeModal('modalCloseDay')">Cancel</button>
+                <button class="btn-formal btn-danger" onclick="submitCloseDay()">Close Day</button>
+            </div>
+        </div>
+    </div>
 
     <!-- View Details Modal -->
     <div class="modal-overlay" id="modalView">
@@ -489,9 +586,12 @@
 
     <script>
         // --- State ---
-        let allRecords = []; // The cache
+        let allRecords = []; // Full cache
         let filteredRecords = [];
         let lastFetchTime = null;
+        let isConnected = true;
+        
+        let viewDateObj = new Date();
         
         let currentPage = 1;
         const recordsPerPage = 25;
@@ -499,7 +599,6 @@
         let sortColumn = 'created_at';
         let sortAsc = false;
         
-        let autoRefreshInterval = null;
         let searchTimeout = null;
 
         // --- Theme Logic ---
@@ -517,9 +616,10 @@
 
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
+            updateLedgerDateDisplay();
             fetchRecords();
             
-            // Close dropdowns when clicking outside
+            // Close dropdowns
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.dropdown')) {
                     document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
@@ -529,30 +629,16 @@
             // Debounced Auto-Search
             document.getElementById('searchInput').addEventListener('input', () => {
                 clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    applyFiltersAndSort();
-                }, 300);
+                searchTimeout = setTimeout(() => applyFiltersAndSort(), 300);
             });
 
-            // Auto-filter on select/change
+            // Auto-filter
             document.getElementById('filterStatus').addEventListener('change', applyFiltersAndSort);
-            document.getElementById('filterDateFrom').addEventListener('change', applyFiltersAndSort);
-            document.getElementById('filterDateTo').addEventListener('change', applyFiltersAndSort);
             document.getElementById('filterPriority').addEventListener('change', applyFiltersAndSort);
 
-            // Auto-refresh toggle
-            document.getElementById('autoRefreshToggle').addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    autoRefreshInterval = setInterval(() => fetchRecords(false), 30000);
-                    showToast('Auto-refresh enabled (30s)');
-                } else {
-                    clearInterval(autoRefreshInterval);
-                    showToast('Auto-refresh disabled');
-                }
-            });
-
-            // Clock for cache warning
-            setInterval(updateCacheWarning, 60000);
+            // Silent Auto Refresh loop
+            setInterval(() => fetchRecords(true), 15000);
+            setInterval(updateCacheWarning, 1000);
         });
 
         function toggleDropdown(event, id) {
@@ -563,51 +649,100 @@
             if (!wasActive) parent.classList.add('active');
         }
 
+        // --- Ledger Date Logic ---
+        function updateLedgerDateDisplay() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('ledgerDateDisplay').textContent = viewDateObj.toLocaleDateString('en-US', options);
+            document.getElementById('statsContext').textContent = `Showing records for: ${viewDateObj.toLocaleDateString('en-US', options)}`;
+            
+            // Disable Next Day if viewing today
+            const today = new Date();
+            const isToday = viewDateObj.toDateString() === today.toDateString();
+            document.getElementById('btnNextDay').disabled = isToday;
+        }
+
+        function changeDate(offset) {
+            viewDateObj.setDate(viewDateObj.getDate() + offset);
+            
+            // Prevent going into future
+            const today = new Date();
+            if (viewDateObj > today) {
+                viewDateObj = today;
+            }
+            
+            updateLedgerDateDisplay();
+            applyFiltersAndSort();
+        }
+
+        function getViewDateString() {
+            // Returns YYYY-MM-DD in local time
+            const offset = viewDateObj.getTimezoneOffset();
+            const localDate = new Date(viewDateObj.getTime() - (offset*60*1000));
+            return localDate.toISOString().split('T')[0];
+        }
+
         // --- Data Fetching (Cache) ---
-        async function fetchRecords(showToastFlag = false) {
+        async function fetchRecords(silent = false) {
             try {
                 const response = await fetch('/api/records');
+                if (!response.ok) throw new Error("Network response was not ok");
                 const result = await response.json();
                 if (result.success) {
                     allRecords = result.data;
                     lastFetchTime = new Date();
+                    
+                    if (!isConnected) {
+                        isConnected = true;
+                        showToast('Reconnected — data updated');
+                    }
+                    
                     updateSummaryBar();
                     applyFiltersAndSort();
                     updateCacheWarning();
-                    if (showToastFlag) showToast('Records synced successfully');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Error connecting to server', true);
+                isConnected = false;
+                updateCacheWarning();
             }
         }
 
         function updateCacheWarning() {
+            const el = document.getElementById('lastUpdated');
+            if (!isConnected) {
+                el.textContent = "Connection lost — retrying...";
+                el.style.color = "var(--red)";
+                return;
+            }
             if (!lastFetchTime) return;
+            
+            el.style.color = "var(--text-muted)";
             const now = new Date();
             const diffMins = Math.floor((now - lastFetchTime) / 60000);
             const timeStr = lastFetchTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             let text = `Last updated: ${timeStr}`;
-            if (diffMins >= 5) text += ` ⚠️ Data may be outdated (${diffMins}m ago)`;
-            document.getElementById('lastUpdated').textContent = text;
+            
+            if (diffMins >= 5) {
+                text = `⚠️ Data may be outdated (${diffMins}m ago). Try reloading.`;
+                el.style.color = "var(--red)";
+            }
+            el.textContent = text;
         }
 
         function updateSummaryBar() {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const todayRecords = allRecords.filter(r => r.created_at.startsWith(todayStr));
+            const viewStr = getViewDateString();
+            const viewRecords = allRecords.filter(r => r.created_at.startsWith(viewStr));
             
-            document.getElementById('stat-registered').textContent = todayRecords.length;
-            document.getElementById('stat-served').textContent = todayRecords.filter(r => r.status === 'Served').length;
-            document.getElementById('stat-waiting').textContent = todayRecords.filter(r => r.status === 'Waiting').length;
-            document.getElementById('stat-skipped').textContent = todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length;
-            document.getElementById('stat-priority').textContent = todayRecords.filter(r => r.is_priority).length;
+            document.getElementById('stat-registered').textContent = viewRecords.length;
+            document.getElementById('stat-served').textContent = viewRecords.filter(r => r.status === 'Served').length;
+            document.getElementById('stat-waiting').textContent = viewRecords.filter(r => r.status === 'Waiting').length;
+            document.getElementById('stat-skipped').textContent = viewRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length;
+            document.getElementById('stat-priority').textContent = viewRecords.filter(r => r.is_priority).length;
         }
 
         function clearFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('filterStatus').value = '';
-            document.getElementById('filterDateFrom').value = '';
-            document.getElementById('filterDateTo').value = '';
             document.getElementById('filterPriority').checked = false;
             applyFiltersAndSort();
         }
@@ -615,15 +750,11 @@
         function applyFiltersAndSort() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('filterStatus').value;
-            const from = document.getElementById('filterDateFrom').value;
-            const to = document.getElementById('filterDateTo').value;
             const prio = document.getElementById('filterPriority').checked;
             
             // Count active filters
             let activeFilters = 0;
             if(status) activeFilters++;
-            if(from) activeFilters++;
-            if(to) activeFilters++;
             if(prio) activeFilters++;
             
             const badge = document.getElementById('filterBadge');
@@ -637,12 +768,15 @@
                 clearBtn.style.display = term ? 'inline' : 'none';
             }
 
+            const viewStr = getViewDateString();
+
             // Filter
             filteredRecords = allRecords.filter(r => {
+                // Must belong to current view date
+                if (!r.created_at.startsWith(viewStr)) return false;
+                
                 if (status && r.status !== status) return false;
                 if (prio && !r.is_priority) return false;
-                if (from && r.created_at.split('T')[0] < from) return false;
-                if (to && r.created_at.split('T')[0] > to) return false;
                 
                 if (term) {
                     return r.full_name.toLowerCase().includes(term) ||
@@ -669,6 +803,7 @@
             });
             
             currentPage = 1;
+            updateSummaryBar();
             renderTable();
             renderPagination();
         }
@@ -689,7 +824,7 @@
             tbody.innerHTML = '';
             
             if (filteredRecords.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">No records found matching filters.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">No records found for this date/filter.</td></tr>`;
                 document.getElementById('recordCount').textContent = "Showing 0 records";
                 return;
             }
@@ -781,6 +916,24 @@
             document.body.style.overflow = '';
         }
 
+        // --- Close Day Logic ---
+        function openCloseDayModal() {
+            document.getElementById('closeDayDateText').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            openModal('modalCloseDay');
+        }
+
+        async function submitCloseDay() {
+            try {
+                const response = await fetch(`/api/sessions/close`, { method: 'POST' });
+                if ((await response.json()).success) {
+                    showToast("Today's session has been closed. Records are preserved.");
+                    closeModal('modalCloseDay');
+                } else {
+                    showToast('Failed to close session', true);
+                }
+            } catch(err) { showToast('Server error', true); }
+        }
+
         // --- Row Actions ---
         function viewDetails(id) {
             const r = allRecords.find(x => x.id === id);
@@ -844,7 +997,7 @@
                 if ((await response.json()).success) {
                     showToast('Record updated');
                     closeModal('modalEdit');
-                    fetchRecords(); // re-fetch to sync cache
+                    fetchRecords(false); // re-fetch silently
                 } else { showToast('Update failed', true); }
             } catch(err) { showToast('Server error', true); }
         }
@@ -872,7 +1025,7 @@
                 if ((await response.json()).success) {
                     showToast('Status updated');
                     closeModal('modalStatus');
-                    fetchRecords();
+                    fetchRecords(false);
                 } else { showToast('Update failed', true); }
             } catch(err) { showToast('Server error', true); }
         }
@@ -883,19 +1036,8 @@
                 const response = await fetch(`/api/records/${id}`, { method: 'DELETE' });
                 if ((await response.json()).success) {
                     showToast('Record deleted');
-                    fetchRecords();
+                    fetchRecords(false);
                 } else { showToast('Delete failed', true); }
-            } catch(err) { showToast('Server error', true); }
-        }
-
-        async function clearTodaysRecords() {
-            if (!confirm('WARNING: Are you sure you want to completely wipe all records for today? This is a destructive action.')) return;
-            try {
-                const response = await fetch(`/api/records/today`, { method: 'DELETE' });
-                if ((await response.json()).success) {
-                    showToast('Today\'s records cleared');
-                    fetchRecords();
-                } else { showToast('Clear failed', true); }
             } catch(err) { showToast('Server error', true); }
         }
 
@@ -921,7 +1063,7 @@
             const ws = XLSX.utils.json_to_sheet(getExportData());
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Records");
-            XLSX.writeFile(wb, `NBI_Records_${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.writeFile(wb, `NBI_Records_${getViewDateString()}.xlsx`);
         }
 
         function exportToCSV() {
@@ -931,7 +1073,7 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `NBI_Records_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = `NBI_Records_${getViewDateString()}.csv`;
             link.click();
         }
 
@@ -954,7 +1096,7 @@
                 startY: 28,
                 styles: { fontSize: 8 }
             });
-            doc.save(`NBI_Records_${new Date().toISOString().split('T')[0]}.pdf`);
+            doc.save(`NBI_Records_${getViewDateString()}.pdf`);
         }
 
         function exportToWord() {
@@ -974,6 +1116,7 @@
             <body>
                 <h1>NBI Cybercrime Division - Official Records</h1>
                 <p><strong>Generated on:</strong> ${new Date().toLocaleString('en-PH')}</p>
+                <p><strong>Date:</strong> ${getViewDateString()}</p>
                 <table>
                     <tr>
                         <th>Date & Time</th><th>CCD No.</th><th>Full Name</th>
@@ -996,21 +1139,21 @@
             const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `NBI_Records_${new Date().toISOString().split('T')[0]}.doc`;
+            link.download = `NBI_Records_${getViewDateString()}.doc`;
             link.click();
         }
 
         function generateEODReport() {
-            const todayStr = new Date().toISOString().split('T')[0];
-            const todayRecords = allRecords.filter(r => r.created_at.startsWith(todayStr));
+            const viewStr = getViewDateString();
+            const viewRecords = allRecords.filter(r => r.created_at.startsWith(viewStr));
             
-            let html = `<div style="margin-bottom: 20px;"><strong>Date:</strong> ${todayStr}</div>`;
-            html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Total Registered</td><td style="border: 1px solid var(--border-color); padding: 10px; font-weight: bold;">${todayRecords.length}</td></tr>
-                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Served</td><td style="border: 1px solid var(--border-color); padding: 10px; color: #2ecc71;">${todayRecords.filter(r => r.status === 'Served').length}</td></tr>
-                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Waiting Left</td><td style="border: 1px solid var(--border-color); padding: 10px;">${todayRecords.filter(r => r.status === 'Waiting').length}</td></tr>
-                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Skipped/No-Show</td><td style="border: 1px solid var(--border-color); padding: 10px; color: #e74c3c;">${todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length}</td></tr>
-                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Priority (PWD/Senior)</td><td style="border: 1px solid var(--border-color); padding: 10px;">${todayRecords.filter(r => r.is_priority).length}</td></tr>
+            let html = `<div style="margin-bottom: 20px;"><strong>Date:</strong> ${viewStr}</div>`;
+            html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; color: var(--text-main);">
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Total Registered</td><td style="border: 1px solid var(--border-color); padding: 10px; font-weight: bold;">${viewRecords.length}</td></tr>
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Served</td><td style="border: 1px solid var(--border-color); padding: 10px; color: #2ecc71;">${viewRecords.filter(r => r.status === 'Served').length}</td></tr>
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Waiting Left</td><td style="border: 1px solid var(--border-color); padding: 10px; color: #3498db;">${viewRecords.filter(r => r.status === 'Waiting').length}</td></tr>
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Skipped/No-Show</td><td style="border: 1px solid var(--border-color); padding: 10px; color: #e74c3c;">${viewRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length}</td></tr>
+                <tr><td style="border: 1px solid var(--border-color); padding: 10px;">Priority (PWD/Senior)</td><td style="border: 1px solid var(--border-color); padding: 10px; color: var(--red);">${viewRecords.filter(r => r.is_priority).length}</td></tr>
             </table>`;
             
             document.getElementById('eodContent').innerHTML = html;
@@ -1020,28 +1163,28 @@
         function exportEODToPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const todayStr = new Date().toISOString().split('T')[0];
+            const viewStr = getViewDateString();
             
             doc.setFontSize(16);
             doc.text("NBI Cybercrime Division - End of Day Report", 14, 20);
             doc.setFontSize(12);
-            doc.text(`Date: ${todayStr}`, 14, 30);
+            doc.text(`Date: ${viewStr}`, 14, 30);
             
-            const todayRecords = allRecords.filter(r => r.created_at.startsWith(todayStr));
+            const viewRecords = allRecords.filter(r => r.created_at.startsWith(viewStr));
             
             doc.autoTable({
                 startY: 40,
                 head: [['Metric', 'Count']],
                 body: [
-                    ['Total Registered', todayRecords.length],
-                    ['Served', todayRecords.filter(r => r.status === 'Served').length],
-                    ['Waiting Left', todayRecords.filter(r => r.status === 'Waiting').length],
-                    ['Skipped / No-show', todayRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length],
-                    ['Priority (PWD/Senior)', todayRecords.filter(r => r.is_priority).length]
+                    ['Total Registered', viewRecords.length],
+                    ['Served', viewRecords.filter(r => r.status === 'Served').length],
+                    ['Waiting Left', viewRecords.filter(r => r.status === 'Waiting').length],
+                    ['Skipped / No-show', viewRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length],
+                    ['Priority (PWD/Senior)', viewRecords.filter(r => r.is_priority).length]
                 ]
             });
             
-            doc.save(`NBI_EOD_Report_${todayStr}.pdf`);
+            doc.save(`NBI_EOD_Report_${viewStr}.pdf`);
         }
 
         // --- Toasts ---

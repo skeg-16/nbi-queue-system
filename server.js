@@ -29,6 +29,22 @@ let state = {
     priorityServedCount: 0
 };
 
+// Closed Dates Storage
+const closedDatesFile = path.join(__dirname, 'closed_dates.json');
+function loadClosedDates() {
+    if (fs.existsSync(closedDatesFile)) {
+        try { return JSON.parse(fs.readFileSync(closedDatesFile, 'utf8')); } catch(e) { return []; }
+    }
+    return [];
+}
+function saveClosedDates(dates) {
+    fs.writeFileSync(closedDatesFile, JSON.stringify(dates, null, 2));
+}
+function isSessionClosed(dateStr) {
+    const dates = loadClosedDates();
+    return dates.includes(dateStr);
+}
+
 function getCycleSortedList(waitingList, initialPriorityCount) {
     let priorityQueue = [];
     let regularQueue = [];
@@ -174,6 +190,62 @@ app.get('/api/audit', (req, res) => {
         res.json({ success: true, data: JSON.parse(fs.readFileSync(logFile, 'utf8')) });
     } else {
         res.json({ success: true, data: [] });
+    }
+});
+
+// === Sessions API (Close Day Logic) ===
+
+app.get('/api/sessions/status', (req, res) => {
+    const todayStr = getTodayDateStr();
+    res.json({ success: true, closed: isSessionClosed(todayStr), date: todayStr });
+});
+
+app.post('/api/sessions/close', (req, res) => {
+    try {
+        const todayStr = getTodayDateStr();
+        const dates = loadClosedDates();
+        if (!dates.includes(todayStr)) {
+            dates.push(todayStr);
+            saveClosedDates(dates);
+        }
+        
+        // Reset state for tomorrow
+        state.currentlyServing = null;
+        state.priorityServedCount = 0;
+        state.recentServed = [];
+        broadcastStaffUpdate();
+        
+        auditLog('Session Close', `Closed session for ${todayStr}`);
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ success: false, error: "Failed to close session" });
+    }
+});
+
+app.post('/api/sessions/open', (req, res) => {
+    try {
+        const todayStr = getTodayDateStr();
+        let dates = loadClosedDates();
+        dates = dates.filter(d => d !== todayStr);
+        saveClosedDates(dates);
+        
+        auditLog('Session Open', `Opened session for ${todayStr}`);
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ success: false, error: "Failed to open session" });
+    }
+});
+
+app.delete('/api/records/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('registrations').delete().eq('id', id);
+        if (error) throw error;
+        auditLog('Delete Record', `Deleted record ID ${id}`);
+        res.json({ success: true });
+        broadcastStaffUpdate();
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
