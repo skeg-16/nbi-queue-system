@@ -8,6 +8,15 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="display-body">
+    <!-- Voice Setup Overlay -->
+    <div id="voice-overlay" class="overlay-unlock">
+        <img src="/assets/nbi.png" alt="NBI Logo" class="overlay-logo">
+        <h1>NBI Cybercrime Division</h1>
+        <h2>Queue Display System</h2>
+        <div class="tap-text">Tap anywhere to activate display</div>
+        <div class="sub-text">Audio announcements will be enabled</div>
+    </div>
+
     <div class="display-container">
         <!-- Header Section -->
         <header class="header">
@@ -44,6 +53,15 @@
 
     <!-- Audio for chime -->
     <audio id="chime" src="assets/chime.mp3" preload="auto"></audio>
+
+    <!-- Voice Controls -->
+    <div class="voice-controls" id="voice-controls" style="display: none;">
+        <select id="lang-toggle" class="voice-btn" style="display: none;" title="Toggle Announcement Language">
+            <option value="en">EN</option>
+            <option value="fil">FIL</option>
+        </select>
+        <button id="btn-repeat" class="voice-btn" title="Repeat Last Announcement">🔊 Repeat</button>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -101,6 +119,112 @@
             }
         }
 
+        // Web Speech API Voice System
+        let voices = [];
+        let filipinoVoice = null;
+        let englishVoice = null;
+        let audioUnlocked = false;
+        let lastAnnouncement = null; // { number: string, isPriority: boolean }
+        
+        const overlay = document.getElementById('voice-overlay');
+        const btnRepeat = document.getElementById('btn-repeat');
+        const langToggle = document.getElementById('lang-toggle');
+        const voiceControls = document.getElementById('voice-controls');
+
+        // Unlock audio context and initialize Speech Synthesis on first interaction
+        overlay.addEventListener('click', () => {
+            audioUnlocked = true;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // Dummy utterance to unlock speech synthesis on mobile/browsers
+            if ('speechSynthesis' in window) {
+                let dummy = new SpeechSynthesisUtterance('');
+                dummy.volume = 0;
+                window.speechSynthesis.speak(dummy);
+            }
+            
+            overlay.style.display = 'none';
+            voiceControls.style.display = 'flex';
+        });
+
+        // Load Voices
+        function loadVoices() {
+            if (!('speechSynthesis' in window)) return;
+            voices = window.speechSynthesis.getVoices();
+            if (voices.length === 0) return;
+
+            englishVoice = voices.find(v => v.lang.startsWith('en-PH')) || 
+                           voices.find(v => v.lang.startsWith('en-US')) || 
+                           voices.find(v => v.lang.startsWith('en')) || voices[0];
+            
+            filipinoVoice = voices.find(v => v.lang.startsWith('fil') || v.lang.startsWith('tl'));
+
+            if (filipinoVoice) {
+                langToggle.style.display = 'block';
+                const savedLang = localStorage.getItem('announcement_lang');
+                if (savedLang) langToggle.value = savedLang;
+            }
+        }
+
+        if ('speechSynthesis' in window) {
+            loadVoices();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        langToggle.addEventListener('change', (e) => {
+            localStorage.setItem('announcement_lang', e.target.value);
+        });
+
+        // Voice Announcement Logic
+        function playVoiceAnnouncement(numberStr, isPriority = false) {
+            if (!audioUnlocked || !('speechSynthesis' in window)) {
+                if (!audioUnlocked) console.warn('Voice announcement skipped: Audio not unlocked yet.');
+                return;
+            }
+            
+            // Wait for chime to finish (approx 600ms) before speaking
+            setTimeout(() => {
+                window.speechSynthesis.cancel(); // Cancel any ongoing speech
+
+                let text = '';
+                const lang = langToggle.value || 'en';
+                const useFilipino = lang === 'fil' && filipinoVoice;
+                
+                // Clean number string (e.g. remove # if present for better TTS)
+                const num = numberStr.replace('#', '').trim();
+
+                if (isPriority) {
+                    if (useFilipino) {
+                        text = `Priority po — numero ${num}. P W D o Senior Citizen, mangyaring pumunta na po sa bintana.`;
+                    } else {
+                        text = `Priority — Now serving number ${num}. P W D or Senior Citizen, please proceed to the window.`;
+                    }
+                } else {
+                    if (useFilipino) {
+                        text = `Susunod na po — numero ${num}, mangyaring pumunta na po sa bintana.`;
+                    } else {
+                        text = `Now serving number ${num}, please proceed to the window.`;
+                    }
+                }
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.voice = useFilipino ? filipinoVoice : englishVoice;
+                utterance.rate = 0.85;
+                utterance.pitch = isPriority ? 1.1 : 1.0;
+                utterance.volume = 1.0;
+
+                window.speechSynthesis.speak(utterance);
+            }, 600); // 600ms delay ensures chime has mostly finished
+        }
+
+        btnRepeat.addEventListener('click', () => {
+            if (lastAnnouncement) {
+                playVoiceAnnouncement(lastAnnouncement.number, lastAnnouncement.isPriority);
+            }
+        });
+
         function shortenCcd(ccd) {
             if (!ccd || ccd === '---') return '---';
             const parts = ccd.split('-');
@@ -140,6 +264,11 @@
 
                 if (data.triggerChime) {
                     playChimeSound(data.isPriority);
+                    
+                    // Trigger Voice Announcement
+                    const cleanNum = shortenCcd(data.currentlyServing);
+                    lastAnnouncement = { number: cleanNum, isPriority: data.isPriority };
+                    playVoiceAnnouncement(cleanNum, data.isPriority);
                     
                     // Flash effect
                     const glowColor = data.isPriority ? 'rgba(204, 34, 34, 0.8)' : 'rgba(241, 196, 15, 0.8)';
