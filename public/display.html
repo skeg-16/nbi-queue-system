@@ -53,8 +53,24 @@
 
     <!-- Audio for chime -->
     <audio id="chime" src="assets/chime.mp3" preload="auto"></audio>
-    <!-- Audio for Google TTS -->
-    <audio id="google-tts-audio" preload="auto"></audio>
+    <!-- Audio for chime -->
+    <audio id="chime" src="assets/chime.mp3" preload="auto"></audio>
+
+    <!-- Settings Panel Gear Icon -->
+    <div id="settings-toggle" class="settings-gear" title="Voice Settings (Press S)">⚙️</div>
+
+    <!-- Voice Settings Panel -->
+    <div id="voice-settings-panel" class="voice-settings" style="display: none;">
+        <h3>Voice Settings</h3>
+        <label for="voice-select">Preferred Voice:</label>
+        <select id="voice-select" class="settings-input"></select>
+        
+        <label for="rate-slider">Speech Rate: <span id="rate-value">0.85</span></label>
+        <input type="range" id="rate-slider" class="settings-input" min="0.7" max="1.0" step="0.01" value="0.85">
+        
+        <button id="btn-test-voice" class="settings-btn">Test Voice</button>
+        <button id="btn-close-settings" class="settings-btn secondary">Close</button>
+    </div>
 
     <!-- Voice Controls -->
     <div class="voice-controls" id="voice-controls" style="display: none;">
@@ -123,126 +139,240 @@
         // Web Speech API Voice System
         let voices = [];
         let filipinoVoice = null;
-        let englishVoice = null;
+        let selectedVoice = null;
         let audioUnlocked = false;
         let lastAnnouncement = null; // { number: string, isPriority: boolean }
+        let settingsTimeout = null;
         
         const overlay = document.getElementById('voice-overlay');
         const langToggle = document.getElementById('lang-toggle');
         const voiceControls = document.getElementById('voice-controls');
-        const googleTtsAudio = document.getElementById('google-tts-audio');
+        
+        // Settings elements
+        const settingsToggle = document.getElementById('settings-toggle');
+        const voiceSettingsPanel = document.getElementById('voice-settings-panel');
+        const voiceSelect = document.getElementById('voice-select');
+        const rateSlider = document.getElementById('rate-slider');
+        const rateValue = document.getElementById('rate-value');
+        const btnTestVoice = document.getElementById('btn-test-voice');
+        const btnCloseSettings = document.getElementById('btn-close-settings');
+
+        function initSettings() {
+            const savedRate = localStorage.getItem('voice_rate');
+            if (savedRate) {
+                rateSlider.value = savedRate;
+                rateValue.textContent = savedRate;
+            }
+
+            rateSlider.addEventListener('input', function() {
+                rateValue.textContent = this.value;
+                localStorage.setItem('voice_rate', this.value);
+                resetSettingsTimeout();
+            });
+
+            voiceSelect.addEventListener('change', function() {
+                localStorage.setItem('preferred_voice_uri', this.value);
+                selectedVoice = voices.find(function(v) { return v.voiceURI === this.value; }.bind(this)) || selectedVoice;
+                resetSettingsTimeout();
+            });
+
+            btnTestVoice.addEventListener('click', function() {
+                resetSettingsTimeout();
+                playVoiceAnnouncement('13', false, true); // test number
+            });
+
+            btnCloseSettings.addEventListener('click', closeSettings);
+            settingsToggle.addEventListener('click', openSettings);
+
+            window.addEventListener('keydown', function(e) {
+                if (e.key === 's' || e.key === 'S') {
+                    if (voiceSettingsPanel.style.display === 'none') openSettings();
+                    else closeSettings();
+                }
+            });
+        }
+
+        function resetSettingsTimeout() {
+            if (settingsTimeout) clearTimeout(settingsTimeout);
+            settingsTimeout = setTimeout(closeSettings, 10000);
+        }
+
+        function openSettings() {
+            voiceSettingsPanel.style.display = 'flex';
+            resetSettingsTimeout();
+        }
+
+        function closeSettings() {
+            voiceSettingsPanel.style.display = 'none';
+            if (settingsTimeout) clearTimeout(settingsTimeout);
+        }
 
         // Unlock audio context and initialize Speech Synthesis on first interaction
-        overlay.addEventListener('click', () => {
+        overlay.addEventListener('click', function() {
             audioUnlocked = true;
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            // Dummy utterance to unlock speech synthesis on mobile/browsers
+            // Warm-up utterance
             if ('speechSynthesis' in window) {
-                let dummy = new SpeechSynthesisUtterance('');
+                var dummy = new SpeechSynthesisUtterance('');
                 dummy.volume = 0;
                 window.speechSynthesis.speak(dummy);
             }
             
             overlay.style.display = 'none';
             voiceControls.style.display = 'flex';
+            
+            loadAndSelectVoices();
+            initSettings();
         });
 
-        // Load Voices
-        function loadVoices() {
-            if (!('speechSynthesis' in window)) return;
-            voices = window.speechSynthesis.getVoices();
-            if (voices.length === 0) return;
+        // Robust async voice loading
+        function loadVoicesAsync() {
+            return new Promise(function(resolve) {
+                if (!('speechSynthesis' in window)) {
+                    resolve([]);
+                    return;
+                }
+                var initialVoices = window.speechSynthesis.getVoices();
+                if (initialVoices.length > 0) {
+                    resolve(initialVoices);
+                    return;
+                }
+                window.speechSynthesis.addEventListener('voiceschanged', function() {
+                    resolve(window.speechSynthesis.getVoices());
+                }, { once: true });
+            });
+        }
 
-            englishVoice = voices.find(v => v.lang.startsWith('en-PH')) || 
-                           voices.find(v => v.lang.startsWith('en-US')) || 
-                           voices.find(v => v.lang.startsWith('en')) || voices[0];
+        function getBestVoice(voicesList) {
+            if (voicesList.length === 0) return null;
             
-            filipinoVoice = voices.find(v => v.lang.startsWith('fil') || v.lang.startsWith('tl'));
-
-            if (filipinoVoice) {
-                langToggle.style.display = 'block';
-                const savedLang = localStorage.getItem('announcement_lang');
-                if (savedLang) langToggle.value = savedLang;
+            const savedUri = localStorage.getItem('preferred_voice_uri');
+            if (savedUri) {
+                const saved = voicesList.find(function(v) { return v.voiceURI === savedUri; });
+                if (saved) return saved;
             }
+
+            const priorityNames = [
+                'Microsoft Aria Online',
+                'Microsoft Jenny Online',
+                'Microsoft Guy Online',
+                'Microsoft Zira',
+                'Microsoft David',
+                'Google US English',
+                'Google UK English Female'
+            ];
+
+            for (var i = 0; i < priorityNames.length; i++) {
+                var match = voicesList.find(function(v) { return v.name.includes(priorityNames[i]); });
+                if (match) return match;
+            }
+            
+            return voicesList.find(function(v) { return v.lang.startsWith('en-PH'); }) ||
+                   voicesList.find(function(v) { return v.lang.startsWith('en-US'); }) ||
+                   voicesList.find(function(v) { return v.lang.startsWith('en'); }) || 
+                   voicesList[0];
         }
 
-        if ('speechSynthesis' in window) {
-            loadVoices();
-            if (window.speechSynthesis.onvoiceschanged !== undefined) {
-                window.speechSynthesis.onvoiceschanged = loadVoices;
-            }
+        function loadAndSelectVoices() {
+            loadVoicesAsync().then(function(v) {
+                voices = v;
+                if (voices.length === 0) return;
+
+                filipinoVoice = voices.find(function(v) { return v.lang.startsWith('fil') || v.lang.startsWith('tl'); });
+                selectedVoice = getBestVoice(voices);
+
+                if (filipinoVoice) {
+                    langToggle.style.display = 'block';
+                    const savedLang = localStorage.getItem('announcement_lang');
+                    if (savedLang) langToggle.value = savedLang;
+                }
+
+                // Populate settings dropdown
+                voiceSelect.innerHTML = '';
+                voices.forEach(function(voice) {
+                    var option = document.createElement('option');
+                    option.value = voice.voiceURI;
+                    option.textContent = voice.name + ' (' + voice.lang + ')';
+                    if (selectedVoice && voice.voiceURI === selectedVoice.voiceURI) {
+                        option.selected = true;
+                    }
+                    voiceSelect.appendChild(option);
+                });
+            });
         }
 
-        langToggle.addEventListener('change', (e) => {
+        langToggle.addEventListener('change', function(e) {
             localStorage.setItem('announcement_lang', e.target.value);
         });
 
-        // Voice Announcement Logic
-        function playVoiceAnnouncement(numberStr, isPriority = false, skipDelay = false) {
-            if (!audioUnlocked) {
-                console.warn('Voice announcement skipped: Audio not unlocked yet.');
-                return;
-            }
+        // Voice Split logic
+        function speakParts(parts, index) {
+            if (index >= parts.length) return;
             
-            const num = numberStr.replace('#', '').trim();
-            const lang = langToggle.value || 'en';
-            const delay = skipDelay ? 0 : 600; // Wait 600ms for chime if not repeating
-
-            setTimeout(async () => {
-                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-                googleTtsAudio.pause();
-                googleTtsAudio.currentTime = 0;
-
-                try {
-                    const response = await fetch('/api/announce', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ number: num, isPriority, lang })
-                    });
-                    
-                    const data = await response.json();
-                    if (!data.success) throw new Error(data.error || 'Unknown error from proxy');
-                    
-                    googleTtsAudio.src = data.url + '?t=' + Date.now(); 
-                    await googleTtsAudio.play();
-                } catch (err) {
-                    console.warn("Google TTS failed, falling back to Web Speech API:", err);
-                    playFallbackVoice(num, isPriority, lang);
-                }
-            }, delay);
-        }
-
-        function playFallbackVoice(num, isPriority, lang) {
-            if (!('speechSynthesis' in window)) return;
+            var part = parts[index];
+            var utterance = new SpeechSynthesisUtterance(part.text);
+            utterance.voice = part.voice;
+            utterance.rate = part.rate;
+            utterance.pitch = part.pitch;
+            utterance.volume = part.volume;
             
-            let text = '';
-            const useFilipino = lang === 'fil' && filipinoVoice;
+            utterance.onend = function() {
+                speakParts(parts, index + 1);
+            };
             
-            if (isPriority) {
-                if (useFilipino) {
-                    text = `Priority po — numero ${num}. P W D o Senior Citizen, mangyaring pumunta na po sa bintana.`;
-                } else {
-                    text = `Priority — Now serving number ${num}. P W D or Senior Citizen, please proceed to the window.`;
-                }
-            } else {
-                if (useFilipino) {
-                    text = `Susunod na po — numero ${num}, mangyaring pumunta na po sa bintana.`;
-                } else {
-                    text = `Now serving number ${num}, please proceed to the window.`;
-                }
-            }
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.voice = useFilipino ? filipinoVoice : englishVoice;
-            utterance.rate = 0.85;
-            utterance.pitch = isPriority ? 1.1 : 1.0;
-            utterance.volume = 1.0;
-
             window.speechSynthesis.speak(utterance);
         }
 
-        socket.on('trigger_repeat', () => {
+        // Voice Announcement Logic
+        function playVoiceAnnouncement(numberStr, isPriority, skipDelay) {
+            if (isPriority === undefined) isPriority = false;
+            if (skipDelay === undefined) skipDelay = false;
+
+            if (!audioUnlocked || !('speechSynthesis' in window) || !selectedVoice) {
+                if (!audioUnlocked) console.warn('Voice announcement skipped: Audio not unlocked.');
+                return;
+            }
+            
+            var num = numberStr.replace('#', '').trim();
+            var lang = langToggle.value || 'en';
+            var useFilipino = lang === 'fil' && filipinoVoice;
+            var voiceToUse = useFilipino ? filipinoVoice : selectedVoice;
+            var baseRate = parseFloat(rateSlider.value) || 0.85;
+
+            var delay = skipDelay ? 0 : 600;
+
+            setTimeout(function() {
+                window.speechSynthesis.cancel(); 
+
+                var parts = [];
+                
+                if (isPriority) {
+                    if (useFilipino) {
+                        parts.push({ text: "Priority po.", rate: baseRate - 0.05, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Numero " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "PWD o Senior Citizen, mangyaring pumunta na po sa bintana.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                    } else {
+                        parts.push({ text: "Priority.", rate: baseRate - 0.05, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Now serving number " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "PWD or Senior Citizen, please proceed to the window.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                    }
+                } else {
+                    if (useFilipino) {
+                        parts.push({ text: "Susunod na po.", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Numero " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Mangyaring pumunta na po sa bintana.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                    } else {
+                        parts.push({ text: "Now serving number " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Please proceed to the window.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                    }
+                }
+
+                speakParts(parts, 0);
+            }, delay);
+        }
+
+        socket.on('trigger_repeat', function() {
             if (lastAnnouncement) {
                 playVoiceAnnouncement(lastAnnouncement.number, lastAnnouncement.isPriority, true);
             }
