@@ -53,6 +53,8 @@
 
     <!-- Audio for chime -->
     <audio id="chime" src="assets/chime.mp3" preload="auto"></audio>
+    <!-- Audio for Google TTS -->
+    <audio id="google-tts-audio" preload="auto"></audio>
 
     <!-- Voice Controls -->
     <div class="voice-controls" id="voice-controls" style="display: none;">
@@ -60,7 +62,6 @@
             <option value="en">EN</option>
             <option value="fil">FIL</option>
         </select>
-        <button id="btn-repeat" class="voice-btn" title="Repeat Last Announcement">🔊 Repeat</button>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -127,9 +128,9 @@
         let lastAnnouncement = null; // { number: string, isPriority: boolean }
         
         const overlay = document.getElementById('voice-overlay');
-        const btnRepeat = document.getElementById('btn-repeat');
         const langToggle = document.getElementById('lang-toggle');
         const voiceControls = document.getElementById('voice-controls');
+        const googleTtsAudio = document.getElementById('google-tts-audio');
 
         // Unlock audio context and initialize Speech Synthesis on first interaction
         overlay.addEventListener('click', () => {
@@ -178,50 +179,72 @@
         });
 
         // Voice Announcement Logic
-        function playVoiceAnnouncement(numberStr, isPriority = false) {
-            if (!audioUnlocked || !('speechSynthesis' in window)) {
-                if (!audioUnlocked) console.warn('Voice announcement skipped: Audio not unlocked yet.');
+        function playVoiceAnnouncement(numberStr, isPriority = false, skipDelay = false) {
+            if (!audioUnlocked) {
+                console.warn('Voice announcement skipped: Audio not unlocked yet.');
                 return;
             }
             
-            // Wait for chime to finish (approx 600ms) before speaking
-            setTimeout(() => {
-                window.speechSynthesis.cancel(); // Cancel any ongoing speech
+            const num = numberStr.replace('#', '').trim();
+            const lang = langToggle.value || 'en';
+            const delay = skipDelay ? 0 : 600; // Wait 600ms for chime if not repeating
 
-                let text = '';
-                const lang = langToggle.value || 'en';
-                const useFilipino = lang === 'fil' && filipinoVoice;
-                
-                // Clean number string (e.g. remove # if present for better TTS)
-                const num = numberStr.replace('#', '').trim();
+            setTimeout(async () => {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                googleTtsAudio.pause();
+                googleTtsAudio.currentTime = 0;
 
-                if (isPriority) {
-                    if (useFilipino) {
-                        text = `Priority po — numero ${num}. P W D o Senior Citizen, mangyaring pumunta na po sa bintana.`;
-                    } else {
-                        text = `Priority — Now serving number ${num}. P W D or Senior Citizen, please proceed to the window.`;
-                    }
-                } else {
-                    if (useFilipino) {
-                        text = `Susunod na po — numero ${num}, mangyaring pumunta na po sa bintana.`;
-                    } else {
-                        text = `Now serving number ${num}, please proceed to the window.`;
-                    }
+                try {
+                    const response = await fetch('/api/announce', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ number: num, isPriority, lang })
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.success) throw new Error(data.error || 'Unknown error from proxy');
+                    
+                    googleTtsAudio.src = data.url + '?t=' + Date.now(); 
+                    await googleTtsAudio.play();
+                } catch (err) {
+                    console.warn("Google TTS failed, falling back to Web Speech API:", err);
+                    playFallbackVoice(num, isPriority, lang);
                 }
-
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.voice = useFilipino ? filipinoVoice : englishVoice;
-                utterance.rate = 0.85;
-                utterance.pitch = isPriority ? 1.1 : 1.0;
-                utterance.volume = 1.0;
-
-                window.speechSynthesis.speak(utterance);
-            }, 600); // 600ms delay ensures chime has mostly finished
+            }, delay);
         }
 
-        btnRepeat.addEventListener('click', () => {
+        function playFallbackVoice(num, isPriority, lang) {
+            if (!('speechSynthesis' in window)) return;
+            
+            let text = '';
+            const useFilipino = lang === 'fil' && filipinoVoice;
+            
+            if (isPriority) {
+                if (useFilipino) {
+                    text = `Priority po — numero ${num}. P W D o Senior Citizen, mangyaring pumunta na po sa bintana.`;
+                } else {
+                    text = `Priority — Now serving number ${num}. P W D or Senior Citizen, please proceed to the window.`;
+                }
+            } else {
+                if (useFilipino) {
+                    text = `Susunod na po — numero ${num}, mangyaring pumunta na po sa bintana.`;
+                } else {
+                    text = `Now serving number ${num}, please proceed to the window.`;
+                }
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = useFilipino ? filipinoVoice : englishVoice;
+            utterance.rate = 0.85;
+            utterance.pitch = isPriority ? 1.1 : 1.0;
+            utterance.volume = 1.0;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        socket.on('trigger_repeat', () => {
             if (lastAnnouncement) {
-                playVoiceAnnouncement(lastAnnouncement.number, lastAnnouncement.isPriority);
+                playVoiceAnnouncement(lastAnnouncement.number, lastAnnouncement.isPriority, true);
             }
         });
 

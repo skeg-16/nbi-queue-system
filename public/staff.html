@@ -372,6 +372,9 @@
                     <button class="btn btn-secondary btn-skip" id="btn-skip">
                         <span class="btn-text">Skip Person</span>
                     </button>
+                    <button class="btn btn-secondary btn-repeat" id="btn-repeat">
+                        <span class="btn-text">Repeat Voice</span>
+                    </button>
                     <button class="btn btn-secondary btn-reset" id="btn-reset">
                         <span class="btn-text">Reset Queue</span>
                     </button>
@@ -443,6 +446,7 @@
         const waitingCountEl = document.getElementById('waiting-count');
         const btnNext = document.getElementById('btn-next');
         const btnSkip = document.getElementById('btn-skip');
+        const btnRepeat = document.getElementById('btn-repeat');
         
         // Connection Logic
         const connDot = document.getElementById('conn-dot');
@@ -566,6 +570,12 @@
             if (currentCcdEl.textContent === '---') return;
             setButtonLoading(btnSkip, "Skipping...");
             socket.emit('skip');
+        });
+
+        btnRepeat.addEventListener('click', () => {
+            if (currentCcdEl.textContent === '---') return;
+            setButtonLoading(btnRepeat, "Repeating...");
+            socket.emit('repeat_announcement');
         });
 
         // Serve Now Override
