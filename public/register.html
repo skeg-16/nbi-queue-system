@@ -8,17 +8,13 @@
     <style>
         /* Modern Government Registration UI */
         body {
-            background-color: var(--primary-color, #0b1d3a);
-            /* Very subtle diagonal pattern at 2% opacity */
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 10px);
-            color: white;
+            background: #050e1d;
             font-family: 'Inter', sans-serif;
-            margin: 0;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            padding: 2rem 1rem;
+            padding: 1rem;
         }
 
         .register-container {
@@ -28,7 +24,7 @@
             border: 1px solid rgba(240, 165, 0, 0.15);
             border-top: 3px solid #F0A500;
             border-radius: 12px;
-            padding: 40px;
+            padding: 24px 32px;
             box-shadow: 0 15px 50px rgba(0,0,0,0.5);
             position: relative;
         }
@@ -56,17 +52,17 @@
         }
 
         .nbi-seal {
-            width: 70px;
-            height: 70px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             border: 1px solid rgba(240, 165, 0, 0.5);
-            margin: 0 auto 1rem;
+            margin: 0 auto 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 900;
             color: #F0A500;
-            font-size: 1.8rem;
+            font-size: 1.2rem;
             background: #0A1628;
             box-shadow: inset 0 0 15px rgba(240, 165, 0, 0.1);
         }
@@ -81,16 +77,16 @@
         }
 
         .brand-title {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: #F0A500;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 0.2rem;
+            margin-bottom: 0;
         }
 
         .brand-subtitle {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: rgba(255,255,255,0.5);
             letter-spacing: 1px;
             text-transform: uppercase;
@@ -100,7 +96,7 @@
             height: 1px;
             background: rgba(240, 165, 0, 0.2);
             width: 100%;
-            margin: 2rem 0;
+            margin: 1rem 0;
             position: relative;
             z-index: 1;
         }
@@ -109,7 +105,7 @@
         .form-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
+            gap: 0.75rem;
             position: relative;
             z-index: 1;
         }
@@ -118,7 +114,7 @@
         .field-wrapper {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.25rem;
             animation: fadeUp 0.5s ease backwards;
         }
         
@@ -156,12 +152,12 @@
 
         .standard-input {
             width: 100%;
-            min-height: 52px;
+            min-height: 40px;
             background: #0A1628;
             border: 1px solid rgba(255,255,255,0.12);
             border-radius: 8px;
             color: white;
-            font-size: 16px;
+            font-size: 14px;
             padding: 0 1rem;
             font-family: inherit;
             transition: all 0.2s ease;
@@ -206,12 +202,12 @@
         /* Errors */
         .error-msg {
             color: #e74c3c;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             display: none;
             align-items: center;
             gap: 0.3rem;
-            margin-top: 0.2rem;
+            margin-top: 0.1rem;
         }
         .error-msg.active {
             display: flex;
@@ -226,7 +222,7 @@
             height: 1px;
             background: rgba(240, 165, 0, 0.1);
             grid-column: 1 / -1;
-            margin: 0.5rem 0;
+            margin: 0.25rem 0;
             animation: fadeUp 0.5s ease backwards;
         }
 
@@ -237,12 +233,12 @@
             align-items: center;
             justify-content: space-between;
             background: #0A1628;
-            padding: 1.2rem 2rem;
+            padding: 0.6rem 1.2rem;
             border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.05);
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 0.5rem;
+            margin-top: 0;
             animation: fadeUp 0.5s ease backwards;
             animation-delay: 0.5s;
         }
@@ -256,13 +252,13 @@
         .priority-text-block {
             display: flex;
             flex-direction: column;
-            gap: 0.3rem;
+            gap: 0.1rem;
         }
         
         .priority-title {
             color: white;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -274,10 +270,10 @@
         }
 
         .priority-badge {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             background: rgba(231, 76, 60, 0.15);
             color: #e74c3c;
-            padding: 0.2rem 0.5rem;
+            padding: 0.1rem 0.4rem;
             border-radius: 4px;
             border: 1px solid rgba(231, 76, 60, 0.3);
             display: none;
@@ -292,7 +288,7 @@
 
         .priority-subtitle {
             color: rgba(255,255,255,0.4);
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             transition: color 0.3s;
         }
 
@@ -304,8 +300,8 @@
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 54px;
-            height: 30px;
+            width: 48px;
+            height: 26px;
         }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .toggle-slider {
@@ -319,8 +315,8 @@
         .toggle-slider:before {
             position: absolute;
             content: "";
-            height: 22px;
-            width: 22px;
+            height: 18px;
+            width: 18px;
             left: 4px;
             bottom: 4px;
             background-color: white;
@@ -331,13 +327,13 @@
             background-color: #F0A500;
         }
         input:checked + .toggle-slider:before {
-            transform: translateX(24px);
+            transform: translateX(22px);
         }
 
         /* Footer Elements */
         .form-footer {
             grid-column: 1 / -1;
-            margin-top: 1rem;
+            margin-top: 0.5rem;
             animation: fadeUp 0.5s ease backwards;
             animation-delay: 0.55s;
         }
@@ -345,7 +341,7 @@
         .required-indicator {
             font-size: 0.75rem;
             color: rgba(255,255,255,0.4);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
             text-align: right;
         }
         .required-indicator span { color: #F0A500; }
@@ -367,7 +363,7 @@
             justify-content: center;
             align-items: center;
             gap: 0.8rem;
-            height: 58px;
+            height: 48px;
         }
 
         .btn-submit:hover:not(:disabled) {
@@ -398,7 +394,7 @@
             text-align: center;
             font-size: 0.75rem;
             color: rgba(255,255,255,0.3);
-            margin-top: 1.5rem;
+            margin-top: 0.8rem;
             line-height: 1.4;
         }
 
