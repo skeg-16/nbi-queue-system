@@ -18,11 +18,23 @@
     --recall-hover: #8e44ad;
 }
 
-* {
+*, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Inter', sans-serif;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+img, video, svg {
+    max-width: 100%;
+    height: auto;
 }
 
 /* Custom Scrollbars (Dark Mode Default) */
@@ -60,8 +72,8 @@ body {
     color: var(--text-color);
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* --------------------
@@ -158,7 +170,7 @@ body {
     justify-content: center;
     text-align: center;
     z-index: 10;
-    padding-bottom: 15rem; /* Increased space to clear the floating footer */
+    padding-bottom: 2rem; /* Was 15rem, which caused cutoff */
 }
 
 .serving-label {
@@ -206,6 +218,7 @@ body {
     backdrop-filter: blur(30px);
     transition: all 0.3s ease;
     min-width: 65vw;
+    max-width: 90vw;
 }
 
 .queue-number {
@@ -257,10 +270,6 @@ body {
 }
 
 .recent-container {
-    position: absolute;
-    bottom: 3rem;
-    left: 50%;
-    transform: translateX(-50%);
     width: 85%;
     max-width: 1200px;
     display: flex;
@@ -273,6 +282,7 @@ body {
     border-radius: 30px;
     padding: 1.5rem 0;
     box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    margin: 2rem auto; /* Instead of fixed absolute positioning */
 }
 
 .recent-label {
@@ -289,6 +299,8 @@ body {
     justify-content: center;
     list-style: none;
     align-items: center;
+    flex-wrap: wrap; /* Allow recent items to wrap if too many */
+    padding: 0 1rem;
 }
 
 .recent-item {
@@ -316,7 +328,7 @@ body.staff-body {
 .staff-layout {
     display: flex;
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh; /* Changed from height to min-height */
 }
 
 .staff-status-panel {
@@ -459,7 +471,7 @@ body.staff-body {
 
 .secondary-controls {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1.5rem;
 }
 
@@ -543,6 +555,7 @@ body.staff-body {
     align-items: center;
     margin-bottom: 2rem;
     gap: 1rem;
+    flex-wrap: wrap; /* Ensure toolbar buttons wrap on small screens */
 }
 
 .search-input {
@@ -692,26 +705,7 @@ body.staff-body {
     .staff-controls-panel {
         padding: 2rem 1rem;
     }
-}
 
-@media (max-width: 600px) {
-    .secondary-controls {
-        grid-template-columns: 1fr;
-    }
-    
-    .secondary-controls .btn {
-        flex-direction: row;
-        justify-content: flex-start;
-        padding: 1.5rem;
-        gap: 1.5rem;
-    }
-
-    .secondary-controls .btn-icon {
-        margin-bottom: 0;
-    }
-}
-
-@media (max-width: 900px) {
     /* Display Page responsive */
     .header {
         padding: 1.5rem;
@@ -733,8 +727,30 @@ body.staff-body {
         width: 90%;
     }
     
-    .queue-number { font-size: 10rem; }
+    .queue-number { font-size: 8rem; }
     .skip-message { font-size: 1.5rem; }
     
     .recent-item { font-size: 1.5rem; padding: 0.4rem 1rem; }
+}
+
+@media (max-width: 640px) {
+    .secondary-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .secondary-controls .btn {
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 1.5rem;
+        gap: 1.5rem;
+    }
+
+    .secondary-controls .btn-icon {
+        margin-bottom: 0;
+    }
+
+    .queue-number { font-size: 5rem; }
+    .serving-label { font-size: 1.5rem; }
+    .brand-title { font-size: 1.4rem; }
+    .status-number { font-size: 4rem; }
 }
