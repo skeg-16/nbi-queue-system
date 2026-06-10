@@ -163,7 +163,7 @@
         .btn-next .btn-text { font-size: 2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;}
         .btn-next .btn-subtext { font-size: 1rem; font-weight: 600; opacity: 0.8; }
         
-        .secondary-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; }
+        .secondary-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; width: 100%; }
         
         .btn-secondary {
             padding: 1.2rem; flex-direction: row; gap: 0.8rem;
@@ -175,6 +175,12 @@
             background: rgba(149, 165, 166, 0.2); border: 1px solid rgba(149, 165, 166, 0.4); 
         }
         .btn-skip:hover:not(:disabled) { background: rgba(149, 165, 166, 0.3); }
+
+        .btn-repeat { 
+            background: rgba(52, 152, 219, 0.2); border: 1px solid rgba(52, 152, 219, 0.4); 
+            color: #3498db;
+        }
+        .btn-repeat:hover:not(:disabled) { background: rgba(52, 152, 219, 0.3); }
 
         .btn-reset { 
             background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.4); 
@@ -319,7 +325,8 @@
             .btn-next .btn-text { font-size: 1.8rem; }
             .btn-next .btn-subtext { font-size: 0.9rem; }
             
-            .btn-secondary { min-height: 56px; font-size: 1.1rem; }
+            .secondary-controls { grid-template-columns: 1fr; gap: 0.8rem; }
+            .btn-secondary { min-height: 56px; font-size: 1.1rem; padding: 1rem; }
             
             .stats-row { gap: 0.5rem; }
             .stat-card { padding: 0.8rem 0.5rem; }
