@@ -335,7 +335,10 @@
                 return;
             }
             
-            var num = numberStr.replace('#', '').trim();
+            var rawNum = numberStr.replace('#', '').trim();
+            var num = rawNum.replace(/^0+/, '');
+            if (num === '') num = '0';
+            
             var lang = langToggle.value || 'en';
             var useFilipino = lang === 'fil';
             var voiceToUse = selectedVoice;
