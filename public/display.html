@@ -171,8 +171,9 @@
             });
 
             voiceSelect.addEventListener('change', function() {
-                localStorage.setItem('preferred_voice_uri', this.value);
-                selectedVoice = voices.find(function(v) { return v.voiceURI === this.value; }.bind(this)) || selectedVoice;
+                var val = this.value;
+                localStorage.setItem('preferred_voice_uri', val);
+                selectedVoice = voices.find(function(v) { return v.voiceURI === val; }) || selectedVoice;
                 resetSettingsTimeout();
             });
 
@@ -336,8 +337,8 @@
             
             var num = numberStr.replace('#', '').trim();
             var lang = langToggle.value || 'en';
-            var useFilipino = lang === 'fil' && filipinoVoice;
-            var voiceToUse = useFilipino ? filipinoVoice : selectedVoice;
+            var useFilipino = lang === 'fil';
+            var voiceToUse = selectedVoice;
             var baseRate = parseFloat(rateSlider.value) || 0.85;
 
             var delay = skipDelay ? 0 : 600;
@@ -351,20 +352,20 @@
                     if (useFilipino) {
                         parts.push({ text: "Priority po.", rate: baseRate - 0.05, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                         parts.push({ text: "Numero " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "PWD o Senior Citizen, mangyaring pumunta na po sa bintana.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "PWD o Senior Citizen, mangyaring pumunta na po sa loob.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
                         parts.push({ text: "Priority.", rate: baseRate - 0.05, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                         parts.push({ text: "Now serving number " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "PWD or Senior Citizen, please proceed to the window.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "PWD or Senior Citizen, please proceed inside.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 } else {
                     if (useFilipino) {
                         parts.push({ text: "Susunod na po.", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
                         parts.push({ text: "Numero " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "Mangyaring pumunta na po sa bintana.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Mangyaring pumunta na po sa loob.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
                         parts.push({ text: "Now serving number " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "Please proceed to the window.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Please proceed inside.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 }
 
