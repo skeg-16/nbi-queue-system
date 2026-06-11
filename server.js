@@ -26,7 +26,13 @@ let state = {
     dailyCounter: 0,
     currentlyServing: null,
     recentServed: [],
-    priorityServedCount: 0
+    priorityServedCount: 0,
+    voiceSettings: {
+        lang: 'en',
+        rate: 0.85,
+        voiceURI: ''
+    },
+    availableVoices: []
 };
 
 // Agent Remarks Storage
@@ -336,6 +342,10 @@ io.on('connection', async (socket) => {
     // Initial load for connecting client
     await broadcastStaffUpdate();
     broadcastDisplayUpdate(false);
+    
+    // Sync voice state
+    socket.emit('voice_settings_update', state.voiceSettings);
+    socket.emit('available_voices_update', state.availableVoices);
 
     // Handle New Registration
     socket.on('submit_registration', async (formData, callback) => {
@@ -585,6 +595,22 @@ io.on('connection', async (socket) => {
 
     socket.on('repeat_announcement', () => {
         io.emit('trigger_repeat');
+    });
+
+    socket.on('register_display_voices', (voicesList) => {
+        state.availableVoices = voicesList;
+        io.emit('available_voices_update', state.availableVoices);
+    });
+
+    socket.on('update_voice_settings', (settings) => {
+        if (settings.lang !== undefined) state.voiceSettings.lang = settings.lang;
+        if (settings.rate !== undefined) state.voiceSettings.rate = settings.rate;
+        if (settings.voiceURI !== undefined) state.voiceSettings.voiceURI = settings.voiceURI;
+        io.emit('voice_settings_update', state.voiceSettings);
+    });
+
+    socket.on('trigger_test_voice', () => {
+        io.emit('trigger_test_voice_display');
     });
 
     socket.on('disconnect', () => {

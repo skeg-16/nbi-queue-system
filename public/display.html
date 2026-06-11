@@ -58,29 +58,7 @@
     <!-- Audio for chime -->
     <audio id="chime" src="assets/chime.mp3" preload="auto"></audio>
 
-    <!-- Settings Panel Gear Icon -->
-    <div id="settings-toggle" class="settings-gear" title="Voice Settings (Press S)">⚙️</div>
-
-    <!-- Voice Settings Panel -->
-    <div id="voice-settings-panel" class="voice-settings" style="display: none;">
-        <h3>Voice Settings</h3>
-        <label for="voice-select">Preferred Voice:</label>
-        <select id="voice-select" class="settings-input"></select>
-
-        <label for="rate-slider">Speech Rate: <span id="rate-value">0.85</span></label>
-        <input type="range" id="rate-slider" class="settings-input" min="0.7" max="1.0" step="0.01" value="0.85">
-
-        <button id="btn-test-voice" class="settings-btn">Test Voice</button>
-        <button id="btn-close-settings" class="settings-btn secondary">Close</button>
-    </div>
-
-    <!-- Voice Controls -->
-    <div class="voice-controls" id="voice-controls" style="display: none;">
-        <select id="lang-toggle" class="voice-btn" style="display: none;" title="Toggle Announcement Language">
-            <option value="en">EN</option>
-            <option value="fil">FIL</option>
-        </select>
-    </div>
+    <!-- Settings and Voice controls moved to Staff Dashboard -->
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -159,56 +137,21 @@
         const btnTestVoice = document.getElementById('btn-test-voice');
         const btnCloseSettings = document.getElementById('btn-close-settings');
 
-        function initSettings() {
-            const savedRate = localStorage.getItem('voice_rate');
-            if (savedRate) {
-                rateSlider.value = savedRate;
-                rateValue.textContent = savedRate;
+        let currentLang = 'en';
+        let currentRate = 0.85;
+
+        socket.on('voice_settings_update', (settings) => {
+            currentLang = settings.lang || 'en';
+            currentRate = settings.rate || 0.85;
+            if (settings.voiceURI && voices.length > 0) {
+                const newVoice = voices.find(v => v.voiceURI === settings.voiceURI);
+                if (newVoice) selectedVoice = newVoice;
             }
+        });
 
-            rateSlider.addEventListener('input', function () {
-                rateValue.textContent = this.value;
-                localStorage.setItem('voice_rate', this.value);
-                resetSettingsTimeout();
-            });
-
-            voiceSelect.addEventListener('change', function () {
-                var val = this.value;
-                localStorage.setItem('preferred_voice_uri', val);
-                selectedVoice = voices.find(function (v) { return v.voiceURI === val; }) || selectedVoice;
-                resetSettingsTimeout();
-            });
-
-            btnTestVoice.addEventListener('click', function () {
-                resetSettingsTimeout();
-                playVoiceAnnouncement('13', false, true); // test number
-            });
-
-            btnCloseSettings.addEventListener('click', closeSettings);
-            settingsToggle.addEventListener('click', openSettings);
-
-            window.addEventListener('keydown', function (e) {
-                if (e.key === 's' || e.key === 'S') {
-                    if (voiceSettingsPanel.style.display === 'none') openSettings();
-                    else closeSettings();
-                }
-            });
-        }
-
-        function resetSettingsTimeout() {
-            if (settingsTimeout) clearTimeout(settingsTimeout);
-            settingsTimeout = setTimeout(closeSettings, 10000);
-        }
-
-        function openSettings() {
-            voiceSettingsPanel.style.display = 'flex';
-            resetSettingsTimeout();
-        }
-
-        function closeSettings() {
-            voiceSettingsPanel.style.display = 'none';
-            if (settingsTimeout) clearTimeout(settingsTimeout);
-        }
+        socket.on('trigger_test_voice_display', () => {
+            playVoiceAnnouncement('13', false, true, 'Test Person');
+        });
 
         // Unlock audio context and initialize Speech Synthesis on first interaction
         overlay.addEventListener('click', function () {
@@ -223,10 +166,8 @@
             }
 
             overlay.style.display = 'none';
-            voiceControls.style.display = 'flex';
 
             loadAndSelectVoices();
-            initSettings();
         });
 
         // Robust async voice loading
@@ -285,29 +226,11 @@
                 filipinoVoice = voices.find(function (v) { return v.lang.startsWith('fil') || v.lang.startsWith('tl'); });
                 selectedVoice = getBestVoice(voices);
 
-                if (filipinoVoice) {
-                    langToggle.style.display = 'block';
-                    const savedLang = localStorage.getItem('announcement_lang');
-                    if (savedLang) langToggle.value = savedLang;
-                }
-
-                // Populate settings dropdown
-                voiceSelect.innerHTML = '';
-                voices.forEach(function (voice) {
-                    var option = document.createElement('option');
-                    option.value = voice.voiceURI;
-                    option.textContent = voice.name + ' (' + voice.lang + ')';
-                    if (selectedVoice && voice.voiceURI === selectedVoice.voiceURI) {
-                        option.selected = true;
-                    }
-                    voiceSelect.appendChild(option);
-                });
+                // Send voices to server so staff can see them!
+                const simpleVoices = voices.map(voice => ({ name: voice.name, lang: voice.lang, voiceURI: voice.voiceURI }));
+                socket.emit('register_display_voices', simpleVoices);
             });
         }
-
-        langToggle.addEventListener('change', function (e) {
-            localStorage.setItem('announcement_lang', e.target.value);
-        });
 
         // Audio SFX Setup
         const sfxBefore = new Audio('assets/sound.mp3');
@@ -347,10 +270,10 @@
             var num = rawNum.replace(/^0+/, '');
             if (num === '') num = '0';
 
-            var lang = langToggle.value || 'en';
+            var lang = currentLang;
             var useFilipino = lang === 'fil';
             var voiceToUse = selectedVoice;
-            var baseRate = parseFloat(rateSlider.value) || 0.85;
+            var baseRate = parseFloat(currentRate) || 0.85;
 
             var delay = skipDelay ? 0 : 600;
 
