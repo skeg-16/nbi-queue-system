@@ -430,36 +430,7 @@
                         </div>
                     </ul>
                 </div>
-                <!-- Voice Settings Card -->
-                <div class="dashboard-card" style="margin-top: 1.5rem; padding: 1.5rem;">
-                    <div class="card-label" style="margin-bottom: 1rem;">Display Voice Settings</div>
-                    
-                    <div style="display: flex; gap: 1rem; flex-direction: column;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <label style="color: #a0aec0;">Language:</label>
-                            <select id="staff-lang" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem; border-radius: 8px;">
-                                <option value="en">English</option>
-                                <option value="fil">Filipino</option>
-                            </select>
-                        </div>
 
-                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <label style="color: #a0aec0;">Speech Rate: <span id="staff-rate-val" style="color: white; font-weight: bold;">0.85</span></label>
-                            <input type="range" id="staff-rate" min="0.7" max="1.0" step="0.01" value="0.85" style="width: 100%;">
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <label style="color: #a0aec0;">Display Voice:</label>
-                            <select id="staff-voice" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem; border-radius: 8px; width: 100%; text-overflow: ellipsis;">
-                                <option value="">Waiting for display to connect...</option>
-                            </select>
-                        </div>
-                        
-                        <button id="btn-test-voice" class="btn btn-secondary" style="padding: 0.8rem; border-radius: 8px; font-size: 1rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; cursor: pointer; transition: all 0.2s;">
-                            Test Voice on Display
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -699,51 +670,7 @@
             closeResetModal();
         }
 
-        // Voice Settings Logic
-        const staffLang = document.getElementById('staff-lang');
-        const staffRate = document.getElementById('staff-rate');
-        const staffRateVal = document.getElementById('staff-rate-val');
-        const staffVoice = document.getElementById('staff-voice');
-        const btnTestVoice = document.getElementById('btn-test-voice');
 
-        staffLang.addEventListener('change', () => {
-            socket.emit('update_voice_settings', { lang: staffLang.value });
-        });
-
-        staffRate.addEventListener('input', () => {
-            staffRateVal.textContent = staffRate.value;
-            socket.emit('update_voice_settings', { rate: parseFloat(staffRate.value) });
-        });
-
-        staffVoice.addEventListener('change', () => {
-            socket.emit('update_voice_settings', { voiceURI: staffVoice.value });
-        });
-
-        btnTestVoice.addEventListener('click', () => {
-            socket.emit('trigger_test_voice');
-        });
-
-        socket.on('voice_settings_update', (settings) => {
-            if (settings.lang) staffLang.value = settings.lang;
-            if (settings.rate) {
-                staffRate.value = settings.rate;
-                staffRateVal.textContent = settings.rate;
-            }
-            if (settings.voiceURI) staffVoice.value = settings.voiceURI;
-        });
-
-        socket.on('available_voices_update', (voicesList) => {
-            if (!voicesList || voicesList.length === 0) return;
-            const currentVal = staffVoice.value;
-            staffVoice.innerHTML = '';
-            voicesList.forEach(voice => {
-                const option = document.createElement('option');
-                option.value = voice.voiceURI;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                staffVoice.appendChild(option);
-            });
-            if (currentVal) staffVoice.value = currentVal;
-        });
     </script>
 </body>
 </html>
