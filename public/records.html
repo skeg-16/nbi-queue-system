@@ -61,6 +61,19 @@
             color: var(--text-main);
             margin: 0;
             padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .staff-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 10px;
         }
 
         .staff-nav {
@@ -538,10 +551,17 @@
             border: 1px solid var(--border-color);
             vertical-align: middle;
             color: var(--text-main);
+            outline: none;
+        }
+
+        .records-table td:focus {
+            outline: 2px solid var(--gold);
+            outline-offset: -2px;
+            background: #e8f0fe;
         }
 
         .records-table tbody tr:hover {
-            background: #e8f0fe; /* Google sheet selection blue */
+            background: #f8f9fa; 
         }
 
         /* Badges Spreadsheet Style */
@@ -936,24 +956,13 @@
 </head>
 
 <body class="staff-body">
-    <div class="staff-nav no-print">
-        <!-- Navigation links removed -->
-        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode"
-            style="width: 40px; text-align: center;">🌙</button>
+    <!-- Excel-like Ribbon Header -->
+    <div class="excel-top-bar no-print" style="background: #0f9d58; color: white; padding: 6px 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: bold; width: 100%;">
+        <img src="/assets/nbi.png" alt="NBI Logo" style="height: 24px; object-fit: contain;">
+        <span>NBI Cybercrime Division - Complaint Registry</span>
     </div>
 
-    <div class="staff-container no-print" style="max-width: 1600px; padding: 2rem; margin: 0 auto;">
-
-        <!-- Formal Page Header -->
-        <div class="page-header"
-            style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 20px;">
-            <img src="/assets/nbi.png" alt="NBI Logo" style="height: 60px; object-fit: contain;">
-            <div style="text-align: center;">
-                <div class="page-title">NBI Cybercrime Division <span style="color: var(--text-muted);">&mdash;</span>
-                    Complaint Registry</div>
-                <div class="page-subtitle">Digital Complainant Database & Records Management</div>
-            </div>
-        </div>
+    <div class="staff-container no-print">
 
         <!-- Ledger Navigation with Calendar Picker -->
         <div class="ledger-nav">
@@ -1618,13 +1627,13 @@
                 if (r.is_priority) tr.className = 'priority-row';
 
                 tr.innerHTML = `
-                    <td>${dateStr}</td>
-                    <td style="font-weight: 800; color: var(--gold);">${r.ccd_no} ${isPrio}</td>
-                    <td style="font-weight: 700;">${r.full_name}</td>
-                    <td>${r.age}</td>
-                    <td>${r.contact}</td>
-                    <td><span class="status-badge ${statusClass}">${r.status}</span></td>
-                    <td class="no-print" style="text-align: right;">
+                    <td tabindex="0">${dateStr}</td>
+                    <td tabindex="0" style="font-weight: 800; color: var(--gold);">${r.ccd_no} ${isPrio}</td>
+                    <td tabindex="0" style="font-weight: 700;">${r.full_name}</td>
+                    <td tabindex="0">${r.age}</td>
+                    <td tabindex="0">${r.contact}</td>
+                    <td tabindex="0"><span class="status-badge ${statusClass}">${r.status}</span></td>
+                    <td class="no-print" style="text-align: right;" tabindex="0">
                         <div class="dropdown right">
                             <button class="btn-formal" onclick="toggleDropdown(event, 'dd-${r.id}')" style="padding: 0.4rem 0.8rem;">Actions ▾</button>
                             <div class="dropdown-content" id="dd-${r.id}">
