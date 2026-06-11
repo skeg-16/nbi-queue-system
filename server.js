@@ -360,79 +360,29 @@ io.on('connection', async (socket) => {
 
     // Handle "Next" logic with strict absolute priority algorithm
     socket.on('next', async () => {
-        if (state.currentlyServing) {
-            await supabase
-                .from('registrations')
-                .update({ status: 'Served' })
-                .eq('id', state.currentlyServing.id);
-                
-            state.recentServed.unshift({
-                ccdNo: state.currentlyServing.ccdNo,
-                isPriority: state.currentlyServing.isPriority
-            });
-            if (state.recentServed.length > 4) state.recentServed.pop();
-        }
-
-        const { data: waiting } = await supabase
-            .from('registrations')
-            .select('*')
-            .eq('status', 'Waiting');
-
-        if (!waiting || waiting.length === 0) {
-            state.currentlyServing = null;
-            await broadcastStaffUpdate();
-            broadcastDisplayUpdate(false);
-            return;
-        }
-
-        const sortedWaiting = getSortedList(waiting);
-        const nextPerson = sortedWaiting[0];
-
-        if (nextPerson.is_priority) {
-            if (state.priorityServedCount === 2) {
-                state.priorityServedCount = 1;
-            } else {
-                state.priorityServedCount++;
+        try {
+            if (state.currentlyServing) {
+                await supabase
+                    .from('registrations')
+                    .update({ status: 'Served' })
+                    .eq('id', state.currentlyServing.id);
+                    
+                state.recentServed.unshift({
+                    ccdNo: state.currentlyServing.ccdNo,
+                    isPriority: state.currentlyServing.isPriority
+                });
+                if (state.recentServed.length > 4) state.recentServed.pop();
             }
-        } else {
-            state.priorityServedCount = 0;
-        }
 
-        await supabase
-            .from('registrations')
-            .update({ status: 'Serving' })
-            .eq('id', nextPerson.id);
-            
-        state.currentlyServing = {
-            id: nextPerson.id,
-            ccdNo: nextPerson.ccd_no,
-            fullName: nextPerson.full_name,
-            isPriority: nextPerson.is_priority,
-            status: 'Serving'
-        };
-        
-        await broadcastStaffUpdate();
-        broadcastDisplayUpdate(true);
-    });
-
-    socket.on('skip', async () => {
-        if (state.currentlyServing) {
-            const skippedCcd = state.currentlyServing.ccdNo;
-            await supabase
-                .from('registrations')
-                .update({ status: 'Skipped' })
-                .eq('id', state.currentlyServing.id);
-                
-            state.currentlyServing = null;
-            
             const { data: waiting } = await supabase
                 .from('registrations')
                 .select('*')
                 .eq('status', 'Waiting');
 
             if (!waiting || waiting.length === 0) {
+                state.currentlyServing = null;
                 await broadcastStaffUpdate();
-                broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Queue Empty`);
+                broadcastDisplayUpdate(false);
                 return;
             }
 
@@ -463,7 +413,65 @@ io.on('connection', async (socket) => {
             };
             
             await broadcastStaffUpdate();
-            broadcastDisplayUpdate(true, `${skippedCcd} Skipped`);
+            broadcastDisplayUpdate(true);
+        } catch (error) {
+            console.error("Error in 'next' handler:", error);
+        }
+    });
+
+    socket.on('skip', async () => {
+        try {
+            if (state.currentlyServing) {
+                const skippedCcd = state.currentlyServing.ccdNo;
+                await supabase
+                    .from('registrations')
+                    .update({ status: 'Skipped' })
+                    .eq('id', state.currentlyServing.id);
+                    
+                state.currentlyServing = null;
+                
+                const { data: waiting } = await supabase
+                    .from('registrations')
+                    .select('*')
+                    .eq('status', 'Waiting');
+
+                if (!waiting || waiting.length === 0) {
+                    await broadcastStaffUpdate();
+                    broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Queue Empty`);
+                    return;
+                }
+
+                const sortedWaiting = getSortedList(waiting);
+                const nextPerson = sortedWaiting[0];
+
+                if (nextPerson.is_priority) {
+                    if (state.priorityServedCount === 2) {
+                        state.priorityServedCount = 1;
+                    } else {
+                        state.priorityServedCount++;
+                    }
+                } else {
+                    state.priorityServedCount = 0;
+                }
+
+                await supabase
+                    .from('registrations')
+                    .update({ status: 'Serving' })
+                    .eq('id', nextPerson.id);
+                    
+                state.currentlyServing = {
+                    id: nextPerson.id,
+                    ccdNo: nextPerson.ccd_no,
+                    fullName: nextPerson.full_name,
+                    isPriority: nextPerson.is_priority,
+                    status: 'Serving'
+                };
+                
+                await broadcastStaffUpdate();
+                broadcastDisplayUpdate(true, `${skippedCcd} Skipped`);
+            }
+        } catch (error) {
+            console.error("Error in 'skip' handler:", error);
         }
     });
 
