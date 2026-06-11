@@ -16,81 +16,51 @@
 
     <style>
         :root {
-            /* Dark Mode (Default) */
-            --bg-color: #050e1d;
-            --panel-bg: rgba(255, 255, 255, 0.02);
-            --border-color: rgba(255, 255, 255, 0.05);
-            --text-main: #ffffff;
-            --text-muted: #a0aec0;
-            --btn-bg: rgba(255, 255, 255, 0.05);
-            --btn-border: rgba(255, 255, 255, 0.15);
-            --btn-hover: rgba(255, 255, 255, 0.1);
-            --table-hover: rgba(255, 255, 255, 0.02);
-            --table-alt: transparent;
-            --input-bg: rgba(0, 0, 0, 0.4);
-            --modal-bg: #050e1d;
-            --dropdown-bg: #0b1d3a;
-            --gold: #f39c12;
-            --red: #CC2222;
+            /* Spreadsheet Theme */
+            --bg-color: #ffffff;
+            --panel-bg: #ffffff;
+            --border-color: #cccccc;
+            --text-main: #000000;
+            --text-muted: #666666;
+            --btn-bg: #f8f9fa;
+            --btn-border: #dadce0;
+            --btn-hover: #f1f3f4;
+            --table-hover: #f1f3f4;
+            --table-alt: #ffffff;
+            --input-bg: #ffffff;
+            --modal-bg: #ffffff;
+            --dropdown-bg: #ffffff;
+            --gold: #1a73e8; /* Google blue for highlights */
+            --red: #ea4335;
 
-            /* Status Badges Dark */
-            --status-served-bg: rgba(46, 204, 113, 0.15);
-            --status-served-txt: #2ecc71;
-            --status-served-border: rgba(46, 204, 113, 0.3);
-            --status-waiting-bg: rgba(52, 152, 219, 0.15);
-            --status-waiting-txt: #3498db;
-            --status-waiting-border: rgba(52, 152, 219, 0.3);
-            --status-skipped-bg: rgba(231, 76, 60, 0.15);
-            --status-skipped-txt: #e74c3c;
-            --status-skipped-border: rgba(231, 76, 60, 0.3);
-            --status-noshow-bg: rgba(149, 165, 166, 0.15);
-            --status-noshow-txt: #95a5a6;
-            --status-noshow-border: rgba(149, 165, 166, 0.3);
-            --status-serving-bg: rgba(243, 156, 18, 0.15);
-            --status-serving-txt: var(--gold);
-            --status-serving-border: rgba(243, 156, 18, 0.3);
-        }
-
-        body.light-mode {
-            --bg-color: #F0EDE6;
-            --panel-bg: #FDFCFA;
-            --border-color: #DDD8CF;
-            --text-main: #1C1A16;
-            --text-muted: #6B6560;
-            --btn-bg: #FDFCFA;
-            --btn-border: #3A3530;
-            --btn-hover: #E8E4DC;
-            --table-hover: #EDE9E0;
-            --table-alt: #F5F2EC;
-            --input-bg: #FFFFFF;
-            --modal-bg: #FDFCFA;
-            --dropdown-bg: #FDFCFA;
-            --gold: #B36B00;
-            /* Darker amber for contrast against white */
-
-            /* Status Badges Light */
-            --status-served-bg: #D4F0DE;
-            --status-served-txt: #1A7A3A;
-            --status-served-border: #D4F0DE;
-            --status-waiting-bg: #D4E8F8;
-            --status-waiting-txt: #1A5FA0;
-            --status-waiting-border: #D4E8F8;
-            --status-skipped-bg: #F8D4D4;
-            --status-skipped-txt: #A02020;
-            --status-skipped-border: #F8D4D4;
-            --status-noshow-bg: #E8E4DC;
-            --status-noshow-txt: #6B6560;
-            --status-noshow-border: #E8E4DC;
-            --status-serving-bg: #FFF0C0;
-            --status-serving-txt: #8A5A00;
-            --status-serving-border: #FFF0C0;
+            /* Spreadsheet Status Colors (Solid like conditional formatting) */
+            --status-served-bg: #0f9d58;
+            --status-served-txt: #ffffff;
+            --status-served-border: #0f9d58;
+            
+            --status-waiting-bg: #4285f4;
+            --status-waiting-txt: #ffffff;
+            --status-waiting-border: #4285f4;
+            
+            --status-skipped-bg: #ea4335;
+            --status-skipped-txt: #ffffff;
+            --status-skipped-border: #ea4335;
+            
+            --status-noshow-bg: #5f6368;
+            --status-noshow-txt: #ffffff;
+            --status-noshow-border: #5f6368;
+            
+            --status-serving-bg: #fbbc04;
+            --status-serving-txt: #000000;
+            --status-serving-border: #fbbc04;
         }
 
         .staff-body {
             background: var(--bg-color) !important;
-            font-family: 'Inter', sans-serif;
+            font-family: Arial, sans-serif;
             color: var(--text-main);
-            transition: background 0.3s ease, color 0.3s ease;
+            margin: 0;
+            padding: 0;
         }
 
         .staff-nav {
@@ -106,55 +76,12 @@
             transition: background 0.3s ease;
         }
 
-        body.light-mode .staff-nav {
-            background: #E8E4DC !important;
-        }
-
         .staff-nav .nav-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            margin: 0 0.5rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.85rem;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .staff-nav .nav-link:hover {
-            color: var(--text-main);
-        }
-
-        .staff-nav .nav-link.active {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
-        }
-
-        body.light-mode .staff-nav .nav-link.active {
-            background: #FDFCFA;
-            border-top-left-radius: 6px;
-            border-top-right-radius: 6px;
+            display: none; /* Removed */
         }
 
         .theme-toggle {
-            position: absolute;
-            right: 2rem;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .theme-toggle:hover {
-            color: var(--gold);
-        }
-
-        body.light-mode .theme-toggle {
-            color: var(--gold);
+            display: none;
         }
 
         /* Formal Page Header */
@@ -579,72 +506,49 @@
             border-radius: 4px;
         }
 
-        /* Table */
+        /* Table Spreadsheet Style */
         .table-container {
             overflow-x: auto;
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
         }
 
         .records-table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .records-table th {
-            padding: 1rem 1.2rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.75rem;
-            border-bottom: 1px solid var(--border-color);
-            background: var(--panel-bg);
+            padding: 6px 10px;
+            color: var(--text-main);
+            font-weight: bold;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+            background: #f3f3f3;
             cursor: pointer;
             white-space: nowrap;
             position: sticky;
             top: 0;
         }
 
-        body.light-mode .records-table th {
-            background: #E8E4DC;
-            color: #3A3530;
-            border-bottom: 1px solid #C8C4BC;
-        }
-
         .records-table td {
-            padding: 1rem 1.2rem;
-            border-bottom: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border: 1px solid var(--border-color);
             vertical-align: middle;
-        }
-
-        body.light-mode .records-table td {
-            border-bottom: 1px solid #E0DDD6;
-        }
-
-        .records-table tbody tr:nth-child(even) {
-            background: var(--table-alt);
+            color: var(--text-main);
         }
 
         .records-table tbody tr:hover {
-            background: var(--table-hover);
+            background: #e8f0fe; /* Google sheet selection blue */
         }
 
-        body.light-mode .records-table tbody tr.priority-row {
-            border-left: 3px solid var(--red);
-        }
-
-        /* Badges */
+        /* Badges Spreadsheet Style */
         .badge {
-            padding: 0.3rem 0.8rem;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            font-weight: normal;
             display: inline-block;
             white-space: nowrap;
         }
@@ -652,47 +556,40 @@
         .badge-priority {
             background: var(--red);
             color: white;
-            border: 1px solid #ff4444;
         }
 
         .status-badge {
-            padding: 0.3rem 0.8rem;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            padding: 2px 6px;
+            font-size: 0.85rem;
+            font-weight: normal;
             display: inline-block;
+            width: 100%;
+            text-align: center;
         }
 
         .status-waiting {
             background: var(--status-waiting-bg);
             color: var(--status-waiting-txt);
-            border: 1px solid var(--status-waiting-border);
         }
 
         .status-serving {
             background: var(--status-serving-bg);
             color: var(--status-serving-txt);
-            border: 1px solid var(--status-serving-border);
         }
 
         .status-served {
             background: var(--status-served-bg);
             color: var(--status-served-txt);
-            border: 1px solid var(--status-served-border);
         }
 
         .status-skipped {
             background: var(--status-skipped-bg);
             color: var(--status-skipped-txt);
-            border: 1px solid var(--status-skipped-border);
         }
 
         .status-noshow {
             background: var(--status-noshow-bg);
             color: var(--status-noshow-txt);
-            border: 1px solid var(--status-noshow-border);
         }
 
         /* Pagination */
@@ -1040,8 +937,7 @@
 
 <body class="staff-body">
     <div class="staff-nav no-print">
-        <a href="/staff" class="nav-link">Queue Dashboard</a>
-        <a href="/records" class="nav-link active">Database Records</a>
+        <!-- Navigation links removed -->
         <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode"
             style="width: 40px; text-align: center;">🌙</button>
     </div>
