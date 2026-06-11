@@ -490,7 +490,10 @@
             }
             
             if (data.cycleLabel) {
-                document.getElementById('cycle-label').textContent = data.cycleLabel;
+                const cycleEl = document.getElementById('cycle-label');
+                if (cycleEl) {
+                    cycleEl.textContent = data.cycleLabel;
+                }
             }
 
             // Update currently serving
@@ -562,12 +565,14 @@
 
         // Button Actions with loading states
         function setButtonLoading(btn, text) {
-            const originalHTML = btn.innerHTML;
+            const textSpan = btn.querySelector('.btn-text');
+            if (!textSpan) return;
+            const originalText = textSpan.textContent;
             btn.disabled = true;
-            btn.innerHTML = `<span class="btn-text">${text}</span>`;
+            textSpan.textContent = text;
             setTimeout(() => {
                 btn.disabled = false;
-                btn.innerHTML = originalHTML;
+                textSpan.textContent = originalText;
             }, 1500); // 1.5s debounce/loading
         }
 

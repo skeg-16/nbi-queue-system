@@ -321,6 +321,7 @@ async function broadcastStaffUpdate() {
 function broadcastDisplayUpdate(triggerChime = false, skipMessage = null) {
     const data = {
         currentlyServing: state.currentlyServing ? state.currentlyServing.ccdNo : '---',
+        currentlyServingName: state.currentlyServing ? state.currentlyServing.fullName : '',
         isPriority: state.currentlyServing ? state.currentlyServing.isPriority : false,
         recentNumbers: state.recentServed.map(r => r.ccdNo),
         triggerChime: triggerChime,

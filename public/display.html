@@ -7,6 +7,14 @@
     <title>NBI Queue Display</title>
     <link rel="icon" type="image/png" href="/assets/nbi.png">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .queue-number-box {
+            border-radius: 30px !important;
+        }
+        .recent-item {
+            border-radius: 15px !important;
+        }
+    </style>
 </head>
 
 <body class="display-body">
@@ -337,9 +345,10 @@
         }
 
         // Voice Announcement Logic
-        function playVoiceAnnouncement(numberStr, isPriority, skipDelay) {
+        function playVoiceAnnouncement(numberStr, isPriority, skipDelay, complainantName) {
             if (isPriority === undefined) isPriority = false;
             if (skipDelay === undefined) skipDelay = false;
+            if (complainantName === undefined) complainantName = "";
 
             if (!audioUnlocked || !('speechSynthesis' in window) || !selectedVoice) {
                 if (!audioUnlocked) console.warn('Voice announcement skipped: Audio not unlocked.');
@@ -367,25 +376,27 @@
 
                 var parts = [];
 
+                var nameText = complainantName ? ", " + complainantName + ", " : ", ";
+
                 if (isPriority) {
                     if (useFilipino) {
-                        parts.push({ text: "Priority number " + num + ", handa na po ang counter 1 para sa inyo.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Priority number " + num + nameText + "handa na po ang counter 1 para sa inyo.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        parts.push({ text: "Priority number " + num + ", Counter 1 is ready for you.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Priority number " + num + nameText + "Please proceed inside the interview room.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 } else {
                     if (useFilipino) {
-                        parts.push({ text: "Number " + num + ", handa na po ang counter 1 para sa inyo.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Number " + num + nameText + "handa na po ang counter 1 para sa inyo.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        parts.push({ text: "Number " + num + ", Counter 1 is ready for you.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Number " + num + nameText + "Please proceed inside the interview room.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 }
 
                 // Play SFX Before, then speak
-                sfxBefore.onended = function() {
+                sfxBefore.onended = function () {
                     speakParts(parts, 0);
                 };
-                
+
                 sfxBefore.play().catch(e => {
                     console.log('SFX before error:', e);
                     // Fallback to speaking directly if audio fails
@@ -397,7 +408,7 @@
 
         socket.on('trigger_repeat', function () {
             if (lastAnnouncement) {
-                playVoiceAnnouncement(lastAnnouncement.number, lastAnnouncement.isPriority, true);
+                playVoiceAnnouncement(lastAnnouncement.number, lastAnnouncement.isPriority, true, lastAnnouncement.name);
             }
         });
 
@@ -443,8 +454,8 @@
 
                     // Trigger Voice Announcement
                     const cleanNum = shortenCcd(data.currentlyServing);
-                    lastAnnouncement = { number: cleanNum, isPriority: data.isPriority };
-                    playVoiceAnnouncement(cleanNum, data.isPriority);
+                    lastAnnouncement = { number: cleanNum, isPriority: data.isPriority, name: data.currentlyServingName };
+                    playVoiceAnnouncement(cleanNum, data.isPriority, false, data.currentlyServingName);
 
                     // Flash effect
                     const glowColor = data.isPriority ? 'rgba(204, 34, 34, 0.8)' : 'rgba(241, 196, 15, 0.8)';
