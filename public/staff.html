@@ -220,9 +220,15 @@
         #stat-skipped { color: #e74c3c; }
 
         /* Waiting List */
-        .waiting-card { padding: 2rem; height: 100%; display: flex; flex-direction: column; }
+        .waiting-card { padding: 2rem; display: flex; flex-direction: column; height: auto; max-height: 80vh; }
         
-        .waiting-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 0.8rem; }
+        .waiting-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 0.8rem; padding-right: 10px; }
+        
+        /* Custom Scrollbar for waiting list */
+        .waiting-list::-webkit-scrollbar { width: 8px; }
+        .waiting-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .waiting-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .waiting-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
         .waiting-item {
             background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
             padding: 1.2rem 1.5rem; border-radius: 12px;
@@ -451,8 +457,12 @@
         const waitingListEl = document.getElementById('waiting-list');
         const waitingCountEl = document.getElementById('waiting-count');
         const btnNext = document.getElementById('btn-next');
+        const btnRecall = document.getElementById('btn-recall');
         const btnSkip = document.getElementById('btn-skip');
         const btnRepeat = document.getElementById('btn-repeat');
+        const btnReset = document.getElementById('btn-reset');
+        
+        let isQueueEmpty = true;
         
         // Connection Logic
         const connDot = document.getElementById('conn-dot');
@@ -514,14 +524,29 @@
             // Update Queue Preview
             waitingListEl.innerHTML = '';
             
-            if (!data.waitingList || data.waitingList.length === 0) {
+            isQueueEmpty = !data.waitingList || data.waitingList.length === 0;
+            
+            if (isQueueEmpty) {
                 waitingListEl.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">✓</div>
                         <div>No complainants in queue. Waiting for registrations.</div>
                     </div>
                 `;
+                btnNext.disabled = true;
+                btnNext.style.opacity = '0.5';
+                btnNext.style.cursor = 'not-allowed';
+                btnSkip.disabled = true;
+                btnSkip.style.opacity = '0.5';
+                btnSkip.style.cursor = 'not-allowed';
             } else {
+                btnNext.disabled = false;
+                btnNext.style.opacity = '1';
+                btnNext.style.cursor = 'pointer';
+                btnSkip.disabled = false;
+                btnSkip.style.opacity = '1';
+                btnSkip.style.cursor = 'pointer';
+                
                 data.waitingList.forEach((person, index) => {
                     const li = document.createElement('li');
                     
@@ -571,7 +596,9 @@
             btn.disabled = true;
             textSpan.textContent = text;
             setTimeout(() => {
-                btn.disabled = false;
+                if (!isQueueEmpty || (btn !== btnNext && btn !== btnSkip)) {
+                    btn.disabled = false;
+                }
                 textSpan.textContent = originalText;
             }, 1500); // 1.5s debounce/loading
         }

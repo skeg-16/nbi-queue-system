@@ -212,7 +212,7 @@ body {
 .queue-number-box {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 40px;
+    border-radius: 100px;
     padding: 3rem 6rem;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(255,255,255,0.05);
     backdrop-filter: blur(30px);
@@ -665,7 +665,7 @@ body.staff-body {
 }
 
 .priority-badge {
-    background: #f39c12;
+    background: #CC2222;
     color: #fff;
 }
 
@@ -904,4 +904,3 @@ body.staff-body {
     background: #e74c3c;
 }
 .settings-btn.secondary:hover { background: #c0392b; }
-* { border-radius: 0 !important; }
