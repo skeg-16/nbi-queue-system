@@ -262,6 +262,15 @@ app.post('/api/import', async (req, res) => {
     }
 });
 
+// Deployment Verification Endpoint
+app.get('/api/ping', (req, res) => {
+    res.json({ 
+        message: "Server is running!", 
+        status: "ok",
+        last_updated: new Date().toISOString()
+    });
+});
+
 
 async function broadcastStaffUpdate() {
     const todayStr = getTodayDateStr();
