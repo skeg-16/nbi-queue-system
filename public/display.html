@@ -190,11 +190,17 @@
                 'Microsoft Aria Online (Natural)',
                 'Microsoft Jenny Online',
                 'Microsoft Aria Online',
+                'Google UK English Female',
                 'Samantha',
                 'Karen',
                 'Victoria',
-                'Google UK English Female',
-                'Google US English'
+                'Google US English',
+                'Microsoft Hazel',
+                'Microsoft Catherine',
+                'Microsoft Susan',
+                'Microsoft Heera',
+                'Microsoft Zira Desktop',
+                'Microsoft Zira'
             ];
 
             for (var i = 0; i < priorityNames.length; i++) {
@@ -202,10 +208,35 @@
                 if (match) return match;
             }
 
-            return voicesList.find(function (v) { return v.lang.startsWith('en-PH'); }) ||
-                voicesList.find(function (v) { return v.lang.startsWith('en-US'); }) ||
-                voicesList.find(function (v) { return v.lang.startsWith('en'); }) ||
-                voicesList[0];
+            // Fallback 1: Any voice explicitly containing "Female"
+            var femaleMatch = voicesList.find(function (v) { return v.name.toLowerCase().includes('female'); });
+            if (femaleMatch) return femaleMatch;
+
+            // Fallback 2: Any English voice that is NOT explicitly male
+            const maleNames = ['david', 'mark', 'guy', 'george', 'daniel', 'arthur', 'male'];
+            var englishVoices = voicesList.filter(function(v) { return v.lang.startsWith('en'); });
+            
+            // Prefer PH/US English first among non-male voices
+            var nonMalePH = englishVoices.find(function(v) {
+                var lowerName = v.name.toLowerCase();
+                return v.lang.startsWith('en-PH') && !maleNames.some(function(m) { return lowerName.includes(m); });
+            });
+            if (nonMalePH) return nonMalePH;
+
+            var nonMaleUS = englishVoices.find(function(v) {
+                var lowerName = v.name.toLowerCase();
+                return v.lang.startsWith('en-US') && !maleNames.some(function(m) { return lowerName.includes(m); });
+            });
+            if (nonMaleUS) return nonMaleUS;
+
+            var nonMaleAny = englishVoices.find(function(v) {
+                var lowerName = v.name.toLowerCase();
+                return !maleNames.some(function(m) { return lowerName.includes(m); });
+            });
+            if (nonMaleAny) return nonMaleAny;
+
+            // Last resort
+            return englishVoices.find(function (v) { return v.lang.startsWith('en-US'); }) || voicesList[0];
         }
 
         function loadAndSelectVoices() {
