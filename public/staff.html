@@ -125,7 +125,7 @@
         .status-name { font-size: 2.2rem; font-weight: 600; color: white;}
 
         .priority-badge {
-            display: inline-block; background: #CC2222; color: white;
+            display: inline-block; background: #f39c12; color: #0b1d3a;
             padding: 0.4rem 1.2rem; border-radius: 50px; font-weight: 800; font-size: 1rem;
             text-transform: uppercase; letter-spacing: 2px;
             margin-bottom: 1rem;
@@ -237,8 +237,8 @@
         }
         
         .waiting-item.is-priority {
-            border-left: 6px solid #CC2222;
-            background: linear-gradient(90deg, rgba(204, 34, 34, 0.1) 0%, rgba(0,0,0,0.3) 100%);
+            border-left: 6px solid #f39c12;
+            background: linear-gradient(90deg, rgba(243, 156, 18, 0.1) 0%, rgba(0,0,0,0.3) 100%);
         }
 
         /* Next Up Highlight */
@@ -248,11 +248,11 @@
             background: linear-gradient(90deg, rgba(46, 204, 113, 0.1) 0%, rgba(0,0,0,0.3) 100%);
         }
         .waiting-item.next-up.is-priority {
-            border-left: 6px solid #CC2222;
-            border-top: 1px solid rgba(204, 34, 34, 0.5);
-            border-bottom: 1px solid rgba(204, 34, 34, 0.5);
-            border-right: 1px solid rgba(204, 34, 34, 0.5);
-            box-shadow: inset 0 0 20px rgba(204, 34, 34, 0.15);
+            border-left: 6px solid #f39c12;
+            border-top: 1px solid rgba(243, 156, 18, 0.5);
+            border-bottom: 1px solid rgba(243, 156, 18, 0.5);
+            border-right: 1px solid rgba(243, 156, 18, 0.5);
+            box-shadow: inset 0 0 20px rgba(243, 156, 18, 0.15);
         }
 
         .waiting-info { display: flex; flex-direction: column; gap: 0.2rem; }
@@ -557,7 +557,7 @@
                     li.className = classes;
                     
                     let priorityHTML = person.isPriority 
-                        ? '<div class="waiting-badge" style="background: rgba(204, 34, 34, 0.2); color: #CC2222;">[PRIORITY] PWD/Senior</div>' 
+                        ? '<div class="waiting-badge" style="background: rgba(243, 156, 18, 0.2); color: #f39c12;">[PRIORITY] PWD/Senior</div>' 
                         : '<div class="waiting-badge" style="background: rgba(255,255,255,0.1); color: white;">[REGULAR] Lane</div>';
                     
                     // Estimate wait time (~5 mins per person ahead of them)

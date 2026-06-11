@@ -7,15 +7,6 @@
     <title>NBI Queue Display</title>
     <link rel="icon" type="image/png" href="/assets/nbi.png">
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .queue-number-box {
-            border-radius: 30px !important;
-        }
-
-        .recent-item {
-            border-radius: 15px !important;
-        }
-    </style>
 </head>
 
 <body class="display-body">
@@ -318,12 +309,12 @@
             localStorage.setItem('announcement_lang', e.target.value);
         });
 
+        // Audio SFX Setup
+        const sfxBefore = new Audio('assets/sound.mp3');
+
         // Voice Split logic
         function speakParts(parts, index) {
             if (index >= parts.length) {
-                // Play SFX After when speech finishes
-                sfxAfter.currentTime = 0;
-                sfxAfter.play().catch(e => console.log('SFX after error:', e));
                 return;
             }
 
@@ -368,8 +359,6 @@
                 window.speechSynthesis.cancel();
                 sfxBefore.pause();
                 sfxBefore.currentTime = 0;
-                sfxAfter.pause();
-                sfxAfter.currentTime = 0;
 
                 var parts = [];
 
