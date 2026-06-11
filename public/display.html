@@ -179,32 +179,23 @@
         function getBestVoice(voicesList) {
             if (voicesList.length === 0) return null;
 
-            const savedUri = localStorage.getItem('preferred_voice_uri');
-            if (savedUri) {
-                const saved = voicesList.find(function (v) { return v.voiceURI === savedUri; });
-                if (saved) return saved;
-            }
-
             const priorityNames = [
-                'Microsoft Jenny Online (Natural)',
-                'Microsoft Aria Online (Natural)',
-                'Microsoft Jenny Online',
-                'Microsoft Aria Online',
-                'Google UK English Female',
-                'Samantha',
-                'Karen',
-                'Victoria',
-                'Google US English',
-                'Microsoft Hazel',
-                'Microsoft Catherine',
-                'Microsoft Susan',
-                'Microsoft Heera',
-                'Microsoft Zira Desktop',
-                'Microsoft Zira'
+                'microsoft jenny online',
+                'microsoft aria online',
+                'google uk english female',
+                'samantha',
+                'karen',
+                'victoria',
+                'google us english',
+                'microsoft hazel',
+                'microsoft catherine',
+                'microsoft susan',
+                'microsoft heera',
+                'microsoft zira'
             ];
 
             for (var i = 0; i < priorityNames.length; i++) {
-                var match = voicesList.find(function (v) { return v.name.includes(priorityNames[i]); });
+                var match = voicesList.find(function (v) { return v.name.toLowerCase().includes(priorityNames[i]); });
                 if (match) return match;
             }
 
