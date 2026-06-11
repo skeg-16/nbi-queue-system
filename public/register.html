@@ -551,7 +551,7 @@
                     <div class="input-group" id="group-fullName">
                         <input type="text" class="standard-input" id="fullName" placeholder="Enter your full name" tabindex="1">
                     </div>
-                    <div class="error-msg" id="err-fullName">⚠ Please enter a valid full name (letters only)</div>
+                    <div class="error-msg" id="err-fullName">⚠ Please enter a valid full name (letters and at most one dot)</div>
                 </div>
                 
                 <div class="field-wrapper" id="wrap-contact">
@@ -712,7 +712,10 @@
         // Validation Rules
         const rules = {
             fullName: {
-                validate: (val) => val.trim().length >= 2 && /^[a-zA-Z\s]+$/.test(val),
+                validate: (val) => {
+                    const trimmed = val.trim();
+                    return trimmed.length >= 2 && /[a-zA-Z]/.test(trimmed) && /^[a-zA-Z\s]*\.?[a-zA-Z\s]*$/.test(trimmed);
+                },
                 errorEl: 'err-fullName',
                 groupEl: 'group-fullName'
             },

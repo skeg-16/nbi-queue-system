@@ -391,6 +391,43 @@
             return ccd;
         }
 
+        function updateDisplayCore(data) {
+            queueNumberEl.classList.remove('is-text');
+            queueNumberEl.textContent = shortenCcd(data.currentlyServing);
+            
+            if (data.isPriority) {
+                priorityBadgeEl.style.display = 'inline-block';
+                queueNumberEl.classList.add('priority');
+                queueBoxEl.classList.add('priority');
+                queueNumberEl.style.color = '';
+                queueNumberEl.style.textShadow = '';
+            } else {
+                priorityBadgeEl.style.display = 'none';
+                queueNumberEl.classList.remove('priority');
+                queueBoxEl.classList.remove('priority');
+                queueNumberEl.style.color = '';
+                queueNumberEl.style.textShadow = '';
+            }
+
+            if (data.triggerChime) {
+                playChimeSound(data.isPriority);
+                
+                // Trigger Voice Announcement
+                const cleanNum = shortenCcd(data.currentlyServing);
+                lastAnnouncement = { number: cleanNum, isPriority: data.isPriority };
+                playVoiceAnnouncement(cleanNum, data.isPriority);
+                
+                // Flash effect
+                const glowColor = data.isPriority ? 'rgba(204, 34, 34, 0.8)' : 'rgba(241, 196, 15, 0.8)';
+                queueBoxEl.style.transform = 'scale(1.05)';
+                queueBoxEl.style.boxShadow = `0 30px 80px ${glowColor}`;
+                setTimeout(() => {
+                    queueBoxEl.style.transform = 'scale(1)';
+                    queueBoxEl.style.boxShadow = '';
+                }, 500);
+            }
+        }
+
         socket.on('display_update', (data) => {
             if (data.skipMessage) {
                 // Show temporary skip message
@@ -398,44 +435,10 @@
                 queueNumberEl.textContent = data.skipMessage;
                 
                 setTimeout(() => {
-                    queueNumberEl.classList.remove('is-text');
-                    queueNumberEl.textContent = shortenCcd(data.currentlyServing);
+                    updateDisplayCore(data);
                 }, 3000);
             } else {
-                queueNumberEl.classList.remove('is-text');
-                queueNumberEl.textContent = shortenCcd(data.currentlyServing);
-                
-                if (data.isPriority) {
-                    priorityBadgeEl.style.display = 'inline-block';
-                    queueNumberEl.classList.add('priority');
-                    queueBoxEl.classList.add('priority');
-                    queueNumberEl.style.color = '';
-                    queueNumberEl.style.textShadow = '';
-                } else {
-                    priorityBadgeEl.style.display = 'none';
-                    queueNumberEl.classList.remove('priority');
-                    queueBoxEl.classList.remove('priority');
-                    queueNumberEl.style.color = '';
-                    queueNumberEl.style.textShadow = '';
-                }
-
-                if (data.triggerChime) {
-                    playChimeSound(data.isPriority);
-                    
-                    // Trigger Voice Announcement
-                    const cleanNum = shortenCcd(data.currentlyServing);
-                    lastAnnouncement = { number: cleanNum, isPriority: data.isPriority };
-                    playVoiceAnnouncement(cleanNum, data.isPriority);
-                    
-                    // Flash effect
-                    const glowColor = data.isPriority ? 'rgba(204, 34, 34, 0.8)' : 'rgba(241, 196, 15, 0.8)';
-                    queueBoxEl.style.transform = 'scale(1.05)';
-                    queueBoxEl.style.boxShadow = `0 30px 80px ${glowColor}`;
-                    setTimeout(() => {
-                        queueBoxEl.style.transform = 'scale(1)';
-                        queueBoxEl.style.boxShadow = '';
-                    }, 500);
-                }
+                updateDisplayCore(data);
             }
 
             // Update recent list

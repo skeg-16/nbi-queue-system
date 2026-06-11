@@ -463,7 +463,7 @@ io.on('connection', async (socket) => {
             };
             
             await broadcastStaffUpdate();
-            broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Now Serving ${state.currentlyServing.ccdNo}`);
+            broadcastDisplayUpdate(true, `${skippedCcd} Skipped`);
         }
     });
 
