@@ -200,9 +200,10 @@
             const priorityNames = [
                 'Microsoft Aria Online',
                 'Microsoft Jenny Online',
-                'Microsoft Guy Online',
+                'Samantha',
+                'Karen',
+                'Victoria',
                 'Microsoft Zira',
-                'Microsoft David',
                 'Google US English',
                 'Google UK English Female'
             ];
@@ -229,6 +230,11 @@
                 // Send voices to server so staff can see them!
                 const simpleVoices = voices.map(voice => ({ name: voice.name, lang: voice.lang, voiceURI: voice.voiceURI }));
                 socket.emit('register_display_voices', simpleVoices);
+                
+                // Tell staff what the actual selected default voice is
+                if (selectedVoice) {
+                    socket.emit('update_voice_settings', { voiceURI: selectedVoice.voiceURI });
+                }
             });
         }
 
@@ -282,6 +288,7 @@
                 window.speechSynthesis.cancel();
                 sfxBefore.pause();
                 sfxBefore.currentTime = 0;
+                sfxBefore.onended = null; // FIX: Prevent double firing from previous play requests
 
                 var parts = [];
 
@@ -303,14 +310,21 @@
 
                 // Play SFX Before, then speak
                 sfxBefore.onended = function () {
-                    speakParts(parts, 0);
+                    setTimeout(function() { speakParts(parts, 0); }, 50);
                 };
 
-                sfxBefore.play().catch(e => {
-                    console.log('SFX before error:', e);
-                    // Fallback to speaking directly if audio fails
-                    speakParts(parts, 0);
-                });
+                var playPromise = sfxBefore.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        console.log('SFX before error:', e);
+                        setTimeout(function() { speakParts(parts, 0); }, 50);
+                    });
+                } else {
+                    // For very old browsers
+                    sfxBefore.onended = function () {
+                        setTimeout(function() { speakParts(parts, 0); }, 50);
+                    };
+                }
 
             }, delay);
         }
@@ -348,8 +362,8 @@
                     priorityBadgeEl.style.display = 'inline-block';
                     queueNumberEl.classList.add('priority');
                     queueBoxEl.classList.add('priority');
-                    queueNumberEl.style.color = '';
-                    queueNumberEl.style.textShadow = '';
+                    queueNumberEl.style.color = '#ff3333';
+                    queueNumberEl.style.textShadow = '0 0 30px rgba(255, 51, 51, 0.6)';
                 } else {
                     priorityBadgeEl.style.display = 'none';
                     queueNumberEl.classList.remove('priority');
