@@ -131,10 +131,6 @@
         socket.on('voice_settings_update', (settings) => {
             currentLang = settings.lang || 'en';
             currentRate = settings.rate || 0.85;
-            if (settings.voiceURI && voices.length > 0) {
-                const newVoice = voices.find(v => v.voiceURI === settings.voiceURI);
-                if (newVoice) selectedVoice = newVoice;
-            }
         });
 
         socket.on('trigger_test_voice_display', () => {
