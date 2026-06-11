@@ -904,3 +904,4 @@ body.staff-body {
     background: #e74c3c;
 }
 .settings-btn.secondary:hover { background: #c0392b; }
+* { border-radius: 0 !important; }
