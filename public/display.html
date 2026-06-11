@@ -355,22 +355,15 @@
 
                 if (isPriority) {
                     if (useFilipino) {
-                        parts.push({ text: "Priority po.", rate: baseRate - 0.05, pitch: 1.0, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "Numero " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "PWD o Senior Citizen, mangyaring pumunta na po sa loob.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Priority number " + num + ", handa na po ang counter 1 para sa inyo.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        parts.push({ text: "Priority.", rate: baseRate - 0.05, pitch: 1.0, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "Now serving number " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "PWD or Senior Citizen, please proceed inside.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Priority number " + num + ", Counter 1 is ready for you.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 } else {
                     if (useFilipino) {
-                        parts.push({ text: "Susunod na po.", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "Numero " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "Mangyaring pumunta na po sa loob.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Number " + num + ", handa na po ang counter 1 para sa inyo.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        parts.push({ text: "Now serving number " + num + ".", rate: baseRate, pitch: 1.05, volume: 1.0, voice: voiceToUse });
-                        parts.push({ text: "Please proceed inside.", rate: baseRate + 0.03, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        parts.push({ text: "Number " + num + ", Counter 1 is ready for you.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 }
 

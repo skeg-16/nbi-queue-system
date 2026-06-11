@@ -557,6 +557,10 @@
             renderStaffState(data);
         });
 
+        socket.on('action_error', (data) => {
+            alert("QUEUE ACTION ERROR: " + data.message + "\n\nThis is usually caused by Row Level Security blocking updates. Please check Supabase or your admin settings.");
+        });
+
         // Button Actions with loading states
         function setButtonLoading(btn, text) {
             const originalHTML = btn.innerHTML;

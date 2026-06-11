@@ -1153,6 +1153,11 @@
                 <span id="lastUpdated"
                     style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem; font-style: italic;">Connecting...</span>
 
+                <div class="dropdown right" id="importDropdown">
+                    <button class="btn-formal btn-primary" style="margin-right: 0.5rem;" onclick="document.getElementById('csvFileInput').click()">Import CSV</button>
+                    <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleCSVImport(event)">
+                </div>
+
                 <div class="dropdown right" id="exportDropdown">
                     <button class="btn-formal dropdown-btn" onclick="toggleDropdown(event, 'export-menu')">Export
                         ▾</button>
@@ -2105,6 +2110,78 @@
             });
 
             doc.save(`NBI_EOD_Report_${viewStr}.pdf`);
+        }
+
+        // --- Bulk CSV Import ---
+        async function handleCSVImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n');
+                if (rows.length < 2) {
+                    showToast("CSV file is empty or missing headers", true);
+                    return;
+                }
+
+                const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+                const records = [];
+
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row.trim()) continue;
+                    
+                    // Simple CSV parsing (does not handle quoted commas properly, but fine for basic)
+                    const values = row.split(',').map(v => v.trim());
+                    const record = {};
+                    
+                    headers.forEach((h, index) => {
+                        let val = values[index] !== undefined ? values[index] : null;
+                        if (val === '') val = null;
+                        
+                        if (h === 'age') val = val ? parseInt(val) : 0;
+                        if (h === 'is_priority') val = (val === 'true' || val === '1' || val === 'yes');
+                        
+                        // Map CSV headers to database columns if needed
+                        record[h] = val;
+                    });
+                    
+                    // Fallbacks for required fields based on Schema Finalization
+                    if (!record.ccd_no) record.ccd_no = 'CCD-IMPORT-' + Date.now() + '-' + i;
+                    if (!record.full_name) record.full_name = 'Unknown Name';
+                    if (!record.status) record.status = 'Waiting';
+                    if (!record.age) record.age = 0;
+
+                    records.push(record);
+                }
+
+                if (records.length === 0) return;
+
+                try {
+                    showToast("Importing " + records.length + " records...");
+                    const response = await fetch('/api/import', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ records })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast(`Successfully imported ${result.count} records!`);
+                        fetchRecords(); // Refresh the grid
+                    } else {
+                        showToast("Import failed: " + result.error, true);
+                    }
+                } catch (err) {
+                    showToast("Import failed: " + err.message, true);
+                }
+                
+                // Clear the input so the same file can be uploaded again if needed
+                event.target.value = '';
+            };
+            reader.readAsText(file);
         }
 
         // --- Toasts ---

@@ -240,6 +240,28 @@ app.put('/api/records/:id/status', async (req, res) => {
     }
 });
 
+app.post('/api/import', async (req, res) => {
+    try {
+        const records = req.body.records;
+        if (!records || !Array.isArray(records)) {
+            return res.status(400).json({ success: false, error: "Invalid data format" });
+        }
+
+        const { data, error } = await supabase
+            .from('registrations')
+            .insert(records);
+            
+        if (error) throw error;
+        
+        auditLog('Bulk Import', `Imported ${records.length} records`);
+        broadcastStaffUpdate();
+        res.json({ success: true, count: records.length });
+    } catch (err) {
+        console.error("Import Error:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 async function broadcastStaffUpdate() {
     const todayStr = getTodayDateStr();
@@ -360,79 +382,31 @@ io.on('connection', async (socket) => {
 
     // Handle "Next" logic with strict absolute priority algorithm
     socket.on('next', async () => {
-        if (state.currentlyServing) {
-            await supabase
-                .from('registrations')
-                .update({ status: 'Served' })
-                .eq('id', state.currentlyServing.id);
+        try {
+            if (state.currentlyServing) {
+                const { error: updateErr } = await supabase
+                    .from('registrations')
+                    .update({ status: 'Served' })
+                    .eq('id', state.currentlyServing.id);
+                if (updateErr) throw updateErr;
 
-            state.recentServed.unshift({
-                ccdNo: state.currentlyServing.ccdNo,
-                isPriority: state.currentlyServing.isPriority
-            });
-            if (state.recentServed.length > 4) state.recentServed.pop();
-        }
-
-        const { data: waiting } = await supabase
-            .from('registrations')
-            .select('*')
-            .eq('status', 'Waiting');
-
-        if (!waiting || waiting.length === 0) {
-            state.currentlyServing = null;
-            await broadcastStaffUpdate();
-            broadcastDisplayUpdate(false);
-            return;
-        }
-
-        const sortedWaiting = getSortedList(waiting);
-        const nextPerson = sortedWaiting[0];
-
-        if (nextPerson.is_priority) {
-            if (state.priorityServedCount === 2) {
-                state.priorityServedCount = 1;
-            } else {
-                state.priorityServedCount++;
+                state.recentServed.unshift({
+                    ccdNo: state.currentlyServing.ccdNo,
+                    isPriority: state.currentlyServing.isPriority
+                });
+                if (state.recentServed.length > 4) state.recentServed.pop();
             }
-        } else {
-            state.priorityServedCount = 0;
-        }
 
-        await supabase
-            .from('registrations')
-            .update({ status: 'Serving' })
-            .eq('id', nextPerson.id);
-
-        state.currentlyServing = {
-            id: nextPerson.id,
-            ccdNo: nextPerson.ccd_no,
-            fullName: nextPerson.full_name,
-            isPriority: nextPerson.is_priority,
-            status: 'Serving'
-        };
-
-        await broadcastStaffUpdate();
-        broadcastDisplayUpdate(true);
-    });
-
-    socket.on('skip', async () => {
-        if (state.currentlyServing) {
-            const skippedCcd = state.currentlyServing.ccdNo;
-            await supabase
-                .from('registrations')
-                .update({ status: 'Skipped' })
-                .eq('id', state.currentlyServing.id);
-
-            state.currentlyServing = null;
-
-            const { data: waiting } = await supabase
+            const { data: waiting, error: fetchErr } = await supabase
                 .from('registrations')
                 .select('*')
                 .eq('status', 'Waiting');
+            if (fetchErr) throw fetchErr;
 
             if (!waiting || waiting.length === 0) {
+                state.currentlyServing = null;
                 await broadcastStaffUpdate();
-                broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Queue Empty`);
+                broadcastDisplayUpdate(false);
                 return;
             }
 
@@ -449,10 +423,11 @@ io.on('connection', async (socket) => {
                 state.priorityServedCount = 0;
             }
 
-            await supabase
+            const { error: updateErr2 } = await supabase
                 .from('registrations')
                 .update({ status: 'Serving' })
                 .eq('id', nextPerson.id);
+            if (updateErr2) throw updateErr2;
 
             state.currentlyServing = {
                 id: nextPerson.id,
@@ -463,46 +438,117 @@ io.on('connection', async (socket) => {
             };
 
             await broadcastStaffUpdate();
-            broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Now Serving ${state.currentlyServing.ccdNo}`);
+            broadcastDisplayUpdate(true);
+        } catch (err) {
+            console.error("Error in 'next':", err);
+            socket.emit('action_error', { message: "Failed to call next person. The database update was blocked or failed." });
+        }
+    });
+
+    socket.on('skip', async () => {
+        try {
+            if (state.currentlyServing) {
+                const skippedCcd = state.currentlyServing.ccdNo;
+                const { error: updateErr1 } = await supabase
+                    .from('registrations')
+                    .update({ status: 'Skipped' })
+                    .eq('id', state.currentlyServing.id);
+                if (updateErr1) throw updateErr1;
+
+                state.currentlyServing = null;
+
+                const { data: waiting, error: fetchErr } = await supabase
+                    .from('registrations')
+                    .select('*')
+                    .eq('status', 'Waiting');
+                if (fetchErr) throw fetchErr;
+
+                if (!waiting || waiting.length === 0) {
+                    await broadcastStaffUpdate();
+                    broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Queue Empty`);
+                    return;
+                }
+
+                const sortedWaiting = getSortedList(waiting);
+                const nextPerson = sortedWaiting[0];
+
+                if (nextPerson.is_priority) {
+                    if (state.priorityServedCount === 2) {
+                        state.priorityServedCount = 1;
+                    } else {
+                        state.priorityServedCount++;
+                    }
+                } else {
+                    state.priorityServedCount = 0;
+                }
+
+                const { error: updateErr2 } = await supabase
+                    .from('registrations')
+                    .update({ status: 'Serving' })
+                    .eq('id', nextPerson.id);
+                if (updateErr2) throw updateErr2;
+
+                state.currentlyServing = {
+                    id: nextPerson.id,
+                    ccdNo: nextPerson.ccd_no,
+                    fullName: nextPerson.full_name,
+                    isPriority: nextPerson.is_priority,
+                    status: 'Serving'
+                };
+
+                await broadcastStaffUpdate();
+                broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Now Serving ${state.currentlyServing.ccdNo}`);
+            }
+        } catch (err) {
+            console.error("Error in 'skip':", err);
+            socket.emit('action_error', { message: "Failed to skip person. The database update was blocked or failed." });
         }
     });
 
     socket.on('serve_specific', async (id) => {
-        if (state.currentlyServing) {
-            await supabase
+        try {
+            if (state.currentlyServing) {
+                const { error: updateErr1 } = await supabase
+                    .from('registrations')
+                    .update({ status: 'Served' })
+                    .eq('id', state.currentlyServing.id);
+                if (updateErr1) throw updateErr1;
+
+                state.recentServed.unshift({
+                    ccdNo: state.currentlyServing.ccdNo,
+                    isPriority: state.currentlyServing.isPriority
+                });
+                if (state.recentServed.length > 4) state.recentServed.pop();
+            }
+
+            const { data, error: fetchErr } = await supabase
                 .from('registrations')
-                .update({ status: 'Served' })
-                .eq('id', state.currentlyServing.id);
+                .select('*')
+                .eq('id', id)
+                .single();
+            if (fetchErr) throw fetchErr;
 
-            state.recentServed.unshift({
-                ccdNo: state.currentlyServing.ccdNo,
-                isPriority: state.currentlyServing.isPriority
-            });
-            if (state.recentServed.length > 4) state.recentServed.pop();
-        }
+            if (data) {
+                const { error: updateErr2 } = await supabase
+                    .from('registrations')
+                    .update({ status: 'Serving' })
+                    .eq('id', data.id);
+                if (updateErr2) throw updateErr2;
 
-        const { data } = await supabase
-            .from('registrations')
-            .select('*')
-            .eq('id', id)
-            .single();
+                state.currentlyServing = {
+                    id: data.id,
+                    ccdNo: data.ccd_no,
+                    fullName: data.full_name,
+                    isPriority: data.is_priority,
+                    status: 'Serving'
+                };
 
-        if (data) {
-            await supabase
-                .from('registrations')
-                .update({ status: 'Serving' })
-                .eq('id', data.id);
-
-            state.currentlyServing = {
-                id: data.id,
-                ccdNo: data.ccd_no,
-                fullName: data.full_name,
-                isPriority: data.is_priority,
-                status: 'Serving'
-            };
-
-            await broadcastStaffUpdate();
-            broadcastDisplayUpdate(true);
+                await broadcastStaffUpdate();
+                broadcastDisplayUpdate(true);
+            }
+        } catch (err) {
+            console.error("Error in 'serve_specific':", err);
+            socket.emit('action_error', { message: "Failed to serve specific person. The database update was blocked or failed." });
         }
     });
 
