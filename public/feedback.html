@@ -404,6 +404,45 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Responsive Spacing */
+        @media (max-width: 480px) {
+            .header { padding: 1.5rem 1rem 1rem; }
+            .step { padding: 1.2rem; }
+            .star { font-size: 2.2rem; }
+            .radio-option { padding: 0.8rem; gap: 0.8rem; }
+            .emoji { font-size: 1.6rem; }
+            .radio-text { font-size: 0.95rem; }
+            .btn { min-height: 54px; }
+        }
+
+        @media (min-width: 601px) {
+            .header { 
+                margin-top: 2rem; 
+                max-width: 600px; 
+                margin-left: auto; 
+                margin-right: auto; 
+                border-radius: 12px 12px 0 0;
+                border: 1px solid var(--border-color);
+                border-bottom: 2px solid var(--secondary-color);
+            }
+            .progress-container { 
+                max-width: 600px; 
+                margin: 0 auto; 
+            }
+            .form-container {
+                margin-bottom: 2rem;
+                border-radius: 0 0 12px 12px;
+                border: 1px solid var(--border-color);
+                border-top: none;
+                background: rgba(11, 29, 58, 0.4);
+                backdrop-filter: blur(10px);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            }
+            .step { padding: 3rem; }
+            .radio-group { grid-template-columns: 1fr 1fr; }
+            textarea { min-height: 150px; }
+        }
     </style>
 </head>
 <body>
