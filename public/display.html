@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,13 +8,11 @@
     <link rel="icon" type="image/png" href="/assets/nbi.png">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body class="display-body">
     <!-- Voice Setup Overlay -->
     <div id="voice-overlay" class="overlay-unlock">
-        <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 2rem;">
-            <img src="/assets/nbi.png" alt="NBI Logo" class="overlay-logo" style="margin-bottom: 0;">
-            <img src="/assets/ccd.png" alt="CCD Logo" class="overlay-logo" style="margin-bottom: 0;">
-        </div>
+        <img src="/assets/nbi.png" alt="NBI Logo" class="overlay-logo">
         <h1>NBI Cybercrime Division</h1>
         <h2>Queue Display System</h2>
         <div class="tap-text">Tap anywhere to activate display</div>
@@ -25,7 +24,6 @@
         <header class="header">
             <div class="brand">
                 <img src="/assets/nbi.png" alt="NBI Logo" style="height: 60px; object-fit: contain;">
-                <img src="/assets/ccd.png" alt="CCD Logo" style="height: 60px; object-fit: contain; margin-left: 10px;">
                 <div class="brand-text">
                     <div class="brand-title">NBI Cybercrime Division</div>
                 </div>
@@ -68,10 +66,10 @@
         <h3>Voice Settings</h3>
         <label for="voice-select">Preferred Voice:</label>
         <select id="voice-select" class="settings-input"></select>
-        
+
         <label for="rate-slider">Speech Rate: <span id="rate-value">0.85</span></label>
         <input type="range" id="rate-slider" class="settings-input" min="0.7" max="1.0" step="0.01" value="0.85">
-        
+
         <button id="btn-test-voice" class="settings-btn">Test Voice</button>
         <button id="btn-close-settings" class="settings-btn secondary">Close</button>
     </div>
@@ -106,26 +104,26 @@
 
         // Web Audio API for Chime Sound
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
+
         function playChimeSound(isPriority = false) {
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            
+
             const playNote = (frequency, startTime, duration) => {
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
-                
+
                 oscillator.type = 'sine';
                 oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime + startTime);
-                
+
                 gainNode.gain.setValueAtTime(0, audioCtx.currentTime + startTime);
                 gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + startTime + 0.05);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + startTime + duration);
-                
+
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
-                
+
                 oscillator.start(audioCtx.currentTime + startTime);
                 oscillator.stop(audioCtx.currentTime + startTime + duration);
             };
@@ -147,11 +145,11 @@
         let audioUnlocked = false;
         let lastAnnouncement = null; // { number: string, isPriority: boolean }
         let settingsTimeout = null;
-        
+
         const overlay = document.getElementById('voice-overlay');
         const langToggle = document.getElementById('lang-toggle');
         const voiceControls = document.getElementById('voice-controls');
-        
+
         // Settings elements
         const settingsToggle = document.getElementById('settings-toggle');
         const voiceSettingsPanel = document.getElementById('voice-settings-panel');
@@ -168,20 +166,20 @@
                 rateValue.textContent = savedRate;
             }
 
-            rateSlider.addEventListener('input', function() {
+            rateSlider.addEventListener('input', function () {
                 rateValue.textContent = this.value;
                 localStorage.setItem('voice_rate', this.value);
                 resetSettingsTimeout();
             });
 
-            voiceSelect.addEventListener('change', function() {
+            voiceSelect.addEventListener('change', function () {
                 var val = this.value;
                 localStorage.setItem('preferred_voice_uri', val);
-                selectedVoice = voices.find(function(v) { return v.voiceURI === val; }) || selectedVoice;
+                selectedVoice = voices.find(function (v) { return v.voiceURI === val; }) || selectedVoice;
                 resetSettingsTimeout();
             });
 
-            btnTestVoice.addEventListener('click', function() {
+            btnTestVoice.addEventListener('click', function () {
                 resetSettingsTimeout();
                 playVoiceAnnouncement('13', false, true); // test number
             });
@@ -189,7 +187,7 @@
             btnCloseSettings.addEventListener('click', closeSettings);
             settingsToggle.addEventListener('click', openSettings);
 
-            window.addEventListener('keydown', function(e) {
+            window.addEventListener('keydown', function (e) {
                 if (e.key === 's' || e.key === 'S') {
                     if (voiceSettingsPanel.style.display === 'none') openSettings();
                     else closeSettings();
@@ -213,27 +211,27 @@
         }
 
         // Unlock audio context and initialize Speech Synthesis on first interaction
-        overlay.addEventListener('click', function() {
+        overlay.addEventListener('click', function () {
             audioUnlocked = true;
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
+
             // Warm-up utterance
             if ('speechSynthesis' in window) {
                 var dummy = new SpeechSynthesisUtterance('');
                 dummy.volume = 0;
                 window.speechSynthesis.speak(dummy);
             }
-            
+
             overlay.style.display = 'none';
             voiceControls.style.display = 'flex';
-            
+
             loadAndSelectVoices();
             initSettings();
         });
 
         // Robust async voice loading
         function loadVoicesAsync() {
-            return new Promise(function(resolve) {
+            return new Promise(function (resolve) {
                 if (!('speechSynthesis' in window)) {
                     resolve([]);
                     return;
@@ -243,7 +241,7 @@
                     resolve(initialVoices);
                     return;
                 }
-                window.speechSynthesis.addEventListener('voiceschanged', function() {
+                window.speechSynthesis.addEventListener('voiceschanged', function () {
                     resolve(window.speechSynthesis.getVoices());
                 }, { once: true });
             });
@@ -251,10 +249,10 @@
 
         function getBestVoice(voicesList) {
             if (voicesList.length === 0) return null;
-            
+
             const savedUri = localStorage.getItem('preferred_voice_uri');
             if (savedUri) {
-                const saved = voicesList.find(function(v) { return v.voiceURI === savedUri; });
+                const saved = voicesList.find(function (v) { return v.voiceURI === savedUri; });
                 if (saved) return saved;
             }
 
@@ -269,22 +267,22 @@
             ];
 
             for (var i = 0; i < priorityNames.length; i++) {
-                var match = voicesList.find(function(v) { return v.name.includes(priorityNames[i]); });
+                var match = voicesList.find(function (v) { return v.name.includes(priorityNames[i]); });
                 if (match) return match;
             }
-            
-            return voicesList.find(function(v) { return v.lang.startsWith('en-PH'); }) ||
-                   voicesList.find(function(v) { return v.lang.startsWith('en-US'); }) ||
-                   voicesList.find(function(v) { return v.lang.startsWith('en'); }) || 
-                   voicesList[0];
+
+            return voicesList.find(function (v) { return v.lang.startsWith('en-PH'); }) ||
+                voicesList.find(function (v) { return v.lang.startsWith('en-US'); }) ||
+                voicesList.find(function (v) { return v.lang.startsWith('en'); }) ||
+                voicesList[0];
         }
 
         function loadAndSelectVoices() {
-            loadVoicesAsync().then(function(v) {
+            loadVoicesAsync().then(function (v) {
                 voices = v;
                 if (voices.length === 0) return;
 
-                filipinoVoice = voices.find(function(v) { return v.lang.startsWith('fil') || v.lang.startsWith('tl'); });
+                filipinoVoice = voices.find(function (v) { return v.lang.startsWith('fil') || v.lang.startsWith('tl'); });
                 selectedVoice = getBestVoice(voices);
 
                 if (filipinoVoice) {
@@ -295,7 +293,7 @@
 
                 // Populate settings dropdown
                 voiceSelect.innerHTML = '';
-                voices.forEach(function(voice) {
+                voices.forEach(function (voice) {
                     var option = document.createElement('option');
                     option.value = voice.voiceURI;
                     option.textContent = voice.name + ' (' + voice.lang + ')';
@@ -307,25 +305,25 @@
             });
         }
 
-        langToggle.addEventListener('change', function(e) {
+        langToggle.addEventListener('change', function (e) {
             localStorage.setItem('announcement_lang', e.target.value);
         });
 
         // Voice Split logic
         function speakParts(parts, index) {
             if (index >= parts.length) return;
-            
+
             var part = parts[index];
             var utterance = new SpeechSynthesisUtterance(part.text);
             utterance.voice = part.voice;
             utterance.rate = part.rate;
             utterance.pitch = part.pitch;
             utterance.volume = part.volume;
-            
-            utterance.onend = function() {
+
+            utterance.onend = function () {
                 speakParts(parts, index + 1);
             };
-            
+
             window.speechSynthesis.speak(utterance);
         }
 
@@ -338,11 +336,11 @@
                 if (!audioUnlocked) console.warn('Voice announcement skipped: Audio not unlocked.');
                 return;
             }
-            
+
             var rawNum = numberStr.replace('#', '').trim();
             var num = rawNum.replace(/^0+/, '');
             if (num === '') num = '0';
-            
+
             var lang = langToggle.value || 'en';
             var useFilipino = lang === 'fil';
             var voiceToUse = selectedVoice;
@@ -350,11 +348,11 @@
 
             var delay = skipDelay ? 0 : 600;
 
-            setTimeout(function() {
-                window.speechSynthesis.cancel(); 
+            setTimeout(function () {
+                window.speechSynthesis.cancel();
 
                 var parts = [];
-                
+
                 if (isPriority) {
                     if (useFilipino) {
                         parts.push({ text: "Priority po.", rate: baseRate - 0.05, pitch: 1.0, volume: 1.0, voice: voiceToUse });
@@ -380,7 +378,7 @@
             }, delay);
         }
 
-        socket.on('trigger_repeat', function() {
+        socket.on('trigger_repeat', function () {
             if (lastAnnouncement) {
                 playVoiceAnnouncement(lastAnnouncement.number, lastAnnouncement.isPriority, true);
             }
@@ -395,54 +393,51 @@
             return ccd;
         }
 
-        function updateDisplayCore(data) {
-            queueNumberEl.classList.remove('is-text');
-            queueNumberEl.textContent = shortenCcd(data.currentlyServing);
-            
-            if (data.isPriority) {
-                priorityBadgeEl.style.display = 'inline-block';
-                queueNumberEl.classList.add('priority');
-                queueBoxEl.classList.add('priority');
-                queueNumberEl.style.color = '';
-                queueNumberEl.style.textShadow = '';
-            } else {
-                priorityBadgeEl.style.display = 'none';
-                queueNumberEl.classList.remove('priority');
-                queueBoxEl.classList.remove('priority');
-                queueNumberEl.style.color = '';
-                queueNumberEl.style.textShadow = '';
-            }
-
-            if (data.triggerChime) {
-                playChimeSound(data.isPriority);
-                
-                // Trigger Voice Announcement
-                const cleanNum = shortenCcd(data.currentlyServing);
-                lastAnnouncement = { number: cleanNum, isPriority: data.isPriority };
-                playVoiceAnnouncement(cleanNum, data.isPriority);
-                
-                // Flash effect
-                const glowColor = data.isPriority ? 'rgba(204, 34, 34, 0.8)' : 'rgba(241, 196, 15, 0.8)';
-                queueBoxEl.style.transform = 'scale(1.05)';
-                queueBoxEl.style.boxShadow = `0 30px 80px ${glowColor}`;
-                setTimeout(() => {
-                    queueBoxEl.style.transform = 'scale(1)';
-                    queueBoxEl.style.boxShadow = '';
-                }, 500);
-            }
-        }
-
         socket.on('display_update', (data) => {
             if (data.skipMessage) {
                 // Show temporary skip message
                 queueNumberEl.classList.add('is-text');
                 queueNumberEl.textContent = data.skipMessage;
-                
+
                 setTimeout(() => {
-                    updateDisplayCore(data);
+                    queueNumberEl.classList.remove('is-text');
+                    queueNumberEl.textContent = shortenCcd(data.currentlyServing);
                 }, 3000);
             } else {
-                updateDisplayCore(data);
+                queueNumberEl.classList.remove('is-text');
+                queueNumberEl.textContent = shortenCcd(data.currentlyServing);
+
+                if (data.isPriority) {
+                    priorityBadgeEl.style.display = 'inline-block';
+                    queueNumberEl.classList.add('priority');
+                    queueBoxEl.classList.add('priority');
+                    queueNumberEl.style.color = '';
+                    queueNumberEl.style.textShadow = '';
+                } else {
+                    priorityBadgeEl.style.display = 'none';
+                    queueNumberEl.classList.remove('priority');
+                    queueBoxEl.classList.remove('priority');
+                    queueNumberEl.style.color = '';
+                    queueNumberEl.style.textShadow = '';
+                }
+
+                if (data.triggerChime) {
+                    playChimeSound(data.isPriority);
+
+                    // Trigger Voice Announcement
+                    const cleanNum = shortenCcd(data.currentlyServing);
+                    lastAnnouncement = { number: cleanNum, isPriority: data.isPriority };
+                    playVoiceAnnouncement(cleanNum, data.isPriority);
+
+                    // Flash effect
+                    const glowColor = data.isPriority ? 'rgba(204, 34, 34, 0.8)' : 'rgba(241, 196, 15, 0.8)';
+                    queueBoxEl.style.transform = 'scale(1.05)';
+                    queueBoxEl.style.boxShadow = `0 30px 80px ${glowColor}`;
+                    setTimeout(() => {
+                        queueBoxEl.style.transform = 'scale(1)';
+                        queueBoxEl.style.boxShadow = '';
+                    }, 500);
+                }
             }
 
             // Update recent list
@@ -476,4 +471,5 @@
         }, 5 * 60 * 1000); // 5 minutes
     </script>
 </body>
+
 </html>
