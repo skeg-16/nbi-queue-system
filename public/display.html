@@ -318,15 +318,11 @@
         });
 
         // Audio SFX Setup
-        const sfxBefore = new Audio('assets/sfx after.mp3');
-        const sfxAfter = new Audio('assets/sfx before.mp3');
+        const sfxBefore = new Audio('assets/sound.mp3');
 
         // Voice Split logic
         function speakParts(parts, index) {
             if (index >= parts.length) {
-                // Play SFX After when speech finishes
-                sfxAfter.currentTime = 0;
-                sfxAfter.play().catch(e => console.log('SFX after error:', e));
                 return;
             }
 
@@ -371,8 +367,6 @@
                 window.speechSynthesis.cancel();
                 sfxBefore.pause();
                 sfxBefore.currentTime = 0;
-                sfxAfter.pause();
-                sfxAfter.currentTime = 0;
 
                 var parts = [];
 
