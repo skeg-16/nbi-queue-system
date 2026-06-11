@@ -129,9 +129,30 @@ app.get('/display', (req, res) => res.sendFile(path.join(__dirname, 'public', 'd
 app.get('/staff', (req, res) => res.sendFile(path.join(__dirname, 'public', 'staff.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
 app.get('/records', (req, res) => res.sendFile(path.join(__dirname, 'public', 'records.html')));
+app.get('/feedback/en', (req, res) => res.sendFile(path.join(__dirname, 'public', 'feedback.html')));
+app.get('/feedback/tl', (req, res) => res.send('Coming Soon'));
 app.get('/', (req, res) => res.redirect('/register'));
 
+// API Endpoint for Feedback Submission
+app.post('/api/feedback', async (req, res) => {
+    try {
+        const payload = req.body;
+        // payload should contain: language, rating, service_quality, staff_behavior, wait_time, recommendation, suggestions, complaints, follow_up, contact_for_followup
+        const { data, error } = await supabase
+            .from('feedback')
+            .insert([payload]);
 
+        if (error) {
+            console.error("Supabase Feedback Insert Error:", error);
+            throw error;
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Error submitting feedback:", err);
+        res.status(500).json({ success: false, error: "Failed to save feedback" });
+    }
+});
 
 // API Endpoint for Database Records Interface
 app.get('/api/records', async (req, res) => {

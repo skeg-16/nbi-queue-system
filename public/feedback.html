@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Complainant Feedback Form | NBI Cybercrime Division</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0b1d3a;
+            --secondary-color: #f1c40f;
+            --bg-color: #050e1d;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-muted: #a0aec0;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --input-bg: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 0%, #1a365d 0%, var(--bg-color) 60%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 1.5rem 1rem 1rem;
+            border-bottom: 1px solid var(--secondary-color);
+            background: linear-gradient(180deg, rgba(11,29,58,0.9) 0%, rgba(5,14,29,0) 100%);
+            position: relative;
+            z-index: 10;
+        }
+        .header img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 0.5rem;
+        }
+        .header h1 {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .header h2 {
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+        .header h3 {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .intro-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            line-height: 1.4;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--secondary-color);
+            width: 25%;
+            transition: width 0.3s ease;
+        }
+
+        /* Form Container */
+        .form-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            overflow: hidden; /* For slide animation */
+        }
+
+        .step {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 1.5rem;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease;
+        }
+        .step.active {
+            display: flex;
+            opacity: 1;
+            transform: translateX(0);
+            position: relative;
+        }
+        .step.exit-left {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        .step-indicator {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Inputs */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .helper-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        input[type="text"], input[type="date"], select, textarea {
+            width: 100%;
+            background: var(--input-bg);
+            border: 2px solid var(--border-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            min-height: 48px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .error-text {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 0.4rem;
+            display: none;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .has-error input, .has-error select, .has-error textarea {
+            border-color: var(--danger);
+        }
+        .has-error .error-text {
+            display: flex;
+        }
+
+        /* Star Rating */
+        .star-rating {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+        }
+        .star {
+            font-size: 2.5rem;
+            color: var(--border-color);
+            cursor: pointer;
+            transition: transform 0.2s, color 0.2s;
+            text-align: center;
+            flex: 1;
+        }
+        .star.selected {
+            color: var(--secondary-color);
+        }
+        .star-label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+        .has-error .star-rating {
+            border: 1px solid var(--danger);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        /* Emoji Radio Buttons */
+        .radio-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
+        }
+        .radio-option {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .radio-option.selected {
+            border-color: var(--secondary-color);
+            background: rgba(241, 196, 15, 0.1);
+        }
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+        .emoji {
+            font-size: 1.8rem;
+        }
+        .radio-text {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .has-error .radio-group {
+            border: 1px solid var(--danger);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        /* Pill Buttons (Toggle) */
+        .pill-group {
+            display: flex;
+            gap: 1rem;
+        }
+        .pill-btn {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pill-btn.selected {
+            background: var(--secondary-color);
+            color: var(--bg-color);
+            border-color: var(--secondary-color);
+        }
+        .pill-btn.selected-no {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            min-height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn-back {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: white;
+        }
+        .btn-next, .btn-submit {
+            background: var(--secondary-color);
+            color: var(--bg-color);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Success Screen */
+        .success-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            z-index: 100;
+        }
+        .success-screen.active {
+            display: flex;
+        }
+        .checkmark-circle {
+            width: 100px;
+            height: 100px;
+            background: var(--success);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            transform: scale(0);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .checkmark {
+            color: white;
+            font-size: 4rem;
+        }
+        @keyframes popIn {
+            to { transform: scale(1); }
+        }
+        .success-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+        .success-screen p {
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        .success-logo {
+            width: 50px;
+            margin-top: 3rem;
+            opacity: 0.5;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.4s; }
+
+        @keyframes pulseError {
+            0% { border-color: var(--border-color); }
+            50% { border-color: var(--danger); box-shadow: 0 0 10px rgba(231,76,60,0.5); }
+            100% { border-color: var(--border-color); }
+        }
+        .pulse-error { animation: pulseError 1s 2; }
+        
+        #contact-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, margin-top 0.3s ease;
+        }
+        #contact-container.visible {
+            max-height: 150px;
+            margin-top: 1rem;
+        }
+        
+        /* General Loading overlay */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none; justify-content: center; align-items: center;
+            z-index: 200; flex-direction: column; gap: 1rem;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="/assets/nbi.png" alt="NBI Logo" onerror="this.style.display='none'">
+        <h1>National Bureau of Investigation</h1>
+        <h2>Cybercrime Division</h2>
+        <h3>Complainant Feedback Form</h3>
+        <p class="intro-text">Your feedback helps us serve you better. This will only take 2 minutes.</p>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="form-container" id="form-container">
+        <!-- Step 1: Your Visit -->
+        <div class="step active" id="step-1">
+            <div class="step-indicator">Step 1 of 4 — Your Visit</div>
+            
+            <div class="form-group">
+                <label for="ccd_no">CCD Control Number</label>
+                <div class="helper-text">Optional — check your registration slip</div>
+                <input type="text" id="ccd_no" placeholder="e.g. CCD-2026-06-11-0005" data-save="ccd_no">
+            </div>
+
+            <div class="form-group">
+                <label for="visit_date">Date of Visit</label>
+                <input type="date" id="visit_date" data-save="visit_date">
+            </div>
+
+            <div class="form-group" id="group-purpose">
+                <label for="purpose">Purpose of Visit <span style="color:var(--danger)">*</span></label>
+                <select id="purpose" data-save="purpose">
+                    <option value="" disabled selected>Select an option...</option>
+                    <option value="File a Complaint">File a Complaint</option>
+                    <option value="Follow Up">Follow Up</option>
+                    <option value="Inquire">Inquire</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div class="error-text">⚠ Please select your purpose of visit.</div>
+            </div>
+
+            <div class="nav-buttons">
+                <button type="button" class="btn btn-next" onclick="nextStep(1)">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Rate Your Experience -->
+        <div class="step" id="step-2">
+            <div class="step-indicator">Step 2 of 4 — Rate Your Experience</div>
+            
+            <div class="form-group" id="group-rating">
+                <label>Overall Satisfaction <span style="color:var(--danger)">*</span></label>
+                <div class="star-rating" id="star-rating-container">
+                    <div class="star" data-value="1">★<span class="star-label">Very Dissatisfied</span></div>
+                    <div class="star" data-value="2">★<span class="star-label">Dissatisfied</span></div>
+                    <div class="star" data-value="3">★<span class="star-label">Neutral</span></div>
+                    <div class="star" data-value="4">★<span class="star-label">Satisfied</span></div>
+                    <div class="star" data-value="5">★<span class="star-label">Very Satisfied</span></div>
+                </div>
+                <div class="error-text">⚠ Please provide an overall rating.</div>
+            </div>
+
+            <div class="form-group" id="group-service">
+                <label>Service Quality <span style="color:var(--danger)">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="service_quality" value="Excellent"><span class="emoji">😊</span><span class="radio-text">Excellent</span></label>
+                    <label class="radio-option"><input type="radio" name="service_quality" value="Good"><span class="emoji">🙂</span><span class="radio-text">Good</span></label>
+                    <label class="radio-option"><input type="radio" name="service_quality" value="Fair"><span class="emoji">😐</span><span class="radio-text">Fair</span></label>
+                    <label class="radio-option"><input type="radio" name="service_quality" value="Poor"><span class="emoji">😞</span><span class="radio-text">Poor</span></label>
+                </div>
+                <div class="error-text">⚠ Please rate the service quality.</div>
+            </div>
+
+            <div class="form-group" id="group-staff">
+                <label>Staff Behavior <span style="color:var(--danger)">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="staff_behavior" value="Very Professional"><span class="emoji">😊</span><span class="radio-text">Very Professional</span></label>
+                    <label class="radio-option"><input type="radio" name="staff_behavior" value="Professional"><span class="emoji">🙂</span><span class="radio-text">Professional</span></label>
+                    <label class="radio-option"><input type="radio" name="staff_behavior" value="Neutral"><span class="emoji">😐</span><span class="radio-text">Neutral</span></label>
+                    <label class="radio-option"><input type="radio" name="staff_behavior" value="Unprofessional"><span class="emoji">😞</span><span class="radio-text">Unprofessional</span></label>
+                </div>
+                <div class="error-text">⚠ Please rate the staff behavior.</div>
+            </div>
+
+            <div class="form-group" id="group-wait">
+                <label>Wait Time Experience <span style="color:var(--danger)">*</span></label>
+                <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="wait_time" value="Shorter than expected"><span class="emoji">😊</span><span class="radio-text">Shorter than expected</span></label>
+                    <label class="radio-option"><input type="radio" name="wait_time" value="About right"><span class="emoji">🙂</span><span class="radio-text">About right</span></label>
+                    <label class="radio-option"><input type="radio" name="wait_time" value="A bit long"><span class="emoji">😐</span><span class="radio-text">A bit long</span></label>
+                    <label class="radio-option"><input type="radio" name="wait_time" value="Too long"><span class="emoji">😞</span><span class="radio-text">Too long</span></label>
+                </div>
+                <div class="error-text">⚠ Please rate the wait time.</div>
+            </div>
+
+            <div class="nav-buttons">
+                <button type="button" class="btn btn-back" onclick="prevStep(2)">← Back</button>
+                <button type="button" class="btn btn-next" onclick="nextStep(2)">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Your Thoughts -->
+        <div class="step" id="step-3">
+            <div class="step-indicator">Step 3 of 4 — Your Thoughts</div>
+            
+            <div class="form-group" id="group-recommend">
+                <label>Would you recommend NBI CCD to others? <span style="color:var(--danger)">*</span></label>
+                <div class="pill-group" style="flex-direction: column;">
+                    <div class="pill-btn" onclick="selectPill('recommend', 'Yes, definitely')">✅ Yes, definitely</div>
+                    <div class="pill-btn" onclick="selectPill('recommend', 'Maybe')">🤔 Maybe</div>
+                    <div class="pill-btn" onclick="selectPill('recommend', 'No')">❌ No</div>
+                </div>
+                <input type="hidden" id="recommendation" data-save="recommendation">
+                <div class="error-text">⚠ Please make a selection.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="suggestions">Suggestions for improvement</label>
+                <div class="helper-text">Optional</div>
+                <textarea id="suggestions" placeholder="What can we do better?" data-save="suggestions"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="complaints">Specific Complaints</label>
+                <div class="helper-text">Optional — If you experienced any issues, please describe them here.</div>
+                <textarea id="complaints" placeholder="Details of your complaint..." data-save="complaints"></textarea>
+            </div>
+
+            <div class="nav-buttons">
+                <button type="button" class="btn btn-back" onclick="prevStep(3)">← Back</button>
+                <button type="button" class="btn btn-next" onclick="nextStep(3)">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Follow Up -->
+        <div class="step" id="step-4">
+            <div class="step-indicator">Step 4 of 4 — Follow Up</div>
+            
+            <div class="form-group">
+                <label>Do you want us to follow up with you?</label>
+                <div class="pill-group">
+                    <div class="pill-btn" id="btn-follow-yes" onclick="toggleFollowUp(true)">Yes</div>
+                    <div class="pill-btn selected selected-no" id="btn-follow-no" onclick="toggleFollowUp(false)">No</div>
+                </div>
+                <input type="hidden" id="follow_up" value="false" data-save="follow_up">
+            </div>
+
+            <div id="contact-container">
+                <div class="form-group" id="group-contact">
+                    <label for="contact_for_followup">Contact Number <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="contact_for_followup" placeholder="09XXXXXXXXX" maxlength="11" pattern="\d*" data-save="contact_for_followup">
+                    <div class="helper-text">Your contact information will only be used for follow-up purposes in accordance with RA 10173.</div>
+                    <div class="error-text">⚠ Please enter a valid 11-digit number starting with 09.</div>
+                </div>
+            </div>
+
+            <div class="nav-buttons">
+                <button type="button" class="btn btn-back" onclick="prevStep(4)">← Back</button>
+                <button type="button" class="btn btn-submit" onclick="submitForm()">SUBMIT FEEDBACK →</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-screen" id="success-screen">
+        <div class="checkmark-circle">
+            <span class="checkmark">✓</span>
+        </div>
+        <h2>Thank You!</h2>
+        <p>Your feedback has been recorded. We appreciate you taking the time to help us improve.</p>
+        <p id="success-followup-msg" style="display: none; color: white; margin-top: 1rem;">A staff member will reach out to you within 3 business days.</p>
+        <img src="/assets/nbi.png" class="success-logo" alt="NBI Logo" onerror="this.style.display='none'">
+        <button type="button" class="btn btn-back" style="margin-top: 2rem; width: 100%; max-width: 300px;" onclick="window.close()">Close</button>
+    </div>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p style="font-weight: 600;">Submitting...</p>
+    </div>
+
+    <script>
+        // State
+        let currentStep = 1;
+        let rating = 0;
+        const totalSteps = 4;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('visit_date').value = today;
+            
+            restoreDraft();
+            updateProgressBar();
+
+            // Setup stars
+            document.querySelectorAll('.star').forEach(star => {
+                star.addEventListener('click', (e) => {
+                    rating = parseInt(e.currentTarget.getAttribute('data-value'));
+                    document.getElementById('group-rating').classList.remove('has-error');
+                    updateStars();
+                    saveDraft();
+                });
+            });
+
+            // Setup radio options
+            document.querySelectorAll('.radio-option').forEach(label => {
+                label.addEventListener('click', function() {
+                    const group = this.closest('.radio-group');
+                    group.querySelectorAll('.radio-option').forEach(el => el.classList.remove('selected'));
+                    this.classList.add('selected');
+                    const radio = this.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                    this.closest('.form-group').classList.remove('has-error');
+                    saveDraft();
+                });
+            });
+
+            // Auto-save inputs
+            document.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('input', () => {
+                    el.closest('.form-group')?.classList.remove('has-error');
+                    saveDraft();
+                });
+            });
+            
+            // Contact input restriction (numbers only)
+            const contactInput = document.getElementById('contact_for_followup');
+            contactInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value.length > 0 && !this.value.startsWith('09')) {
+                    this.closest('.form-group').classList.add('has-error');
+                } else {
+                    this.closest('.form-group').classList.remove('has-error');
+                }
+            });
+        });
+
+        function updateStars() {
+            document.querySelectorAll('.star').forEach(star => {
+                const val = parseInt(star.getAttribute('data-value'));
+                if (val <= rating) {
+                    star.classList.add('selected');
+                    star.textContent = '★';
+                } else {
+                    star.classList.remove('selected');
+                    star.textContent = '☆';
+                }
+            });
+            if(rating === 0) {
+                document.querySelectorAll('.star').forEach(star => star.textContent = '★');
+            }
+        }
+
+        function selectPill(groupName, value) {
+            if (groupName === 'recommend') {
+                document.getElementById('recommendation').value = value;
+                const parent = document.getElementById('group-recommend');
+                parent.classList.remove('has-error');
+                parent.querySelectorAll('.pill-btn').forEach(btn => btn.classList.remove('selected'));
+                event.target.classList.add('selected');
+                saveDraft();
+            }
+        }
+
+        function toggleFollowUp(isYes) {
+            document.getElementById('follow_up').value = isYes;
+            document.getElementById('btn-follow-yes').classList.toggle('selected', isYes);
+            document.getElementById('btn-follow-no').classList.toggle('selected', !isYes);
+            document.getElementById('btn-follow-no').classList.toggle('selected-no', !isYes);
+            
+            const contactContainer = document.getElementById('contact-container');
+            if (isYes) {
+                contactContainer.classList.add('visible');
+            } else {
+                contactContainer.classList.remove('visible');
+                document.getElementById('group-contact').classList.remove('has-error');
+            }
+            saveDraft();
+        }
+
+        function validateStep(step) {
+            let isValid = true;
+            
+            if (step === 1) {
+                const purpose = document.getElementById('purpose');
+                if (!purpose.value) {
+                    document.getElementById('group-purpose').classList.add('has-error');
+                    isValid = false;
+                }
+            } 
+            else if (step === 2) {
+                if (rating === 0) {
+                    const ratingContainer = document.getElementById('star-rating-container');
+                    document.getElementById('group-rating').classList.add('has-error');
+                    ratingContainer.classList.add('pulse-error');
+                    setTimeout(() => ratingContainer.classList.remove('pulse-error'), 2000);
+                    isValid = false;
+                }
+                
+                ['service_quality', 'staff_behavior', 'wait_time'].forEach(name => {
+                    const checked = document.querySelector(`input[name="${name}"]:checked`);
+                    if (!checked) {
+                        document.querySelector(`input[name="${name}"]`).closest('.form-group').classList.add('has-error');
+                        isValid = false;
+                    }
+                });
+            }
+            else if (step === 3) {
+                const rec = document.getElementById('recommendation').value;
+                if (!rec) {
+                    document.getElementById('group-recommend').classList.add('has-error');
+                    isValid = false;
+                }
+            }
+            else if (step === 4) {
+                const isFollowUp = document.getElementById('follow_up').value === 'true';
+                if (isFollowUp) {
+                    const contact = document.getElementById('contact_for_followup').value;
+                    if (!contact.match(/^09[0-9]{9}$/)) {
+                        document.getElementById('group-contact').classList.add('has-error');
+                        isValid = false;
+                    }
+                }
+            }
+
+            return isValid;
+        }
+
+        function nextStep(current) {
+            if (!validateStep(current)) {
+                // Shake button
+                const btn = document.querySelector(`#step-${current} .btn-next`);
+                btn.classList.add('shake');
+                setTimeout(() => btn.classList.remove('shake'), 400);
+                return;
+            }
+            
+            const currentEl = document.getElementById(`step-${current}`);
+            const nextEl = document.getElementById(`step-${current + 1}`);
+            
+            currentEl.classList.add('exit-left');
+            setTimeout(() => {
+                currentEl.classList.remove('active', 'exit-left');
+                nextEl.classList.add('active');
+            }, 400);
+            
+            currentStep++;
+            updateProgressBar();
+            window.scrollTo(0, 0);
+        }
+
+        function prevStep(current) {
+            const currentEl = document.getElementById(`step-${current}`);
+            const prevEl = document.getElementById(`step-${current - 1}`);
+            
+            currentEl.classList.remove('active');
+            prevEl.classList.add('active');
+            
+            currentStep--;
+            updateProgressBar();
+            window.scrollTo(0, 0);
+        }
+
+        function updateProgressBar() {
+            const pct = (currentStep / totalSteps) * 100;
+            document.getElementById('progress-bar').style.width = pct + '%';
+        }
+
+        // Local Storage Draft
+        function saveDraft() {
+            const draft = {
+                ccd_no: document.getElementById('ccd_no').value,
+                visit_date: document.getElementById('visit_date').value,
+                purpose: document.getElementById('purpose').value,
+                rating: rating,
+                service_quality: document.querySelector('input[name="service_quality"]:checked')?.value || '',
+                staff_behavior: document.querySelector('input[name="staff_behavior"]:checked')?.value || '',
+                wait_time: document.querySelector('input[name="wait_time"]:checked')?.value || '',
+                recommendation: document.getElementById('recommendation').value,
+                suggestions: document.getElementById('suggestions').value,
+                complaints: document.getElementById('complaints').value,
+                follow_up: document.getElementById('follow_up').value,
+                contact_for_followup: document.getElementById('contact_for_followup').value
+            };
+            localStorage.setItem('nbi_feedback_draft', JSON.stringify(draft));
+        }
+
+        function restoreDraft() {
+            try {
+                const draft = JSON.parse(localStorage.getItem('nbi_feedback_draft'));
+                if (!draft) return;
+
+                if(draft.ccd_no) document.getElementById('ccd_no').value = draft.ccd_no;
+                if(draft.visit_date) document.getElementById('visit_date').value = draft.visit_date;
+                if(draft.purpose) document.getElementById('purpose').value = draft.purpose;
+                
+                if(draft.rating) {
+                    rating = draft.rating;
+                    updateStars();
+                }
+
+                ['service_quality', 'staff_behavior', 'wait_time'].forEach(name => {
+                    if (draft[name]) {
+                        const radio = document.querySelector(`input[name="${name}"][value="${draft[name]}"]`);
+                        if (radio) {
+                            radio.checked = true;
+                            radio.closest('.radio-option').classList.add('selected');
+                        }
+                    }
+                });
+
+                if(draft.recommendation) {
+                    document.getElementById('recommendation').value = draft.recommendation;
+                    const pill = Array.from(document.querySelectorAll('#group-recommend .pill-btn')).find(el => el.textContent.includes(draft.recommendation));
+                    if (pill) pill.classList.add('selected');
+                }
+
+                if(draft.suggestions) document.getElementById('suggestions').value = draft.suggestions;
+                if(draft.complaints) document.getElementById('complaints').value = draft.complaints;
+                
+                if(draft.follow_up === 'true') {
+                    toggleFollowUp(true);
+                    if(draft.contact_for_followup) document.getElementById('contact_for_followup').value = draft.contact_for_followup;
+                }
+            } catch(e) {}
+        }
+
+        async function submitForm() {
+            if (!validateStep(4)) {
+                const btn = document.querySelector('.btn-submit');
+                btn.classList.add('shake');
+                setTimeout(() => btn.classList.remove('shake'), 400);
+                return;
+            }
+
+            if (!navigator.onLine) {
+                alert("You appear to be offline. Please connect to WiFi/Data and try again.");
+                return;
+            }
+
+            const payload = {
+                language: 'en',
+                ccd_no: document.getElementById('ccd_no').value,
+                rating: rating,
+                service_quality: document.querySelector('input[name="service_quality"]:checked').value,
+                staff_behavior: document.querySelector('input[name="staff_behavior"]:checked').value,
+                wait_time: document.querySelector('input[name="wait_time"]:checked').value,
+                recommendation: document.getElementById('recommendation').value,
+                suggestions: document.getElementById('suggestions').value,
+                complaints: document.getElementById('complaints').value,
+                follow_up: document.getElementById('follow_up').value === 'true',
+                contact_for_followup: document.getElementById('contact_for_followup').value || null
+            };
+
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'flex';
+
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                overlay.style.display = 'none';
+
+                if (data.success) {
+                    localStorage.removeItem('nbi_feedback_draft');
+                    
+                    if (payload.follow_up) {
+                        document.getElementById('success-followup-msg').style.display = 'block';
+                    }
+                    
+                    document.getElementById('form-container').style.display = 'none';
+                    document.getElementById('success-screen').classList.add('active');
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (err) {
+                overlay.style.display = 'none';
+                console.error(err);
+                alert("Something went wrong. Please try again or approach the staff for assistance.");
+            }
+        }
+    </script>
+</body>
+</html>
