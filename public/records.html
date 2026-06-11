@@ -73,7 +73,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            padding: 10px;
+            padding: 0;
         }
 
         .staff-nav {
@@ -956,8 +956,8 @@
 </head>
 
 <body class="staff-body">
-    <!-- Excel-like Ribbon Header -->
-    <div class="excel-top-bar no-print" style="background: #0f9d58; color: white; padding: 6px 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: bold; width: 100%;">
+    <!-- Excel-like Ribbon Header (NBI Blue) -->
+    <div class="excel-top-bar no-print" style="background: #0b1d3a; color: white; padding: 6px 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: bold; width: 100%;">
         <img src="/assets/nbi.png" alt="NBI Logo" style="height: 24px; object-fit: contain;">
         <span>NBI Cybercrime Division - Complaint Registry</span>
     </div>
@@ -1091,7 +1091,6 @@
                         <th onclick="handleSort('age', 3)">Age <span id="sort-3"></span></th>
                         <th onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></th>
                         <th onclick="handleSort('status', 5)">Status <span id="sort-5"></span></th>
-                        <th class="no-print" style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="recordsBody">
@@ -1103,17 +1102,6 @@
             </table>
         </div>
 
-        <div class="pagination-container">
-            <div id="recordCount">Showing 0 records</div>
-            <div class="page-controls">
-                <button class="page-btn" id="btnPrev" onclick="changePage(currentPage - 1)">Prev</button>
-                <div id="pageNumbers" style="display: flex; gap: 0.2rem;"></div>
-                <button class="page-btn" id="btnNext" onclick="changePage(currentPage + 1)">Next</button>
-                <span style="margin-left: 1rem;">Jump to:</span>
-                <input type="number" class="jump-input" id="jumpPage" min="1"
-                    onkeypress="if(event.key==='Enter') changePage(parseInt(this.value))">
-            </div>
-        </div>
     </div>
 
     <!-- Modals -->
@@ -1579,13 +1567,8 @@
                 return 0;
             });
 
-            // Adjust pagination if filtered results shrink
-            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-
             updateSummaryBar();
             renderTable();
-            renderPagination();
         }
 
         function handleSort(col, thIndex) {
@@ -1604,17 +1587,13 @@
             tbody.innerHTML = '';
 
             if (filteredRecords.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">No records found for this date/filter.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">No records found.</td></tr>`;
                 document.getElementById('recordCount').textContent = "Showing 0 records";
                 return;
             }
 
-            const start = (currentPage - 1) * recordsPerPage;
-            const end = start + recordsPerPage;
-            const paginated = filteredRecords.slice(start, end);
-
-            paginated.forEach(r => {
-                const isPrio = r.is_priority ? '<span class="badge badge-priority">PRIORITY</span>' : '';
+            filteredRecords.forEach(r => {
+                const isPrio = r.is_priority ? '<span class="badge badge-priority" style="margin-left: 5px;">PRIORITY</span>' : '';
                 const dateStr = new Date(r.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
                 let statusClass = 'status-waiting';
@@ -1628,64 +1607,47 @@
 
                 tr.innerHTML = `
                     <td tabindex="0">${dateStr}</td>
-                    <td tabindex="0" style="font-weight: 800; color: var(--gold);">${r.ccd_no} ${isPrio}</td>
-                    <td tabindex="0" style="font-weight: 700;">${r.full_name}</td>
-                    <td tabindex="0">${r.age}</td>
-                    <td tabindex="0">${r.contact}</td>
-                    <td tabindex="0"><span class="status-badge ${statusClass}">${r.status}</span></td>
-                    <td class="no-print" style="text-align: right;" tabindex="0">
-                        <div class="dropdown right">
-                            <button class="btn-formal" onclick="toggleDropdown(event, 'dd-${r.id}')" style="padding: 0.4rem 0.8rem;">Actions ▾</button>
-                            <div class="dropdown-content" id="dd-${r.id}">
-                                <button class="menu-item" onclick="viewDetails('${r.id}')">View Full Details</button>
-                                <button class="menu-item" onclick="openEdit('${r.id}')">Edit Record</button>
-                                <button class="menu-item" onclick="openRemarks('${r.id}')">Agent Remarks</button>
-                                <button class="menu-item" onclick="openStatus('${r.id}', '${r.status}')">Change Status</button>
-                                <button class="menu-item danger" onclick="confirmDelete('${r.id}')" style="color: var(--red);">Delete Record</button>
-                            </div>
-                        </div>
+                    <td tabindex="0" style="font-weight: 800; color: var(--gold);" contenteditable="true" onblur="updateCell(this, 'ccd_no', '${r.id}')">${r.ccd_no}</td>
+                    <td tabindex="0" style="font-weight: 700;" contenteditable="true" onblur="updateCell(this, 'full_name', '${r.id}')">${r.full_name} ${isPrio}</td>
+                    <td tabindex="0" contenteditable="true" onblur="updateCell(this, 'age', '${r.id}')">${r.age}</td>
+                    <td tabindex="0" contenteditable="true" onblur="updateCell(this, 'contact', '${r.id}')">${r.contact}</td>
+                    <td tabindex="0">
+                        <select onchange="updateCell(this, 'status', '${r.id}')" class="status-badge ${statusClass}" style="border: none; outline: none; cursor: pointer; width: 100%; text-align: center; padding: 2px 6px; font-size: 0.85rem; font-family: inherit;">
+                            <option value="Waiting" ${r.status === 'Waiting' ? 'selected' : ''}>Waiting</option>
+                            <option value="Serving" ${r.status === 'Serving' ? 'selected' : ''}>Serving</option>
+                            <option value="Served" ${r.status === 'Served' ? 'selected' : ''}>Served</option>
+                            <option value="Skipped" ${r.status === 'Skipped' ? 'selected' : ''}>Skipped</option>
+                            <option value="No-show" ${r.status === 'No-show' ? 'selected' : ''}>No-show</option>
+                        </select>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('recordCount').textContent = `Showing ${start + 1}–${Math.min(end, filteredRecords.length)} of ${filteredRecords.length} records`;
+            document.getElementById('recordCount').textContent = `Showing ${filteredRecords.length} records`;
         }
 
-        function renderPagination() {
-            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
-            const container = document.getElementById('pageNumbers');
-            container.innerHTML = '';
-
-            document.getElementById('btnPrev').disabled = currentPage <= 1;
-            document.getElementById('btnNext').disabled = currentPage >= totalPages;
-
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(totalPages, startPage + 4);
-            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
-
-            if (startPage > 1) {
-                container.innerHTML += `<button class="page-btn" onclick="changePage(1)">1</button>`;
-                if (startPage > 2) container.innerHTML += `<span style="padding: 0.4rem;">...</span>`;
+        async function updateCell(element, field, id) {
+            const newValue = element.value !== undefined ? element.value : element.innerText.trim();
+            // Optional: add visual saving indicator here
+            element.style.opacity = '0.5';
+            
+            try {
+                const response = await fetch('/api/records/' + id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [field]: newValue })
+                });
+                
+                if (!response.ok) {
+                    showToast('Failed to save update.', true);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error saving data.', true);
+            } finally {
+                element.style.opacity = '1';
             }
-
-            for (let i = startPage; i <= endPage; i++) {
-                container.innerHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
-            }
-
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) container.innerHTML += `<span style="padding: 0.4rem;">...</span>`;
-                container.innerHTML += `<button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
-            }
-        }
-
-        function changePage(p) {
-            const totalPages = Math.ceil(filteredRecords.length / recordsPerPage) || 1;
-            if (p < 1 || p > totalPages || isNaN(p)) return;
-            currentPage = p;
-            document.getElementById('jumpPage').value = '';
-            renderTable();
-            renderPagination();
         }
 
         // --- Modals Base ---
