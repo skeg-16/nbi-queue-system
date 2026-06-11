@@ -121,24 +121,12 @@
         let filipinoVoice = null;
         let selectedVoice = null;
         let audioUnlocked = false;
-        let lastAnnouncement = null; // { number: string, isPriority: boolean }
-        let settingsTimeout = null;
-
-        const overlay = document.getElementById('voice-overlay');
-        const langToggle = document.getElementById('lang-toggle');
-        const voiceControls = document.getElementById('voice-controls');
-
-        // Settings elements
-        const settingsToggle = document.getElementById('settings-toggle');
-        const voiceSettingsPanel = document.getElementById('voice-settings-panel');
-        const voiceSelect = document.getElementById('voice-select');
-        const rateSlider = document.getElementById('rate-slider');
-        const rateValue = document.getElementById('rate-value');
-        const btnTestVoice = document.getElementById('btn-test-voice');
-        const btnCloseSettings = document.getElementById('btn-close-settings');
+        let lastAnnouncement = null;
 
         let currentLang = 'en';
         let currentRate = 0.85;
+
+        const overlay = document.getElementById('voice-overlay');
 
         socket.on('voice_settings_update', (settings) => {
             currentLang = settings.lang || 'en';
@@ -249,12 +237,19 @@
 
             var part = parts[index];
             var utterance = new SpeechSynthesisUtterance(part.text);
-            utterance.voice = part.voice;
+            if (part.voice) {
+                utterance.voice = part.voice;
+            }
             utterance.rate = part.rate;
             utterance.pitch = part.pitch;
             utterance.volume = part.volume;
 
             utterance.onend = function () {
+                speakParts(parts, index + 1);
+            };
+
+            utterance.onerror = function (e) {
+                console.warn('Speech synthesis error:', e);
                 speakParts(parts, index + 1);
             };
 
@@ -284,8 +279,10 @@
             var delay = skipDelay ? 0 : 600;
 
             setTimeout(function () {
-                // Cancel any ongoing speech and audio
-                window.speechSynthesis.cancel();
+                // Cancel any ongoing speech and audio only if necessary to prevent wedging Chrome
+                if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+                    window.speechSynthesis.cancel();
+                }
                 sfxBefore.pause();
                 sfxBefore.currentTime = 0;
                 sfxBefore.onended = null; // FIX: Prevent double firing from previous play requests
