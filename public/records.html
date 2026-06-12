@@ -14,1097 +14,461 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
+    
     <style>
         * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             border-radius: 0 !important;
         }
         :root {
-            /* Spreadsheet Theme */
-            --bg-color: #ffffff;
-            --panel-bg: #ffffff;
-            --border-color: #cccccc;
-            --text-main: #000000;
-            --text-muted: #666666;
+            /* NBI Spreadsheet Theme */
+            --bg-color: #E1DFDD;
+            --panel-bg: #FFFFFF;
+            --border-color: #cbd5e1;
+            --border-heavy: #94a3b8;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            
+            --nbi-blue: #0F172A;
+            --nbi-blue-light: #1E293B;
+            --nbi-yellow: #EAB308;
+            --nbi-yellow-hover: #FACC15;
+            --nbi-cell-border: #d4d4d4;
+
             --btn-bg: #f8f9fa;
             --btn-border: #dadce0;
             --btn-hover: #f1f3f4;
+            
             --table-hover: #f1f3f4;
-            --table-alt: #ffffff;
             --input-bg: #ffffff;
             --modal-bg: #ffffff;
             --dropdown-bg: #ffffff;
-            --gold: #1a73e8; /* Google blue for highlights */
+            
+            --gold: var(--nbi-yellow);
             --red: #ea4335;
-
-            /* Spreadsheet Status Colors (Solid like conditional formatting) */
-            --status-served-bg: #0f9d58;
-            --status-served-txt: #ffffff;
-            --status-served-border: #0f9d58;
             
-            --status-waiting-bg: #4285f4;
-            --status-waiting-txt: #ffffff;
-            --status-waiting-border: #4285f4;
-            
-            --status-skipped-bg: #ea4335;
-            --status-skipped-txt: #ffffff;
-            --status-skipped-border: #ea4335;
-            
-            --status-noshow-bg: #5f6368;
-            --status-noshow-txt: #ffffff;
-            --status-noshow-border: #5f6368;
-            
-            --status-serving-bg: #fbbc04;
-            --status-serving-txt: #000000;
-            --status-serving-border: #fbbc04;
+            /* Status Colors */
+            --status-served-bg: #0f9d58; --status-served-txt: #ffffff;
+            --status-waiting-bg: #4285f4; --status-waiting-txt: #ffffff;
+            --status-skipped-bg: #ea4335; --status-skipped-txt: #ffffff;
+            --status-noshow-bg: #5f6368; --status-noshow-txt: #ffffff;
+            --status-serving-bg: #fbbc04; --status-serving-txt: #000000;
         }
 
-        .staff-body {
-            background: var(--bg-color) !important;
-            font-family: Arial, sans-serif;
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
+        body, html {
+            margin: 0; padding: 0;
             height: 100vh;
-            width: 100vw;
             overflow: hidden;
+            background: var(--bg-color);
             display: flex;
             flex-direction: column;
-        }
-
-        .staff-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            padding: 0;
-        }
-
-        .staff-nav {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: var(--bg-color) !important;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            transition: background 0.3s ease;
-        }
-
-        .staff-nav .nav-link {
-            display: none; /* Removed */
-        }
-
-        .theme-toggle {
-            display: none;
-        }
-
-        /* Formal Page Header */
-        .page-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .page-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--gold);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 0.3rem;
-        }
-
-        body.light-mode .page-title {
-            color: #1C1A16;
-        }
-
-        .page-subtitle {
-            font-size: 1rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        /* Daily Ledger Navigation */
-        .ledger-nav {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 2rem;
-            margin-bottom: 2rem;
-            position: relative;
-        }
-
-        .ledger-date-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-
-        .ledger-date-container:hover {
-            background: var(--panel-bg);
-        }
-
-        .ledger-date {
-            font-size: 1.4rem;
-            font-weight: 700;
             color: var(--text-main);
         }
 
-        .ledger-date.active {
-            color: var(--gold);
-        }
-
-        .calendar-icon {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-        }
-
-        .ledger-btn {
-            background: none;
-            border: none;
-            color: var(--text-main);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .ledger-btn:hover:not(:disabled) {
-            color: var(--gold);
-        }
-
-        .ledger-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        /* Calendar Picker */
-        .calendar-popover {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--dropdown-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1rem;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            z-index: 100;
-            width: 320px;
-            display: none;
-            margin-top: 10px;
-        }
-
-        .calendar-popover.active {
-            display: block;
-        }
-
-        .cal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .cal-title {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--text-main);
-        }
-
-        .cal-nav-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-
-        .cal-nav-btn:hover {
-            color: var(--gold);
-        }
-
-        .cal-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            text-align: center;
-        }
-
-        .cal-day-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .cal-day {
-            padding: 8px 0;
-            border-radius: 50%;
-            font-size: 0.9rem;
-            color: var(--text-main);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .cal-day.disabled {
-            color: var(--text-muted);
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .cal-day.empty {
-            color: var(--text-muted);
-            opacity: 0.6;
-        }
-
-        .cal-day.has-records {
-            font-weight: 800;
-            color: var(--text-main);
-        }
-
-        .cal-day:hover:not(.disabled) {
-            background: var(--table-hover);
-        }
-
-        .cal-day.selected {
-            background: var(--gold);
-            color: #fff;
-            font-weight: 700;
-        }
-
-        .cal-day.today:not(.selected) {
-            border: 2px solid var(--gold);
-        }
-
-        .summary-bar {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-            background: var(--panel-bg);
-            padding: 1.5rem 2.5rem;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            border: 1px solid var(--border-color);
-            transition: background 0.3s ease, border-color 0.3s ease;
-        }
-
-        .summary-stat {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: var(--gold);
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 600;
-        }
-
-        .stats-context {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            margin-bottom: 1.5rem;
-            font-style: italic;
-        }
-
-        body.light-mode .stats-context {
-            color: #8A8078;
-        }
-
-        /* Single Row Toolbar Alignment */
-        .toolbar-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-            background: var(--panel-bg);
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .toolbar-actions {
-            display: flex;
-            gap: 0.8rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .search-input {
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 0.6rem 1rem;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            transition: border-color 0.2s;
-            width: 300px;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--gold);
-        }
-
-        .btn-formal {
-            padding: 0.6rem 1.2rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-radius: 6px;
-            border: 1px solid var(--btn-border);
-            background: var(--btn-bg);
-            color: var(--text-main);
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-formal:hover {
-            background: var(--btn-hover);
-        }
-
-        body.light-mode .btn-formal {
-            color: #3A3530;
-            border-color: #3A3530;
-        }
-
-        body.light-mode .btn-formal:hover {
-            background: #E8E4DC;
-        }
-
-        .btn-primary {
-            background: var(--gold);
-            color: #1C1A16 !important;
-            border-color: var(--gold) !important;
-        }
-
-        .btn-primary:hover {
-            opacity: 0.9;
-        }
-
-        body.light-mode .btn-primary {
-            color: #FFFFFF !important;
-        }
-
-        .btn-danger {
-            background: rgba(204, 34, 34, 0.1);
-            color: var(--red) !important;
-            border-color: rgba(204, 34, 34, 0.3) !important;
-        }
-
-        .btn-danger:hover {
-            background: rgba(204, 34, 34, 0.2);
-        }
-
-        .filter-badge {
-            background: var(--gold);
-            color: #fff;
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-            display: inline-block;
-        }
-
-        .clear-filters-link {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            text-decoration: underline;
-            margin-left: 0.5rem;
-        }
-
-        .clear-filters-link:hover {
-            color: var(--text-main);
-        }
-
-        /* Dropdowns */
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            top: 110%;
-            left: 0;
-            background-color: var(--dropdown-bg);
-            min-width: 220px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            z-index: 100;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            padding: 1rem;
-            text-align: left;
-        }
-
-        .dropdown.right .dropdown-content {
-            left: auto;
-            right: 0;
-        }
-
-        .dropdown.active .dropdown-content {
-            display: block;
-        }
-
-        .dropdown-content button.menu-item {
-            color: var(--text-main);
-            padding: 0.8rem 1rem;
-            text-decoration: none;
-            display: block;
-            width: 100%;
-            text-align: left;
-            background: none;
-            border: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .dropdown-content button.menu-item:hover {
-            background-color: var(--table-hover);
-            color: var(--gold);
-        }
-
-        .filter-row {
-            margin-bottom: 1rem;
-        }
-
-        .filter-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-            display: block;
-        }
-
-        .filter-select,
-        .filter-date {
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 0.5rem;
-            border-radius: 4px;
-        }
-
-        /* Table Spreadsheet Style */
-        .table-container {
-            overflow-x: auto;
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-        }
-
-        .records-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.85rem;
-        }
-
-        .records-table th {
-            padding: 6px 10px;
-            color: var(--text-main);
-            font-weight: bold;
-            font-size: 0.85rem;
-            border: 1px solid var(--border-color);
-            background: #f3f3f3;
-            cursor: pointer;
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-        }
-
-        .records-table td {
-            padding: 4px 10px;
-            border: 1px solid var(--border-color);
-            vertical-align: middle;
-            color: var(--text-main);
-            outline: none;
-        }
-
-        .records-table td:focus {
-            outline: 2px solid var(--gold);
-            outline-offset: -2px;
-            background: #e8f0fe;
-        }
-
-        .records-table tbody tr:hover {
-            background: #f8f9fa; 
-        }
-
-        /* Badges Spreadsheet Style */
-        .badge {
-            padding: 2px 6px;
-            font-size: 0.8rem;
-            font-weight: normal;
-            display: inline-block;
-            white-space: nowrap;
-        }
-
-        .badge-priority {
-            background: var(--red);
+        /* Ribbon */
+        .ribbon-header {
+            background: var(--nbi-blue);
             color: white;
-        }
-
-        .status-badge {
-            padding: 2px 6px;
-            font-size: 0.85rem;
-            font-weight: normal;
-            display: inline-block;
-            width: 100%;
-            text-align: center;
-        }
-
-        .status-waiting {
-            background: var(--status-waiting-bg);
-            color: var(--status-waiting-txt);
-        }
-
-        .status-serving {
-            background: var(--status-serving-bg);
-            color: var(--status-serving-txt);
-        }
-
-        .status-served {
-            background: var(--status-served-bg);
-            color: var(--status-served-txt);
-        }
-
-        .status-skipped {
-            background: var(--status-skipped-bg);
-            color: var(--status-skipped-txt);
-        }
-
-        .status-noshow {
-            background: var(--status-noshow-bg);
-            color: var(--status-noshow-txt);
-        }
-
-        /* Pagination */
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding: 1.5rem 0;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .page-controls {
-            display: flex;
-            gap: 0.4rem;
-            align-items: center;
-        }
-
-        .page-btn {
-            background: var(--btn-bg);
-            border: 1px solid var(--btn-border);
-            color: var(--text-main);
-            padding: 0.4rem 0.8rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-
-        .page-btn:hover:not(:disabled) {
-            background: var(--btn-hover);
-        }
-
-        .page-btn.active {
-            background: var(--gold);
-            color: #fff;
-            border-color: var(--gold);
-        }
-
-        .page-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .jump-input {
-            width: 50px;
-            text-align: center;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 0.4rem;
-            border-radius: 4px;
-        }
-
-        /* Modals */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-            overflow-y: auto;
-        }
-
-        .modal {
-            background: var(--modal-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 2.5rem;
-            max-width: 600px;
-            width: 100%;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            margin: auto;
-            position: relative;
-        }
-
-        .modal-header {
-            margin-bottom: 2rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1rem;
-        }
-
-        .modal-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.8rem;
-            cursor: pointer;
-            line-height: 1;
-        }
-
-        .modal-close:hover {
-            color: var(--text-main);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .form-group {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-heavy);
         }
 
-        .form-group.full-width {
-            grid-column: 1 / -1;
+        .ribbon-top {
+            padding: 5px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            background: var(--nbi-blue-light);
         }
+        .ribbon-top img { height: 18px; }
 
-        .form-label {
-            color: var(--text-muted);
-            font-size: 0.8rem;
+        .ribbon-tabs {
+            display: flex;
+            padding: 0 10px;
+            margin-top: 5px;
+            gap: 20px;
+        }
+        .ribbon-tab {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #ccc;
+            border-top: 2px solid transparent;
+            border-left: 1px solid transparent;
+            border-right: 1px solid transparent;
+        }
+        .ribbon-tab.active {
+            background: var(--panel-bg);
+            color: var(--nbi-blue);
+            border-top: 2px solid var(--nbi-yellow);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--panel-bg);
+            margin-bottom: -1px;
+            z-index: 2;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
-        .form-input,
-        .form-select,
-        .form-textarea {
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
+        .ribbon-toolbar {
+            background: var(--panel-bg);
             color: var(--text-main);
-            padding: 0.8rem;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
+            padding: 5px 10px;
+            display: flex;
+            gap: 15px;
+            border-bottom: 1px solid var(--border-heavy);
+            min-height: 80px;
         }
 
-        .form-textarea {
-            resize: vertical;
-            min-height: 120px;
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            border-right: 1px solid var(--border-color);
+            padding-right: 15px;
+            position: relative;
+            padding-bottom: 15px;
         }
 
-        .form-input:focus,
-        .form-select:focus,
-        .form-textarea:focus {
-            border-color: var(--gold);
+        .group-label {
+            position: absolute;
+            bottom: 2px;
+            left: 0; width: 100%;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .ribbon-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            color: var(--text-main);
+        }
+        .ribbon-btn:hover {
+            background: var(--btn-hover);
+            border-color: var(--btn-border);
+        }
+        .ribbon-btn i { font-size: 1.4rem; font-style: normal; }
+
+        .ribbon-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 0 5px;
+        }
+        .ribbon-input-group input, .ribbon-input-group select {
+            padding: 4px;
+            border: 1px solid var(--border-color);
+            font-size: 0.8rem;
+        }
+
+        /* Formula Bar */
+        .formula-bar {
+            display: flex;
+            background: var(--panel-bg);
+            padding: 4px;
+            border-bottom: 1px solid var(--border-heavy);
+            align-items: center;
+            gap: 5px;
+        }
+        .name-box {
+            width: 80px;
+            border: 1px solid var(--border-color);
+            background: white;
+            padding: 4px;
+            font-size: 0.85rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        .fx-icon {
+            color: var(--text-muted);
+            font-style: italic;
+            font-weight: bold;
+            padding: 0 5px;
+        }
+        .formula-input {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            font-size: 0.9rem;
             outline: none;
         }
+        .formula-input:focus { border-color: var(--nbi-blue); }
 
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-color);
+        /* Main Grid Workspace */
+        .grid-workspace {
+            flex: 1;
+            overflow: auto;
+            background: #f3f3f3;
         }
-
-        .detail-row {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 0;
+        .excel-grid {
+            border-collapse: collapse;
+            background: white;
+            table-layout: fixed;
+            min-width: 1000px;
         }
-
-        .detail-label {
-            width: 35%;
-            color: var(--text-muted);
-            font-weight: 600;
+        .excel-grid th, .excel-grid td {
+            border: 1px solid var(--nbi-cell-border);
+            padding: 4px 6px;
             font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .excel-grid th {
+            background: var(--nbi-blue);
+            color: white;
+            font-weight: normal;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .corner-header {
+            width: 40px;
+            background: var(--nbi-blue-light) !important;
+            position: sticky;
+            left: 0;
+            z-index: 11;
+        }
+        .row-number {
+            background: var(--nbi-blue-light);
+            color: white;
+            text-align: center;
+            position: sticky;
+            left: 0;
+            z-index: 9;
+            width: 40px;
+            cursor: pointer;
+        }
+        
+        .column-titles td {
+            background: #e2e8f0;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        /* Cell Selection Interactions */
+        .excel-grid td:not(.row-number):not(.corner-header) {
+            cursor: cell;
+            position: relative;
+            outline: none;
+        }
+        
+        .active-cell {
+            border: 2px solid var(--nbi-blue) !important;
+            background: rgba(234, 179, 8, 0.05);
+            z-index: 5;
+        }
+        .active-cell::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            right: -3px;
+            width: 6px;
+            height: 6px;
+            background: var(--nbi-yellow);
+            border: 1px solid white;
+            cursor: crosshair;
         }
 
-        .detail-value {
-            width: 65%;
-            font-weight: 500;
-            font-size: 0.95rem;
+        /* Status Dropdown inside table */
+        .status-badge {
+            padding: 2px 6px; font-size: 0.8rem; width: 100%; border:none; text-align: center;
         }
+        .status-waiting { background: var(--status-waiting-bg); color: var(--status-waiting-txt); }
+        .status-serving { background: var(--status-serving-bg); color: var(--status-serving-txt); }
+        .status-served { background: var(--status-served-bg); color: var(--status-served-txt); }
+        .status-skipped { background: var(--status-skipped-bg); color: var(--status-skipped-txt); }
+        .status-noshow { background: var(--status-noshow-bg); color: var(--status-noshow-txt); }
+        .badge-priority { background: var(--red); color: white; padding: 2px; font-size: 0.7rem; }
 
-        .toast-container {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 2000;
+        /* Sheet Tabs Bottom */
+        .sheet-tabs {
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+            background: var(--bg-color);
+            border-top: 1px solid var(--border-heavy);
+            padding: 2px 10px 0;
+            gap: 2px;
+        }
+        .sheet-tab {
+            padding: 4px 15px;
+            background: #e2e8f0;
+            border: 1px solid var(--border-heavy);
+            border-bottom: none;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+        .sheet-tab.active {
+            background: white;
+            font-weight: bold;
+            color: var(--nbi-blue);
+        }
+        .sheet-tab.add-sheet {
+            font-weight: bold;
+            padding: 4px 10px;
+        }
+        .sheet-tab:hover:not(.active) {
+            background: #cbd5e1;
         }
 
-        .toast {
-            background: #2ecc71;
-            color: #fff;
-            padding: 1rem 1.5rem;
-            border-radius: 6px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            font-weight: 700;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transform: translateX(120%);
-            transition: transform 0.3s;
-        }
-
-        .toast.show {
-            transform: translateX(0);
-        }
-
-        .toast.error {
-            background: #e74c3c;
-        }
-
-        .toast.warning {
-            background: #e67e22;
-        }
-
-        @media print {
-            body {
-                background: white !important;
-                color: black !important;
-            }
-
-            .no-print,
-            .staff-nav,
-            .ledger-nav,
-            .summary-bar,
-            .stats-context,
-            .toolbar-container,
-            .pagination-container,
-            .theme-toggle {
-                display: none !important;
-            }
-
-            .staff-container {
-                padding: 0;
-                margin: 0;
-                max-width: 100%;
-            }
-
-            .page-header {
-                margin-bottom: 20px;
-            }
-
-            .records-table th,
-            .records-table td {
-                border: 1px solid #ccc;
-                color: black !important;
-                padding: 0.5rem;
-                font-size: 10pt;
-            }
-
-            .records-table th {
-                background-color: #f2f2f2 !important;
-                color: black !important;
-            }
-
-            .table-container {
-                border: none;
-                box-shadow: none;
-                background: white !important;
-            }
-
-            .badge-priority {
-                border: 1px solid black;
-                color: black !important;
-                background: white !important;
-            }
-
-            .status-badge {
-                border: 1px solid black;
-                color: black !important;
-                background: white !important;
-            }
-
-            .print-only {
-                display: block !important;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .staff-container {
-                padding: 1rem !important;
-            }
-
-            .ledger-nav {
-                flex-direction: column;
-                width: 100%;
-                gap: 1rem;
-            }
-
-            .ledger-btn {
-                width: 100%;
-                justify-content: center;
-                padding: 0.8rem;
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 8px;
-            }
-
-            .toolbar-actions .search-input {
-                width: 100%;
-            }
-
-            .toolbar-actions,
-            .toolbar-container,
-            .summary-bar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .summary-stat {
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                padding-bottom: 0.5rem;
-            }
-
-            .pagination-container {
-                flex-direction: column;
-                align-items: stretch;
-                text-align: center;
-            }
-
-            .page-controls {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .table-container {
-                max-width: 100%;
-            }
-        }
+        /* Modals and Original UI Preserved */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: white; padding: 20px; border: 1px solid var(--border-heavy); min-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;}
+        .modal-header { border-bottom: 1px solid var(--border-color); margin-bottom: 15px; padding-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; color: var(--nbi-blue); text-transform: uppercase; }
+        .modal-close { cursor: pointer; background: none; border: none; font-size: 1.2rem; }
+        
+        .toast-container { position: fixed; bottom: 40px; right: 20px; z-index: 2000; }
+        .toast { background: #2ecc71; color: white; padding: 10px 20px; margin-top: 10px; display: none; }
+        .toast.show { display: block; }
+        .toast.error { background: #e74c3c; }
+        
+        .form-group { margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+        .form-input, .form-select, .form-textarea { padding: 6px; border: 1px solid var(--border-color); width: 100%;}
+        .form-textarea { min-height: 100px; resize: vertical; }
+        .btn-formal { padding: 6px 12px; background: #e2e8f0; border: 1px solid var(--border-heavy); cursor: pointer; }
+        .btn-primary { background: var(--nbi-blue); color: white; }
+        .btn-danger { background: var(--red); color: white; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .full-width { grid-column: 1 / -1; }
+        .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;}
+        .detail-row { display: flex; border-bottom: 1px solid var(--border-color); padding: 5px 0;}
+        .detail-label { width: 30%; font-weight: bold;}
+        .detail-value { width: 70%;}
+        
+        /* Calendar Specific Overrides for compatibility */
+        .calendar-popover { display: none; position: absolute; bottom: 30px; background: white; border: 1px solid #ccc; padding: 10px; z-index: 100;}
+        .calendar-popover.active { display: block; }
     </style>
+
 </head>
 
+
 <body class="staff-body">
-    <!-- Excel-like Ribbon Header (NBI Blue) -->
-    <div class="excel-top-bar no-print" style="background: #0b1d3a; color: white; padding: 6px 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: bold; width: 100%;">
-        <img src="/assets/nbi.png" alt="NBI Logo" style="height: 24px; object-fit: contain;">
-        <span>NBI Cybercrime Division - Complaint Registry</span>
+    <!-- Excel-like Ribbon Header -->
+    <div class="ribbon-header">
+        <div class="ribbon-top">
+            <img src="/assets/nbi.png" alt="NBI Logo">
+            <span class="ribbon-title">NBI Cybercrime Division - Complaint Registry.xlsx</span>
+            <span id="lastUpdated" style="margin-left: auto; font-size: 0.75rem; color: #cbd5e1; font-style: italic;">Connecting...</span>
+        </div>
+        <div class="ribbon-tabs">
+            <div class="ribbon-tab">File</div>
+            <div class="ribbon-tab active">Home</div>
+            <div class="ribbon-tab">Insert</div>
+            <div class="ribbon-tab">Data</div>
+            <div class="ribbon-tab" style="margin-left:auto; border:none; padding: 2px;">
+                 <span id="recordCount" style="color: #cbd5e1; font-size: 0.8rem;">Showing 0 records</span>
+            </div>
+        </div>
+        <div class="ribbon-toolbar">
+            <div class="toolbar-group">
+                <button class="ribbon-btn" onclick="generateEODReport()"><i class="icon">📊</i>EOD Report</button>
+                <button class="ribbon-btn" onclick="window.print()"><i class="icon">🖨️</i>Print</button>
+                <div class="group-label">Reports</div>
+            </div>
+            
+            <div class="toolbar-group">
+                <div class="ribbon-input-group">
+                    <input type="text" id="searchInput" placeholder="Search records..." style="width: 200px;">
+                </div>
+                <div class="group-label">Search</div>
+            </div>
+            
+            <div class="toolbar-group">
+                <select id="filterStatus" class="form-select" style="font-size: 0.8rem; padding: 4px; width: 120px;">
+                    <option value="">All Statuses</option>
+                    <option value="Waiting">Waiting</option>
+                    <option value="Serving">Serving</option>
+                    <option value="Served">Served</option>
+                    <option value="Skipped">Skipped</option>
+                    <option value="No-show">No-show</option>
+                </select>
+                <label style="font-size:0.75rem; display:block; margin-top:5px;">
+                    <input type="checkbox" id="filterPriority"> Priority Only
+                </label>
+                <div class="group-label">Filters</div>
+            </div>
+            
+            <div class="toolbar-group">
+                <button class="ribbon-btn" onclick="document.getElementById('csvFileInput').click()"><i class="icon">📥</i>Import CSV</button>
+                <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleCSVImport(event)">
+                <button class="ribbon-btn" onclick="exportToExcel()"><i class="icon">📤</i>Export Excel</button>
+                <button class="ribbon-btn" onclick="exportToPDF()"><i class="icon">📄</i>Export PDF</button>
+                <div class="group-label">Data Management</div>
+            </div>
+        </div>
     </div>
 
-    <div class="staff-container no-print">
+    <!-- Formula Bar -->
+    <div class="formula-bar">
+        <div class="name-box" id="nameBox">A1</div>
+        <div class="fx-icon">fx</div>
+        <input type="text" class="formula-input" id="formulaInput" placeholder="Select a cell..." oninput="updateActiveCell(this.value)">
+    </div>
 
-        <!-- Ledger Navigation with Calendar Picker -->
-        <div class="ledger-nav">
-            <button class="ledger-btn" onclick="changeDate(-1)">← Previous Day</button>
-            <div style="position: relative;" id="calendarContainer">
-                <div class="ledger-date-container" id="dateHeader" title="Click to pick a date">
-                    <span class="ledger-date" id="ledgerDateDisplay">Loading...</span>
-                    <span class="calendar-icon">📅</span>
-                </div>
-                <!-- Calendar Popover -->
-                <div class="calendar-popover" id="calendarPopover">
-                    <div class="cal-header">
-                        <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)">◀</button>
-                        <div class="cal-title" id="calMonthYear">June 2026</div>
-                        <button class="cal-nav-btn" onclick="changeCalendarMonth(1)">▶</button>
-                    </div>
-                    <div class="cal-grid" id="calGrid">
-                        <div class="cal-day-label">Su</div>
-                        <div class="cal-day-label">Mo</div>
-                        <div class="cal-day-label">Tu</div>
-                        <div class="cal-day-label">We</div>
-                        <div class="cal-day-label">Th</div>
-                        <div class="cal-day-label">Fr</div>
-                        <div class="cal-day-label">Sa</div>
-                        <!-- Days populated via JS -->
-                    </div>
-                </div>
-            </div>
-            <button class="ledger-btn" id="btnNextDay" onclick="changeDate(1)">Next Day →</button>
+    <!-- Main Grid Workspace -->
+    <div class="grid-workspace">
+        <table class="excel-grid" id="recordsTable">
+            <thead>
+                <tr>
+                    <th class="corner-header"></th>
+                    <th style="width: 150px;">A</th>
+                    <th style="width: 150px;">B</th>
+                    <th style="width: 250px;">C</th>
+                    <th style="width: 80px;">D</th>
+                    <th style="width: 150px;">E</th>
+                    <th style="width: 120px;">F</th>
+                </tr>
+                <tr class="column-titles">
+                    <td class="row-number">1</td>
+                    <td class="col-title" onclick="handleSort('created_at', 0)">Date & Time <span id="sort-0"></span></td>
+                    <td class="col-title" onclick="handleSort('ccd_no', 1)">CCD No. <span id="sort-1"></span></td>
+                    <td class="col-title" onclick="handleSort('full_name', 2)">Full Name <span id="sort-2"></span></td>
+                    <td class="col-title" onclick="handleSort('age', 3)">Age <span id="sort-3"></span></td>
+                    <td class="col-title" onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></td>
+                    <td class="col-title" onclick="handleSort('status', 5)">Status <span id="sort-5"></span></td>
+                </tr>
+            </thead>
+            <tbody id="recordsBody">
+                <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Sheet Tabs -->
+    <div class="sheet-tabs" style="position: relative;">
+        <div class="sheet-tab" onclick="changeDate(-1)">←</div>
+        
+        <div class="sheet-tab active" id="dateHeader" title="Click to pick a date">
+            <span id="ledgerDateDisplay">Loading...</span>
         </div>
-
-        <!-- Summary Bar -->
-        <div class="summary-bar">
-            <div class="summary-stat">
-                <div class="stat-value" id="stat-registered">0</div>
-                <div class="stat-label">Total Registered</div>
+        
+        <!-- Calendar Popover re-attached to the tab -->
+        <div class="calendar-popover" id="calendarPopover" style="bottom: 100%; left: 50px;">
+            <div class="cal-header">
+                <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)">◀</button>
+                <div class="cal-title" id="calMonthYear">June 2026</div>
+                <button class="cal-nav-btn" onclick="changeCalendarMonth(1)">▶</button>
             </div>
-            <div class="summary-stat">
-                <div class="stat-value" id="stat-served" style="color: #2ecc71;">0</div>
-                <div class="stat-label">Served</div>
-            </div>
-            <div class="summary-stat">
-                <div class="stat-value" id="stat-waiting" style="color: #3498db;">0</div>
-                <div class="stat-label">Waiting</div>
-            </div>
-            <div class="summary-stat">
-                <div class="stat-value" id="stat-skipped" style="color: #e74c3c;">0</div>
-                <div class="stat-label">Skipped</div>
-            </div>
-            <div class="summary-stat">
-                <div class="stat-value" id="stat-priority" style="color: var(--red);">0</div>
-                <div class="stat-label">Priority</div>
-            </div>
-        </div>
-        <div class="stats-context" id="statsContext">Showing records for today</div>
-
-        <!-- Single Row Toolbar -->
-        <div class="toolbar-container">
-            <div class="toolbar-actions" style="flex: 1;">
-                <input type="text" id="searchInput" class="search-input"
-                    placeholder="Search name, CCD, contact, etc...">
-
-                <div class="dropdown" id="filterDropdown">
-                    <button class="btn-formal dropdown-btn" onclick="toggleDropdown(event, 'filter-menu')">
-                        Filters ▾ <span id="filterBadge" class="filter-badge" style="display: none;">0</span>
-                    </button>
-                    <div class="dropdown-content" id="filter-menu" onclick="event.stopPropagation()">
-                        <div class="filter-row">
-                            <span class="filter-label">Status</span>
-                            <select id="filterStatus" class="filter-select">
-                                <option value="">All Statuses</option>
-                                <option value="Waiting">Waiting</option>
-                                <option value="Serving">Serving</option>
-                                <option value="Served">Served</option>
-                                <option value="Skipped">Skipped</option>
-                                <option value="No-show">No-show</option>
-                            </select>
-                        </div>
-                        <div class="filter-row" style="margin-top: 1rem;">
-                            <label
-                                style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 500; cursor: pointer;">
-                                <input type="checkbox" id="filterPriority"> Show Priority Only
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <span class="clear-filters-link" id="clearFiltersBtn" onclick="clearFilters()"
-                    style="display: none;">Clear Filters</span>
-            </div>
-
-            <div class="toolbar-actions" style="justify-content: flex-end;">
-                <span id="lastUpdated"
-                    style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem; font-style: italic;">Connecting...</span>
-
-                <div class="dropdown right" id="importDropdown">
-                    <button class="btn-formal btn-primary" style="margin-right: 0.5rem;" onclick="document.getElementById('csvFileInput').click()">Import CSV</button>
-                    <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleCSVImport(event)">
-                </div>
-
-                <div class="dropdown right" id="exportDropdown">
-                    <button class="btn-formal dropdown-btn" onclick="toggleDropdown(event, 'export-menu')">Export
-                        ▾</button>
-                    <div class="dropdown-content" id="export-menu">
-                        <button class="menu-item" onclick="exportToExcel()">Export as Excel (.xlsx)</button>
-                        <button class="menu-item" onclick="exportToCSV()">Export as CSV (.csv)</button>
-                        <button class="menu-item" onclick="exportToWord()">Export as Word (.docx)</button>
-                        <button class="menu-item" onclick="exportToPDF()">Export as PDF (.pdf)</button>
-                        <button class="menu-item" onclick="window.print()">Print View</button>
-                    </div>
-                </div>
-
-                <button class="btn-formal btn-primary" onclick="generateEODReport()">End of Day Report</button>
+            <div class="cal-grid" id="calGrid">
+                <!-- populated by js -->
             </div>
         </div>
 
-        <div class="table-container" id="print-area">
-            <h2 class="print-only" style="display: none; text-align: center; margin-bottom: 20px; color: black;">NBI
-                Cybercrime Division - Official Records</h2>
-            <table class="records-table" id="recordsTable">
-                <thead>
-                    <tr>
-                        <th onclick="handleSort('created_at', 0)">Date & Time <span id="sort-0">▼</span></th>
-                        <th onclick="handleSort('ccd_no', 1)">CCD No. <span id="sort-1"></span></th>
-                        <th onclick="handleSort('full_name', 2)">Full Name <span id="sort-2"></span></th>
-                        <th onclick="handleSort('age', 3)">Age <span id="sort-3"></span></th>
-                        <th onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></th>
-                        <th onclick="handleSort('status', 5)">Status <span id="sort-5"></span></th>
-                    </tr>
-                </thead>
-                <tbody id="recordsBody">
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">Loading
-                            cached records...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
+        <div class="sheet-tab" onclick="changeDate(1)" id="btnNextDay">→</div>
+        <div class="sheet-tab add-sheet" onclick="openModal('modalView')">View Details Form (Demo)</div>
     </div>
 
     <!-- Modals -->
@@ -1285,6 +649,117 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
+
+// Spreadsheet Interaction Logic
+let activeCellRef = "A1";
+let activeCellElement = null;
+
+function setActiveCell(cell, colLetter, rowIndex) {
+    // Remove active class from all cells
+    document.querySelectorAll('.excel-grid td').forEach(td => td.classList.remove('active-cell'));
+    
+    // Add active class to clicked cell
+    cell.classList.add('active-cell');
+    activeCellElement = cell;
+    
+    // Update Name Box and Formula Bar
+    const cellRef = colLetter + rowIndex;
+    document.getElementById('nameBox').textContent = cellRef;
+    
+    let content = "";
+    // If it's an input or select, get its value, else text content
+    const input = cell.querySelector('input, select');
+    if (input) {
+        content = input.value;
+    } else {
+        content = cell.innerText.trim();
+    }
+    document.getElementById('formulaInput').value = content;
+}
+
+function updateActiveCell(value) {
+    if(activeCellElement) {
+        const input = activeCellElement.querySelector('input, select');
+        if (input) {
+            input.value = value;
+        } else {
+            activeCellElement.innerText = value;
+        }
+    }
+}
+
+// Add right-click context menu (basic simulation)
+document.addEventListener('contextmenu', function(e) {
+    if(e.target.closest('#recordsTable td')) {
+        e.preventDefault();
+        const td = e.target.closest('td');
+        // If it has an id logic, we can trigger actions
+        // But for UI simulation we just activate it
+        td.click();
+        showToast('Context menu: Edit/View options for ' + document.getElementById('nameBox').textContent);
+    }
+});
+
+// Intercept the original renderTable to add spreadsheet cell events and row numbers
+if (typeof originalRenderTable === 'undefined') {
+    var originalRenderTable = renderTable;
+    
+    renderTable = function() {
+        originalRenderTable(); // call the original to populate rows
+        
+        const tbody = document.getElementById('recordsBody');
+        const rows = tbody.querySelectorAll('tr');
+        
+        // Header columns are A, B, C, D, E, F
+        const colLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+        
+        rows.forEach((tr, index) => {
+            const rowIndex = index + 2; // Data starts at row 2
+            
+            // Prepend row number cell
+            const rowNumTd = document.createElement('td');
+            rowNumTd.className = 'row-number';
+            rowNumTd.textContent = rowIndex;
+            tr.insertBefore(rowNumTd, tr.firstChild);
+            
+            // Add click events to data cells
+            const dataCells = tr.querySelectorAll('td:not(.row-number)');
+            dataCells.forEach((td, colIndex) => {
+                const letter = colLetters[colIndex];
+                td.addEventListener('click', function(e) {
+                    setActiveCell(td, letter, rowIndex);
+                });
+                td.addEventListener('keyup', function(e) {
+                    if (document.activeElement === td) {
+                        document.getElementById('formulaInput').value = td.innerText.trim();
+                    }
+                });
+            });
+        });
+    };
+}
+
+// Remove context stats element code to prevent error since we removed it from HTML
+const originalUpdateSummaryBar = updateSummaryBar;
+updateSummaryBar = function() {
+    // Just safely call original but suppress missing element errors
+    try { originalUpdateSummaryBar(); } catch(e){}
+};
+
+const originalUpdateLedger = updateLedgerDateDisplay;
+updateLedgerDateDisplay = function() {
+    try { originalUpdateLedger(); } catch(e){}
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('ledgerDateDisplay').textContent = viewDateObj.toLocaleDateString('en-US', options);
+    
+    // Disable Next Day if viewing today
+    const today = new Date();
+    const isToday = viewDateObj.toDateString() === today.toDateString();
+    document.getElementById('btnNextDay').style.opacity = isToday ? '0.3' : '1';
+    document.getElementById('btnNextDay').style.cursor = isToday ? 'not-allowed' : 'pointer';
+}
+
+
         // --- State ---
         let allRecords = [];
         let filteredRecords = [];
@@ -1900,13 +1375,344 @@
             let html = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head><meta charset='utf-8'><title>NBI Records</title>
-            <style>
-                body { font-family: Arial, sans-serif; }
-                h1 { text-align: center; color: #333; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 10pt; }
-                th { background-color: #f2f2f2; }
-            </style>
+            
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            border-radius: 0 !important;
+        }
+        :root {
+            /* NBI Spreadsheet Theme */
+            --bg-color: #E1DFDD;
+            --panel-bg: #FFFFFF;
+            --border-color: #cbd5e1;
+            --border-heavy: #94a3b8;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            
+            --nbi-blue: #0F172A;
+            --nbi-blue-light: #1E293B;
+            --nbi-yellow: #EAB308;
+            --nbi-yellow-hover: #FACC15;
+            --nbi-cell-border: #d4d4d4;
+
+            --btn-bg: #f8f9fa;
+            --btn-border: #dadce0;
+            --btn-hover: #f1f3f4;
+            
+            --table-hover: #f1f3f4;
+            --input-bg: #ffffff;
+            --modal-bg: #ffffff;
+            --dropdown-bg: #ffffff;
+            
+            --gold: var(--nbi-yellow);
+            --red: #ea4335;
+            
+            /* Status Colors */
+            --status-served-bg: #0f9d58; --status-served-txt: #ffffff;
+            --status-waiting-bg: #4285f4; --status-waiting-txt: #ffffff;
+            --status-skipped-bg: #ea4335; --status-skipped-txt: #ffffff;
+            --status-noshow-bg: #5f6368; --status-noshow-txt: #ffffff;
+            --status-serving-bg: #fbbc04; --status-serving-txt: #000000;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            color: var(--text-main);
+        }
+
+        /* Ribbon */
+        .ribbon-header {
+            background: var(--nbi-blue);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid var(--border-heavy);
+        }
+
+        .ribbon-top {
+            padding: 5px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            background: var(--nbi-blue-light);
+        }
+        .ribbon-top img { height: 18px; }
+
+        .ribbon-tabs {
+            display: flex;
+            padding: 0 10px;
+            margin-top: 5px;
+            gap: 20px;
+        }
+        .ribbon-tab {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #ccc;
+            border-top: 2px solid transparent;
+            border-left: 1px solid transparent;
+            border-right: 1px solid transparent;
+        }
+        .ribbon-tab.active {
+            background: var(--panel-bg);
+            color: var(--nbi-blue);
+            border-top: 2px solid var(--nbi-yellow);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--panel-bg);
+            margin-bottom: -1px;
+            z-index: 2;
+            font-weight: 600;
+        }
+
+        .ribbon-toolbar {
+            background: var(--panel-bg);
+            color: var(--text-main);
+            padding: 5px 10px;
+            display: flex;
+            gap: 15px;
+            border-bottom: 1px solid var(--border-heavy);
+            min-height: 80px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            border-right: 1px solid var(--border-color);
+            padding-right: 15px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .group-label {
+            position: absolute;
+            bottom: 2px;
+            left: 0; width: 100%;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .ribbon-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            color: var(--text-main);
+        }
+        .ribbon-btn:hover {
+            background: var(--btn-hover);
+            border-color: var(--btn-border);
+        }
+        .ribbon-btn i { font-size: 1.4rem; font-style: normal; }
+
+        .ribbon-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 0 5px;
+        }
+        .ribbon-input-group input, .ribbon-input-group select {
+            padding: 4px;
+            border: 1px solid var(--border-color);
+            font-size: 0.8rem;
+        }
+
+        /* Formula Bar */
+        .formula-bar {
+            display: flex;
+            background: var(--panel-bg);
+            padding: 4px;
+            border-bottom: 1px solid var(--border-heavy);
+            align-items: center;
+            gap: 5px;
+        }
+        .name-box {
+            width: 80px;
+            border: 1px solid var(--border-color);
+            background: white;
+            padding: 4px;
+            font-size: 0.85rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        .fx-icon {
+            color: var(--text-muted);
+            font-style: italic;
+            font-weight: bold;
+            padding: 0 5px;
+        }
+        .formula-input {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .formula-input:focus { border-color: var(--nbi-blue); }
+
+        /* Main Grid Workspace */
+        .grid-workspace {
+            flex: 1;
+            overflow: auto;
+            background: #f3f3f3;
+        }
+        .excel-grid {
+            border-collapse: collapse;
+            background: white;
+            table-layout: fixed;
+            min-width: 1000px;
+        }
+        .excel-grid th, .excel-grid td {
+            border: 1px solid var(--nbi-cell-border);
+            padding: 4px 6px;
+            font-size: 0.85rem;
+            vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .excel-grid th {
+            background: var(--nbi-blue);
+            color: white;
+            font-weight: normal;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .corner-header {
+            width: 40px;
+            background: var(--nbi-blue-light) !important;
+            position: sticky;
+            left: 0;
+            z-index: 11;
+        }
+        .row-number {
+            background: var(--nbi-blue-light);
+            color: white;
+            text-align: center;
+            position: sticky;
+            left: 0;
+            z-index: 9;
+            width: 40px;
+            cursor: pointer;
+        }
+        
+        .column-titles td {
+            background: #e2e8f0;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        /* Cell Selection Interactions */
+        .excel-grid td:not(.row-number):not(.corner-header) {
+            cursor: cell;
+            position: relative;
+            outline: none;
+        }
+        
+        .active-cell {
+            border: 2px solid var(--nbi-blue) !important;
+            background: rgba(234, 179, 8, 0.05);
+            z-index: 5;
+        }
+        .active-cell::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            right: -3px;
+            width: 6px;
+            height: 6px;
+            background: var(--nbi-yellow);
+            border: 1px solid white;
+            cursor: crosshair;
+        }
+
+        /* Status Dropdown inside table */
+        .status-badge {
+            padding: 2px 6px; font-size: 0.8rem; width: 100%; border:none; text-align: center;
+        }
+        .status-waiting { background: var(--status-waiting-bg); color: var(--status-waiting-txt); }
+        .status-serving { background: var(--status-serving-bg); color: var(--status-serving-txt); }
+        .status-served { background: var(--status-served-bg); color: var(--status-served-txt); }
+        .status-skipped { background: var(--status-skipped-bg); color: var(--status-skipped-txt); }
+        .status-noshow { background: var(--status-noshow-bg); color: var(--status-noshow-txt); }
+        .badge-priority { background: var(--red); color: white; padding: 2px; font-size: 0.7rem; }
+
+        /* Sheet Tabs Bottom */
+        .sheet-tabs {
+            display: flex;
+            background: var(--bg-color);
+            border-top: 1px solid var(--border-heavy);
+            padding: 2px 10px 0;
+            gap: 2px;
+        }
+        .sheet-tab {
+            padding: 4px 15px;
+            background: #e2e8f0;
+            border: 1px solid var(--border-heavy);
+            border-bottom: none;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+        .sheet-tab.active {
+            background: white;
+            font-weight: bold;
+            color: var(--nbi-blue);
+        }
+        .sheet-tab.add-sheet {
+            font-weight: bold;
+            padding: 4px 10px;
+        }
+        .sheet-tab:hover:not(.active) {
+            background: #cbd5e1;
+        }
+
+        /* Modals and Original UI Preserved */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: white; padding: 20px; border: 1px solid var(--border-heavy); min-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;}
+        .modal-header { border-bottom: 1px solid var(--border-color); margin-bottom: 15px; padding-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; color: var(--nbi-blue); text-transform: uppercase; }
+        .modal-close { cursor: pointer; background: none; border: none; font-size: 1.2rem; }
+        
+        .toast-container { position: fixed; bottom: 40px; right: 20px; z-index: 2000; }
+        .toast { background: #2ecc71; color: white; padding: 10px 20px; margin-top: 10px; display: none; }
+        .toast.show { display: block; }
+        .toast.error { background: #e74c3c; }
+        
+        .form-group { margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+        .form-input, .form-select, .form-textarea { padding: 6px; border: 1px solid var(--border-color); width: 100%;}
+        .form-textarea { min-height: 100px; resize: vertical; }
+        .btn-formal { padding: 6px 12px; background: #e2e8f0; border: 1px solid var(--border-heavy); cursor: pointer; }
+        .btn-primary { background: var(--nbi-blue); color: white; }
+        .btn-danger { background: var(--red); color: white; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .full-width { grid-column: 1 / -1; }
+        .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;}
+        .detail-row { display: flex; border-bottom: 1px solid var(--border-color); padding: 5px 0;}
+        .detail-label { width: 30%; font-weight: bold;}
+        .detail-value { width: 70%;}
+        
+        /* Calendar Specific Overrides for compatibility */
+        .calendar-popover { display: none; position: absolute; bottom: 30px; background: white; border: 1px solid #ccc; padding: 10px; z-index: 100;}
+        .calendar-popover.active { display: block; }
+    </style>
+
             </head>
             <body>
                 <h1>NBI Cybercrime Division - Official Records</h1>
