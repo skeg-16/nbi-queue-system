@@ -356,6 +356,20 @@
 
 
 <body class="staff-body">
+
+    <!-- Hidden elements to preserve JS compatibility -->
+    <div style="display: none;">
+        <span id="themeToggle"></span>
+        <span id="filterBadge"></span>
+        <span id="clearFiltersBtn"></span>
+        <span id="statsContext"></span>
+        <span id="stat-registered"></span>
+        <span id="stat-served"></span>
+        <span id="stat-waiting"></span>
+        <span id="stat-skipped"></span>
+        <span id="stat-priority"></span>
+    </div>
+
     <!-- Excel-like Ribbon Header -->
     <div class="ribbon-header">
         <div class="ribbon-top">
@@ -1715,6 +1729,20 @@ updateLedgerDateDisplay = function() {
 
             </head>
             <body>
+
+    <!-- Hidden elements to preserve JS compatibility -->
+    <div style="display: none;">
+        <span id="themeToggle"></span>
+        <span id="filterBadge"></span>
+        <span id="clearFiltersBtn"></span>
+        <span id="statsContext"></span>
+        <span id="stat-registered"></span>
+        <span id="stat-served"></span>
+        <span id="stat-waiting"></span>
+        <span id="stat-skipped"></span>
+        <span id="stat-priority"></span>
+    </div>
+
                 <h1>NBI Cybercrime Division - Official Records</h1>
                 <p><strong>Generated on:</strong> ${new Date().toLocaleString('en-PH')}</p>
                 <p><strong>Date:</strong> ${getViewDateString()}</p>
