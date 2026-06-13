@@ -2542,16 +2542,29 @@ updateLedgerDateDisplay = function() {
                     const match = funcStr.match(/'([^']+)'\)$/);
                     if(match && match[1]) {
                         const rowId = match[1];
-                        if(confirm("Are you sure you want to completely delete this record? This cannot be undone.")) {
-                            const res = await fetch('/api/records/' + rowId, { method: 'DELETE' });
-                            const result = await res.json();
-                            if(result.success) {
-                                showToast("Row deleted successfully!");
-                                fetchRecords();
-                            } else {
-                                showToast("Failed to delete row.", true);
+                        document.getElementById('confirmMessage').innerText = "Are you sure you want to completely delete this record? This cannot be undone.";
+                        openModal('modalConfirm');
+                        
+                        document.getElementById('confirmYesBtn').onclick = async function() {
+                            closeModal('modalConfirm');
+                            try {
+                                const res = await fetch('/api/records/' + rowId, { method: 'DELETE' });
+                                const result = await res.json();
+                                if(result.success) {
+                                    showToast("Row deleted successfully!", false, "success");
+                                    // Also remove customData if it exists
+                                    if (customData[rowId]) {
+                                        delete customData[rowId];
+                                        saveCustomData();
+                                    }
+                                    fetchRecords();
+                                } else {
+                                    showToast("Failed to delete row.", true);
+                                }
+                            } catch(err) {
+                                showToast("Server error deleting row.", true);
                             }
-                        }
+                        };
                     } else {
                         showToast("Error: Could not identify row ID.", true);
                     }
