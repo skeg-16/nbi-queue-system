@@ -2018,7 +2018,7 @@ updateLedgerDateDisplay = function() {
             const newTh = document.createElement('th');
             newTh.style.width = '150px';
             newTh.textContent = nextLetter;
-            thead.appendChild(newTh);
+            thead.insertBefore(newTh, thead.lastElementChild);
 
             // 2. Add to the <thead> (column-titles)
             const theadTitles = document.querySelector('.excel-grid .column-titles');
@@ -2027,7 +2027,7 @@ updateLedgerDateDisplay = function() {
             newTdTitle.contentEditable = "true";
             newTdTitle.style.cursor = "text";
             newTdTitle.textContent = "New Col " + extraColsCount;
-            theadTitles.appendChild(newTdTitle);
+            theadTitles.insertBefore(newTdTitle, theadTitles.lastElementChild);
 
             // 3. Add to every <tr> in <tbody>
             const tbody = document.getElementById('recordsBody');
@@ -2049,7 +2049,7 @@ updateLedgerDateDisplay = function() {
                         document.getElementById('formulaInput').value = newTd.innerText.trim();
                     }
                 });
-                tr.appendChild(newTd);
+                tr.insertBefore(newTd, tr.lastElementChild);
             });
         }
 
