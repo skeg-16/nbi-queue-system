@@ -229,13 +229,25 @@ app.post('/api/records/:id/remarks', (req, res) => {
 app.delete('/api/records/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { error } = await supabase.from('registrations').delete().eq('id', id);
-        if (error) throw error;
+        const { data, error, count } = await supabase.from('registrations').delete({ count: 'exact' }).eq('id', id);
+        
+        if (error) {
+            console.error("Supabase DELETE Error Details:", JSON.stringify(error, null, 2));
+            throw error;
+        }
+        
+        // Supabase succeeds without error if it deletes 0 rows (e.g. if RLS blocks it or ID missing)
+        if (count === 0) {
+            console.error("Supabase DELETE warning: 0 rows deleted. RLS may be blocking this, or ID is invalid. ID:", id);
+            return res.status(403).json({ success: false, error: "Row not deleted. Permission denied by Supabase RLS, or row does not exist." });
+        }
+
         auditLog('Delete Record', `Deleted record ID ${id}`);
         res.json({ success: true });
         broadcastStaffUpdate();
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        console.error("Server exception in DELETE /api/records/:id:", err);
+        res.status(500).json({ success: false, error: err.message || "Unknown server error" });
     }
 });
 
@@ -243,13 +255,24 @@ app.put('/api/records/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
-        const { error } = await supabase.from('registrations').update(updates).eq('id', id);
-        if (error) throw error;
+        const { data, error, count } = await supabase.from('registrations').update(updates, { count: 'exact' }).eq('id', id);
+        
+        if (error) {
+            console.error("Supabase PUT Error Details:", JSON.stringify(error, null, 2));
+            throw error;
+        }
+
+        if (count === 0) {
+            console.warn("Supabase PUT warning: 0 rows updated. Possible RLS block or invalid ID:", id);
+            return res.status(403).json({ success: false, error: "Row not updated. Permission denied by Supabase RLS, or row does not exist." });
+        }
+
         auditLog('Edit Record', `Edited record ID ${id}`);
         res.json({ success: true });
         broadcastStaffUpdate();
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        console.error("Server exception in PUT /api/records/:id:", err);
+        res.status(500).json({ success: false, error: err.message || "Unknown server error" });
     }
 });
 
