@@ -1789,97 +1789,7 @@ updateLedgerDateDisplay = function() {
                     <td>${r.is_priority ? 'YES' : 'NO'}</td>
                 </tr>`;
             });
-            html += `</table><script>
-        // --- Ribbon Tabs Logic ---
-        function switchTab(tabName) {
-            // Update tabs
-            ['home', 'insert', 'data'].forEach(t => {
-                document.getElementById('tab-' + t).classList.remove('active');
-                document.getElementById('toolbar-' + t).style.display = 'none';
-            });
-            document.getElementById('tab-' + tabName).classList.add('active');
-            document.getElementById('toolbar-' + tabName).style.display = 'flex';
-        }
-
-        // --- Insert Functions ---
-        async function insertRow() {
-            showToast("Inserting new row...");
-            try {
-                // Post to /api/import since it handles arrays of records
-                const newRecord = [{
-                    ccd_no: 'CCD-MANUAL-' + Date.now(),
-                    full_name: 'New Unknown Record',
-                    age: 0,
-                    status: 'Waiting',
-                    contact: '',
-                    is_priority: false
-                }];
-                const res = await fetch('/api/import', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ records: newRecord })
-                });
-                const result = await res.json();
-                if(result.success) {
-                    showToast("Row added successfully!");
-                    fetchRecords(); // refresh grid
-                } else {
-                    showToast("Failed to add row: " + result.error, true);
-                }
-            } catch(e) {
-                showToast("Error adding row", true);
-            }
-        }
-
-        let extraColsCount = 0;
-        function insertColumn() {
-            showToast("Adding scratchpad column (Visual Only)", false);
-            extraColsCount++;
-            
-            // Generate a letter like H, I, J
-            // Current letters stop at G (index 6). Next is index 7.
-            const colLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const nextLetter = colLetters[6 + extraColsCount] || "X"; 
-
-            // 1. Add to the <thead> (letters)
-            const thead = document.querySelector('.excel-grid thead tr:first-child');
-            const newTh = document.createElement('th');
-            newTh.style.width = '150px';
-            newTh.textContent = nextLetter;
-            thead.appendChild(newTh);
-
-            // 2. Add to the <thead> (column-titles)
-            const theadTitles = document.querySelector('.excel-grid .column-titles');
-            const newTdTitle = document.createElement('td');
-            newTdTitle.className = 'col-title';
-            newTdTitle.textContent = "New Col " + extraColsCount;
-            theadTitles.appendChild(newTdTitle);
-
-            // 3. Add to every <tr> in <tbody>
-            const tbody = document.getElementById('recordsBody');
-            const rows = tbody.querySelectorAll('tr');
-            rows.forEach((tr, index) => {
-                // skip if it's the loading/empty state
-                if(tr.cells.length <= 1) return;
-                
-                const newTd = document.createElement('td');
-                newTd.tabIndex = 0;
-                newTd.contentEditable = "true";
-                newTd.textContent = "";
-                // attach active cell event listener
-                newTd.addEventListener('click', function(e) {
-                    setActiveCell(newTd, nextLetter, index + 2);
-                });
-                newTd.addEventListener('keyup', function(e) {
-                    if (document.activeElement === newTd) {
-                        document.getElementById('formulaInput').value = newTd.innerText.trim();
-                    }
-                });
-                tr.appendChild(newTd);
-            });
-        }
-</script>
-</body></html>`;
+            html += `</table></body></html>`;
 
             const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const link = document.createElement("a");
@@ -2018,9 +1928,7 @@ updateLedgerDateDisplay = function() {
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-    </script>
-<script>
-        // --- Ribbon Tabs Logic ---
+            // --- Ribbon Tabs Logic ---
         function switchTab(tabName) {
             // Update tabs
             ['home', 'insert', 'data'].forEach(t => {
@@ -2108,6 +2016,7 @@ updateLedgerDateDisplay = function() {
                 tr.appendChild(newTd);
             });
         }
+
 </script>
 </body>
 
