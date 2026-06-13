@@ -358,40 +358,54 @@
         .calendar-popover.active { display: block; }
     
         .context-menu {
-            position: fixed; /* Use fixed to avoid scroll issues */
+            position: fixed;
             z-index: 10000;
-            width: 200px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border: 1px solid var(--border-color);
+            width: 260px;
+            background: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px 2px rgba(60,64,67,0.15);
+            border: 1px solid transparent;
             display: none;
             flex-direction: column;
-            padding: 8px 0;
-            font-family: 'Inter', sans-serif;
+            padding: 6px 0;
+            font-family: 'Roboto', 'Inter', sans-serif;
+            color: #3c4043;
         }
         .context-menu-item {
-            padding: 8px 16px;
-            font-size: 0.85rem;
-            color: var(--text-main);
+            padding: 6px 16px 6px 40px;
+            font-size: 13px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            position: relative;
         }
         .context-menu-item:hover {
-            background: var(--btn-hover);
+            background: #f1f3f4;
         }
-        .context-menu-item.danger {
-            color: #ef4444;
+        .context-menu-icon {
+            position: absolute;
+            left: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            color: #5f6368;
         }
-        .context-menu-item.danger:hover {
-            background: #fef2f2;
+        .context-menu-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        .context-menu-shortcut {
+            margin-left: auto;
+            color: #80868b;
+            font-size: 12px;
         }
         .context-menu-divider {
             height: 1px;
-            background: var(--border-color);
-            margin: 4px 0;
+            background: #e8eaed;
+            margin: 6px 0;
         }
 
     </style>
@@ -421,10 +435,10 @@
             <span class="ribbon-title">NBI Cybercrime Division - Complaint Registry.xlsx</span>
             <span id="lastUpdated" style="margin-left: auto; font-size: 0.75rem; color: #cbd5e1; font-style: italic;">Connecting...</span>
         </div>
-        <div class="ribbon-tabs">
-            <div class="ribbon-tab active" id="tab-home" onclick="switchTab('home')">Home</div>
-            <div class="ribbon-tab" id="tab-insert" onclick="switchTab('insert')">Insert</div>
-            <div class="ribbon-tab" id="tab-data" onclick="switchTab('data')">Data</div>
+        <div class="ribbon-tabs" style="background: #f8f9fa; border-bottom: 1px solid #dadce0; padding: 2px 10px;">
+            <div class="ribbon-tab active" id="tab-home" onclick="switchTab('home')" style="font-size:14px; padding:4px 8px; border:none; background:transparent;">Edit</div>
+            <div class="ribbon-tab" id="tab-insert" onclick="switchTab('insert')" style="font-size:14px; padding:4px 8px; border:none; background:transparent;">Insert</div>
+            <div class="ribbon-tab" id="tab-data" onclick="switchTab('data')" style="font-size:14px; padding:4px 8px; border:none; background:transparent;">Data</div>
             <div class="ribbon-tab" style="margin-left:auto; border:none; padding: 2px;">
                  <span id="recordCount" style="color: #cbd5e1; font-size: 0.8rem;">Showing 0 records</span>
             </div>
@@ -485,12 +499,44 @@
     
     <!-- Context Menu -->
     <div id="contextMenu" class="context-menu">
-        <div class="context-menu-item" onclick="cmEditCell()">✏️ Edit Cell</div>
-        <div class="context-menu-item" onclick="cmClearCell()">🗑️ Clear Cell</div>
+        <div class="context-menu-item" onclick="cmCut()">
+            <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zm-3.64 1.36C4.9 9 4 8.1 4 7s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM12 12.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM19 3l-6 6 2 2 7-7V3z"/></svg></span>
+            Cut
+            <span class="context-menu-shortcut">Ctrl+X</span>
+        </div>
+        <div class="context-menu-item" onclick="cmCopy()">
+            <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></span>
+            Copy
+            <span class="context-menu-shortcut">Ctrl+C</span>
+        </div>
+        <div class="context-menu-item" onclick="cmPaste()">
+            <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></svg></span>
+            Paste
+            <span class="context-menu-shortcut">Ctrl+V</span>
+        </div>
         <div class="context-menu-divider"></div>
-        <div class="context-menu-item" onclick="cmTogglePriority()">⭐ Toggle Priority</div>
+        <div class="context-menu-item" onclick="cmInsertRowAbove()">
+            <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></span>
+            Insert 1 row above
+        </div>
+        <div class="context-menu-item" onclick="cmInsertColLeft()">
+            <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></span>
+            Insert 1 column to the left
+        </div>
         <div class="context-menu-divider"></div>
-        <div class="context-menu-item danger" onclick="cmDeleteRow()">❌ Delete Row</div>
+        <div class="context-menu-item" onclick="cmDeleteRow()">
+            <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></span>
+            Delete row
+        </div>
+        <div class="context-menu-item" onclick="cmClearCell()">
+            <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span>
+            Delete cell
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" onclick="cmTogglePriority()">
+            <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></span>
+            Toggle Priority
+        </div>
     </div>
 
     <!-- Formula Bar -->
@@ -1830,40 +1876,54 @@ updateLedgerDateDisplay = function() {
         .calendar-popover.active { display: block; }
     
         .context-menu {
-            position: fixed; /* Use fixed to avoid scroll issues */
+            position: fixed;
             z-index: 10000;
-            width: 200px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border: 1px solid var(--border-color);
+            width: 260px;
+            background: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px 2px rgba(60,64,67,0.15);
+            border: 1px solid transparent;
             display: none;
             flex-direction: column;
-            padding: 8px 0;
-            font-family: 'Inter', sans-serif;
+            padding: 6px 0;
+            font-family: 'Roboto', 'Inter', sans-serif;
+            color: #3c4043;
         }
         .context-menu-item {
-            padding: 8px 16px;
-            font-size: 0.85rem;
-            color: var(--text-main);
+            padding: 6px 16px 6px 40px;
+            font-size: 13px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            position: relative;
         }
         .context-menu-item:hover {
-            background: var(--btn-hover);
+            background: #f1f3f4;
         }
-        .context-menu-item.danger {
-            color: #ef4444;
+        .context-menu-icon {
+            position: absolute;
+            left: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            color: #5f6368;
         }
-        .context-menu-item.danger:hover {
-            background: #fef2f2;
+        .context-menu-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        .context-menu-shortcut {
+            margin-left: auto;
+            color: #80868b;
+            font-size: 12px;
         }
         .context-menu-divider {
             height: 1px;
-            background: var(--border-color);
-            margin: 4px 0;
+            background: #e8eaed;
+            margin: 6px 0;
         }
 
     </style>
@@ -2171,6 +2231,52 @@ updateLedgerDateDisplay = function() {
                 cmTargetCell.focus();
                 document.getElementById('contextMenu').style.display = 'none';
             }
+        }
+
+        
+        async function cmCopy() {
+            if(cmTargetCell) {
+                const text = cmTargetCell.innerText.trim();
+                try {
+                    await navigator.clipboard.writeText(text);
+                } catch(e) {
+                    document.execCommand('copy');
+                }
+                document.getElementById('contextMenu').style.display = 'none';
+            }
+        }
+        async function cmCut() {
+            if(cmTargetCell) {
+                cmCopy();
+                cmClearCell();
+            }
+        }
+        async function cmPaste() {
+            if(cmTargetCell) {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    const input = cmTargetCell.querySelector('input, select');
+                    if(input) {
+                        input.value = text;
+                        input.blur();
+                    } else {
+                        cmTargetCell.innerText = text;
+                        cmTargetCell.blur();
+                    }
+                } catch(e) {
+                    showToast('Please use Ctrl+V to paste', true);
+                    cmTargetCell.focus();
+                }
+                document.getElementById('contextMenu').style.display = 'none';
+            }
+        }
+        function cmInsertRowAbove() {
+            insertRow();
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+        function cmInsertColLeft() {
+            insertColumn();
+            document.getElementById('contextMenu').style.display = 'none';
         }
 
         function cmClearCell() {
