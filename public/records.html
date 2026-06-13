@@ -1003,6 +1003,11 @@ if (typeof originalRenderTable === 'undefined') {
             const rowIndex = index + 2; // Data starts at row 2
             const r = filteredRecords[index]; // Get original record payload
             const rowId = r ? r.id : 'temp';
+            
+            // Set dataset id for bulletproof row operations
+            if (rowId !== 'temp') {
+                tr.dataset.id = rowId;
+            }
 
             // Add filler cell at the end
             const fillerTd = document.createElement('td');
