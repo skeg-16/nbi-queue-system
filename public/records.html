@@ -2355,6 +2355,10 @@ updateLedgerDateDisplay = function() {
         }
 
                 function insertColumn(targetIndex) {
+            if (targetIndex === undefined) {
+                const theadLetters = document.querySelector('.excel-grid thead tr:first-child');
+                targetIndex = theadLetters ? theadLetters.children.length - 1 : 8;
+            }
             showToast("Adding custom column...", false);
             
             // Shift indices of existing custom columns if they are >= targetIndex
