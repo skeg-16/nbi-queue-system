@@ -1990,6 +1990,8 @@ updateLedgerDateDisplay = function() {
             const theadTitles = document.querySelector('.excel-grid .column-titles');
             const newTdTitle = document.createElement('td');
             newTdTitle.className = 'col-title';
+            newTdTitle.contentEditable = "true";
+            newTdTitle.style.cursor = "text";
             newTdTitle.textContent = "New Col " + extraColsCount;
             theadTitles.appendChild(newTdTitle);
 
