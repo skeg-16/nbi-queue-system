@@ -974,3 +974,14 @@ select.status-badge option {
     background-color: white;
     color: black;
 }
+
+
+/* Multi-Cell Selection */
+.selected-cell {
+    background-color: rgba(37, 99, 235, 0.1) !important;
+    outline: 1px solid rgba(37, 99, 235, 0.5);
+}
+.selected-cell.active-cell {
+    background-color: rgba(37, 99, 235, 0.2) !important;
+    outline: 2px solid var(--focus-border) !important;
+}

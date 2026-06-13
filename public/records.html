@@ -101,6 +101,12 @@
             <div class="toolbar-group">
                 <button class="ribbon-btn" onclick="insertRow()"><i class="icon">➕</i>Add Row</button>
                 <button class="ribbon-btn" onclick="insertColumn()"><i class="icon">⊞</i>Add Column</button>
+
+                <button class="ribbon-btn" onclick="openColorSettings()">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    Color Rules
+                </button>
+
                 <div class="group-label">Structure</div>
             </div>
         </div>
@@ -588,7 +594,7 @@ if (typeof originalRenderTable === 'undefined') {
                             customData[rowId][col.id] = select.value;
                             saveCustomData();
                         }
-                        document.getElementById('formulaInput').value = select.value;
+                        document.getElementById('formulaInput').value = select.value; applyGlobalColorsToGrid();
                     });
                     newTd.appendChild(select);
                 } else {
@@ -687,122 +693,148 @@ updateLedgerDateDisplay = function() {
         }
 
         
-        // --- Status Colors Customization ---
-        const defaultColors = {
-            served: { bg: '#D1FAE5', txt: '#065F46' },
-            waiting: { bg: '#DBEAFE', txt: '#1E40AF' },
-            skipped: { bg: '#FEE2E2', txt: '#991B1B' },
-            noshow: { bg: '#F3F4F6', txt: '#374151' },
-            serving: { bg: '#FEF3C7', txt: '#92400E' }
+        
+        // --- Global Value Colors Customization ---
+        const defaultGlobalColors = {
+            'Served': { bg: '#D1FAE5', txt: '#065F46' },
+            'Waiting': { bg: '#DBEAFE', txt: '#1E40AF' },
+            'Skipped': { bg: '#FEE2E2', txt: '#991B1B' },
+            'No-show': { bg: '#F3F4F6', txt: '#374151' },
+            'Serving': { bg: '#FEF3C7', txt: '#92400E' },
+            'YES': { bg: '#D1FAE5', txt: '#065F46' },
+            'NO': { bg: '#FEE2E2', txt: '#991B1B' }
         };
 
-        function getStatusColors() {
+        function getGlobalColors() {
             try {
-                const saved = localStorage.getItem('nbi_status_colors');
+                const saved = localStorage.getItem('nbi_global_colors');
                 if (saved) return JSON.parse(saved);
             } catch(e) {}
-            return JSON.parse(JSON.stringify(defaultColors));
+            return JSON.parse(JSON.stringify(defaultGlobalColors));
         }
 
-        function applyStatusColors() {
-            const colors = getStatusColors();
-            let styleTag = document.getElementById('dynamic-status-colors');
-            if (!styleTag) {
-                styleTag = document.createElement('style');
-                styleTag.id = 'dynamic-status-colors';
-                document.head.appendChild(styleTag);
-            }
-            
-            let css = ':root {\n';
-            for (const [status, vals] of Object.entries(colors)) {
-                css += `  --status-${status}-bg: ${vals.bg};\n`;
-                css += `  --status-${status}-txt: ${vals.txt};\n`;
-            }
-            css += '}\n';
-            styleTag.innerHTML = css;
+        function saveGlobalColors(colors) {
+            localStorage.setItem('nbi_global_colors', JSON.stringify(colors));
+            applyGlobalColorsToGrid();
+        }
+
+        function applyGlobalColorsToGrid() {
+            const colors = getGlobalColors();
+            // Apply to all select elements in the grid
+            const selects = document.querySelectorAll('.excel-grid select, .status-badge');
+            selects.forEach(select => {
+                const val = select.value;
+                if (colors[val]) {
+                    select.style.backgroundColor = colors[val].bg;
+                    select.style.color = colors[val].txt;
+                    // Ensure it overrides default appearance
+                    select.style.appearance = 'none';
+                } else {
+                    select.style.backgroundColor = 'transparent';
+                    select.style.color = 'inherit';
+                }
+            });
         }
 
         function openColorSettings() {
-            const colors = getStatusColors();
+            const colors = getGlobalColors();
             const form = document.getElementById('colorSettingsForm');
             form.innerHTML = '';
             
-            for (const [status, vals] of Object.entries(colors)) {
-                const row = document.createElement('div');
-                row.style.display = 'flex';
-                row.style.alignItems = 'center';
-                row.style.gap = '15px';
-                
-                const label = document.createElement('div');
-                label.style.width = '80px';
-                label.style.fontWeight = 'bold';
-                label.style.textTransform = 'capitalize';
-                label.textContent = status;
-                
-                const bgInput = document.createElement('input');
-                bgInput.type = 'color';
-                bgInput.value = vals.bg;
-                bgInput.id = `color_bg_${status}`;
-                bgInput.style.cursor = 'pointer';
-                
-                const txtInput = document.createElement('input');
-                txtInput.type = 'color';
-                txtInput.value = vals.txt;
-                txtInput.id = `color_txt_${status}`;
-                txtInput.style.cursor = 'pointer';
-                
-                const preview = document.createElement('div');
-                preview.className = `status-badge`;
-                preview.style.backgroundColor = vals.bg;
-                preview.style.color = vals.txt;
-                preview.textContent = "Preview";
-                preview.id = `preview_${status}`;
-                
-                bgInput.addEventListener('input', e => preview.style.backgroundColor = e.target.value);
-                txtInput.addEventListener('input', e => preview.style.color = e.target.value);
-                
-                row.appendChild(label);
-                
-                const bgGroup = document.createElement('div');
-                bgGroup.innerHTML = '<span style="font-size:0.8rem; margin-right:5px;">Background:</span>';
-                bgGroup.appendChild(bgInput);
-                row.appendChild(bgGroup);
-                
-                const txtGroup = document.createElement('div');
-                txtGroup.innerHTML = '<span style="font-size:0.8rem; margin-right:5px;">Text:</span>';
-                txtGroup.appendChild(txtInput);
-                row.appendChild(txtGroup);
-                
-                row.appendChild(preview);
-                form.appendChild(row);
+            for (const [word, vals] of Object.entries(colors)) {
+                addColorRuleRow(form, word, vals.bg, vals.txt);
             }
             openModal('modalColors');
         }
 
-        function saveStatusColors() {
-            const colors = getStatusColors();
-            for (const status of Object.keys(colors)) {
-                colors[status].bg = document.getElementById(`color_bg_${status}`).value;
-                colors[status].txt = document.getElementById(`color_txt_${status}`).value;
-            }
-            localStorage.setItem('nbi_status_colors', JSON.stringify(colors));
-            applyStatusColors();
+        function addColorRuleRow(container, word = '', bg = '#ffffff', txt = '#000000') {
+            const row = document.createElement('div');
+            row.className = 'color-rule-row';
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.gap = '10px';
+            row.style.marginBottom = '10px';
+            
+            const wordInput = document.createElement('input');
+            wordInput.type = 'text';
+            wordInput.value = word;
+            wordInput.placeholder = 'Exact Word...';
+            wordInput.className = 'form-input';
+            wordInput.style.width = '120px';
+            
+            const bgInput = document.createElement('input');
+            bgInput.type = 'color';
+            bgInput.value = bg;
+            bgInput.style.cursor = 'pointer';
+            
+            const txtInput = document.createElement('input');
+            txtInput.type = 'color';
+            txtInput.value = txt;
+            txtInput.style.cursor = 'pointer';
+            
+            const preview = document.createElement('div');
+            preview.className = `status-badge`;
+            preview.style.backgroundColor = bg;
+            preview.style.color = txt;
+            preview.style.minWidth = '80px';
+            preview.textContent = word || "Preview";
+            
+            const delBtn = document.createElement('button');
+            delBtn.innerHTML = '&times;';
+            delBtn.className = 'btn-formal';
+            delBtn.style.color = 'red';
+            delBtn.style.padding = '2px 8px';
+            delBtn.onclick = () => row.remove();
+            
+            wordInput.addEventListener('keyup', e => preview.textContent = e.target.value || "Preview");
+            bgInput.addEventListener('input', e => preview.style.backgroundColor = e.target.value);
+            txtInput.addEventListener('input', e => preview.style.color = e.target.value);
+            
+            row.appendChild(wordInput);
+            row.appendChild(document.createTextNode('Bg:'));
+            row.appendChild(bgInput);
+            row.appendChild(document.createTextNode('Txt:'));
+            row.appendChild(txtInput);
+            row.appendChild(preview);
+            row.appendChild(delBtn);
+            
+            container.appendChild(row);
+        }
+
+        function addNewColorRule() {
+            const form = document.getElementById('colorSettingsForm');
+            addColorRuleRow(form);
+        }
+
+        function saveColorRules() {
+            const rows = document.querySelectorAll('.color-rule-row');
+            const newColors = {};
+            rows.forEach(row => {
+                const word = row.children[0].value.trim();
+                const bg = row.children[2].value;
+                const txt = row.children[4].value;
+                if (word) {
+                    newColors[word] = { bg, txt };
+                }
+            });
+            saveGlobalColors(newColors);
             closeModal('modalColors');
-            showToast("Status colors saved!", false, "success");
+            showToast("Color rules saved!", false, "success");
         }
 
         function resetDefaultColors() {
-            localStorage.removeItem('nbi_status_colors');
-            applyStatusColors();
+            localStorage.removeItem('nbi_global_colors');
             openColorSettings(); // Refresh modal
+            applyGlobalColorsToGrid();
             showToast("Reset to default colors.");
         }
 
         // Apply colors on page load
-        document.addEventListener('DOMContentLoaded', applyStatusColors);
+        document.addEventListener('DOMContentLoaded', applyGlobalColorsToGrid);
+
 
         // --- Initialization ---
-        applyStatusColors();
+        applyGlobalColorsToGrid();
 
         document.addEventListener('DOMContentLoaded', () => {
             updateLedgerDateDisplay();
@@ -1109,7 +1141,7 @@ updateLedgerDateDisplay = function() {
                         </select>
                     </td>
                     <td tabindex="0">
-                        <select onchange="updateCell(this, 'status', '${r.id}')" class="status-badge ${statusClass}" >
+                        <select onchange="updateCell(this, 'status', '${r.id}')" class="status-badge" >
                             <option value="Waiting" ${r.status === 'Waiting' ? 'selected' : ''}>Waiting</option>
                             <option value="Serving" ${r.status === 'Serving' ? 'selected' : ''}>Serving</option>
                             <option value="Served" ${r.status === 'Served' ? 'selected' : ''}>Served</option>
@@ -1910,26 +1942,32 @@ updateLedgerDateDisplay = function() {
 
     
     <!-- Status Color Settings Modal -->
+    
+    <!-- Global Color Rules Modal -->
     <div id="modalColors" class="modal-overlay">
-        <div class="modal">
+        <div class="modal" style="min-width: 500px;">
             <div class="modal-header">
-                <span>Status Color Settings</span>
+                <span>Global Color Rules</span>
                 <button class="modal-close" onclick="closeModal('modalColors')">&times;</button>
             </div>
             <div style="margin-bottom: 20px; font-size: 0.9rem; color: #475569;">
-                Select custom background and text colors for each status. Changes apply immediately.
+                Add rules to automatically color any cell that matches an exact word (e.g. YES, NO, Waiting).
             </div>
-            <div id="colorSettingsForm" style="display: flex; flex-direction: column; gap: 15px;">
+            <div id="colorSettingsForm" style="display: flex; flex-direction: column; max-height: 400px; overflow-y: auto;">
                 <!-- Generated by JS -->
             </div>
-            <div class="modal-footer">
+            <div style="margin-top: 15px;">
+                <button class="btn-formal" onclick="addNewColorRule()">+ Add New Rule</button>
+            </div>
+            <div class="modal-footer" style="margin-top: 20px;">
                 <button class="btn-formal" onclick="resetDefaultColors()">Reset Defaults</button>
                 <div style="flex:1"></div>
                 <button class="btn-formal" onclick="closeModal('modalColors')">Cancel</button>
-                <button class="btn-formal btn-primary" onclick="saveStatusColors()">Save Colors</button>
+                <button class="btn-formal btn-primary" onclick="saveColorRules()">Save Rules</button>
             </div>
         </div>
     </div>
+
 
     <!-- Confirm Modal -->
     <div id="modalConfirm" class="modal-overlay">
