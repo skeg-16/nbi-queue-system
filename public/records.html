@@ -594,6 +594,10 @@
             <span class="context-menu-shortcut">Ctrl+V</span>
         </div>
         <div class="context-menu-divider"></div>
+        <div class="context-menu-item" onclick="cmConvertColumnToDropdown()">
+            <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></span>
+            Convert Col to Dropdown
+        </div>
         <div class="context-menu-item" onclick="cmInsertRowAbove()">
             <span class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></span>
             Insert 1 row above
@@ -2267,17 +2271,26 @@ updateLedgerDateDisplay = function() {
                 if(tr.cells.length <= 1) return;
                 
                 const newTd = document.createElement('td');
-                newTd.tabIndex = 0;
-                newTd.contentEditable = "true";
-                newTd.textContent = "";
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.style.width = '100%';
+                input.style.border = 'none';
+                input.style.background = 'transparent';
+                input.style.outline = 'none';
+                input.style.fontSize = '0.85rem';
+                input.className = 'scratchpad-input';
+                
+                newTd.appendChild(input);
+                
                 // attach active cell event listener
                 newTd.addEventListener('click', function(e) {
                     setActiveCell(newTd, nextLetter, index + 2);
                 });
-                newTd.addEventListener('keyup', function(e) {
-                    if (document.activeElement === newTd) {
-                        document.getElementById('formulaInput').value = newTd.innerText.trim();
-                    }
+                input.addEventListener('focus', function(e) {
+                    setActiveCell(newTd, nextLetter, index + 2);
+                });
+                input.addEventListener('keyup', function(e) {
+                    document.getElementById('formulaInput').value = input.value;
                 });
                 tr.insertBefore(newTd, tr.lastElementChild);
             });
@@ -2359,6 +2372,59 @@ updateLedgerDateDisplay = function() {
                 document.getElementById('contextMenu').style.display = 'none';
             }
         }
+        
+        function cmConvertColumnToDropdown() {
+            if(cmTargetCell) {
+                const tr = cmTargetCell.parentElement;
+                const colIndex = Array.from(tr.children).indexOf(cmTargetCell);
+                
+                // Convert all scratchpad cells in this column
+                const tbody = document.getElementById('recordsBody');
+                const rows = tbody.querySelectorAll('tr');
+                let converted = 0;
+                rows.forEach(row => {
+                    if (row.cells.length > colIndex) {
+                        const cell = row.cells[colIndex];
+                        const input = cell.querySelector('input.scratchpad-input');
+                        if (input) {
+                            const select = document.createElement('select');
+                            select.style.width = '100%';
+                            select.style.border = 'none';
+                            select.style.background = 'transparent';
+                            select.style.outline = 'none';
+                            select.style.fontSize = '0.85rem';
+                            select.className = 'scratchpad-select';
+                            
+                            const optEmpty = document.createElement('option'); optEmpty.value = ""; optEmpty.textContent = "";
+                            const optYes = document.createElement('option'); optYes.value = "YES"; optYes.textContent = "YES";
+                            const optNo = document.createElement('option'); optNo.value = "NO"; optNo.textContent = "NO";
+                            
+                            select.appendChild(optEmpty);
+                            select.appendChild(optYes);
+                            select.appendChild(optNo);
+                            
+                            select.value = input.value.toUpperCase() === "YES" || input.value.toUpperCase() === "NO" ? input.value.toUpperCase() : "";
+                            
+                            // add listeners
+                            select.addEventListener('focus', function() { setActiveCell(cell, "Col", Array.from(tbody.children).indexOf(row) + 2); });
+                            select.addEventListener('change', function() { document.getElementById('formulaInput').value = select.value; });
+                            
+                            cell.innerHTML = '';
+                            cell.appendChild(select);
+                            converted++;
+                        }
+                    }
+                });
+                
+                if(converted > 0) {
+                    showToast("Converted column to Dropdown!", false, "success");
+                } else {
+                    showToast("Can only convert scratchpad columns.", true);
+                }
+                document.getElementById('contextMenu').style.display = 'none';
+            }
+        }
+
         function cmInsertRowAbove() {
             insertRow();
             document.getElementById('contextMenu').style.display = 'none';
