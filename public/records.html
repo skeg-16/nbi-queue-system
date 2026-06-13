@@ -20,39 +20,37 @@
             box-sizing: border-box;
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
         :root {
-            /* NBI Spreadsheet Theme - Modernized */
-            --bg-color: #f1f5f9;
+            /* Sleek Modern Light Theme */
+            --bg-color: #F9FAFB;
             --panel-bg: #FFFFFF;
-            --border-color: #e2e8f0;
-            --border-heavy: #cbd5e1;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
+            --border-color: #E5E7EB;
+            --border-heavy: #D1D5DB;
             
-            --nbi-blue: #0f172a;
-            --nbi-blue-light: #1e293b;
-            --nbi-yellow: #f59e0b;
-            --nbi-yellow-hover: #fbbf24;
-            --nbi-cell-border: #e2e8f0;
+            --text-main: #111827;
+            --text-muted: #6B7280;
+            --text-accent: #2563EB;
+            
+            --header-bg: #FFFFFF;
+            --header-text: #4B5563;
+            
+            --table-hover: #F3F4F6;
+            --nbi-cell-border: #E5E7EB;
 
-            --btn-bg: #f8fafc;
-            --btn-border: #e2e8f0;
-            --btn-hover: #f1f5f9;
+            --btn-bg: #FFFFFF;
+            --btn-border: #E5E7EB;
+            --btn-hover: #F9FAFB;
             
-            --table-hover: #f1f3f4;
-            --input-bg: #ffffff;
-            --modal-bg: #ffffff;
-            --dropdown-bg: #ffffff;
-            
-            --gold: var(--nbi-yellow);
-            --red: #ea4335;
+            --focus-ring: rgba(37, 99, 235, 0.2);
+            --focus-border: #2563EB;
             
             /* Status Colors */
-            --status-served-bg: #0f9d58; --status-served-txt: #ffffff;
-            --status-waiting-bg: #4285f4; --status-waiting-txt: #ffffff;
-            --status-skipped-bg: #ea4335; --status-skipped-txt: #ffffff;
-            --status-noshow-bg: #5f6368; --status-noshow-txt: #ffffff;
-            --status-serving-bg: #fbbc04; --status-serving-txt: #000000;
+            --status-served-bg: #D1FAE5; --status-served-txt: #065F46;
+            --status-waiting-bg: #DBEAFE; --status-waiting-txt: #1E40AF;
+            --status-skipped-bg: #FEE2E2; --status-skipped-txt: #991B1B;
+            --status-noshow-bg: #F3F4F6; --status-noshow-txt: #374151;
+            --status-serving-bg: #FEF3C7; --status-serving-txt: #92400E;
         }
 
         body, html {
@@ -63,207 +61,229 @@
             display: flex;
             flex-direction: column;
             color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Ribbon */
+        /* Modernized Ribbon/Header */
         .ribbon-header {
-            background: var(--nbi-blue);
-            color: white;
+            background: var(--panel-bg);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
-            border-bottom: 1px solid var(--border-heavy);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            z-index: 50;
         }
 
         .ribbon-top {
-            padding: 5px 15px;
+            padding: 8px 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-            background: var(--nbi-blue-light);
+            gap: 12px;
+            font-size: 0.85rem;
+            background: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 500;
+            color: var(--text-muted);
         }
-        .ribbon-top img { height: 18px; }
+        
+        .ribbon-top img { height: 20px; border-radius: 4px; }
 
         .ribbon-tabs {
             display: flex;
-            padding: 0 10px;
-            margin-top: 5px;
-            gap: 20px;
+            padding: 0 16px;
+            margin-top: 8px;
+            gap: 24px;
         }
+        
         .ribbon-tab {
-            padding: 6px 12px;
+            padding: 8px 4px;
             cursor: pointer;
             font-size: 0.85rem;
-            color: #ccc;
-            border-top: 2px solid transparent;
-            border-left: 1px solid transparent;
-            border-right: 1px solid transparent;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
         }
+        
+        .ribbon-tab:hover {
+            color: var(--text-main);
+        }
+        
         .ribbon-tab.active {
-            background: var(--panel-bg);
-            color: var(--nbi-blue);
-            border-top: 2px solid var(--nbi-yellow);
-            border-left: 1px solid var(--border-color);
-            border-right: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--panel-bg);
-            margin-bottom: -1px;
-            z-index: 2;
-            font-weight: 600;
+            color: var(--text-accent);
+            border-bottom: 2px solid var(--text-accent);
         }
 
         .ribbon-toolbar {
             background: var(--panel-bg);
-            color: var(--text-main);
-            padding: 5px 10px;
+            padding: 8px 16px;
             display: flex;
-            gap: 15px;
-            border-bottom: 1px solid var(--border-heavy);
-            min-height: 80px;
+            gap: 24px;
+            align-items: center;
         }
 
         .toolbar-group {
             display: flex;
             align-items: center;
+            gap: 8px;
             border-right: 1px solid var(--border-color);
-            padding-right: 15px;
-            position: relative;
-            padding-bottom: 15px;
+            padding-right: 24px;
         }
 
-        .group-label {
-            position: absolute;
-            bottom: 2px;
-            left: 0; width: 100%;
-            text-align: center;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
+        .toolbar-group:last-child { border-right: none; }
+
+        .group-label { display: none; /* Hide old ugly group labels */ }
 
         .ribbon-btn {
-            background: transparent;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            padding: 4px 8px;
+            background: var(--btn-bg);
+            border-radius: 6px;
+            border: 1px solid var(--btn-border);
+            padding: 6px 12px;
             cursor: pointer;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
             color: var(--text-main);
+            transition: all 0.15s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
+        
         .ribbon-btn:hover {
             background: var(--btn-hover);
-            border-color: var(--btn-border);
-        }
-        .ribbon-btn i { font-size: 1.4rem; font-style: normal; }
-
-        .ribbon-input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            padding: 0 5px;
-        }
-        .ribbon-input-group input, .ribbon-input-group select {
-            padding: 4px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            font-size: 0.8rem;
+            border-color: var(--border-heavy);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
 
-        /* Formula Bar */
+        /* Formula Bar - Modernized */
         .formula-bar {
             display: flex;
             background: var(--panel-bg);
-            padding: 4px;
-            border-bottom: 1px solid var(--border-heavy);
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border-color);
             align-items: center;
-            gap: 5px;
+            gap: 12px;
         }
+        
         .name-box {
             width: 80px;
             border: 1px solid var(--border-color);
-            background: white;
-            padding: 4px;
-            font-size: 0.85rem;
+            border-radius: 4px;
+            background: var(--bg-color);
+            padding: 4px 8px;
+            font-size: 0.8rem;
             text-align: center;
-            font-weight: 600;
+            font-weight: 500;
+            color: var(--text-muted);
         }
+        
         .fx-icon {
             color: var(--text-muted);
-            font-style: italic;
-            font-weight: bold;
-            padding: 0 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
+        
         .formula-input {
             flex: 1;
             border: 1px solid var(--border-color);
-            padding: 4px 8px;
-            font-size: 0.9rem;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
             outline: none;
+            transition: all 0.2s;
+            background: var(--bg-color);
         }
-        .formula-input:focus { border-color: var(--nbi-blue); }
+        
+        .formula-input:focus {
+            border-color: var(--focus-border);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+            background: var(--panel-bg);
+        }
 
-        /* Main Grid Workspace */
+        /* Main Grid Workspace - Airtable/Notion Style */
         .grid-workspace {
             flex: 1;
             overflow: auto;
-            background: #f3f3f3;
+            background: var(--panel-bg);
         }
+        
         .excel-grid {
-            border-collapse: collapse;
-            background: white;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--panel-bg);
             table-layout: fixed;
             width: 100%;
             min-width: 1000px;
         }
-        .excel-grid tr {
-            height: 32px; /* Fixed row height to prevent stretching */
-        }
+        
+        .excel-grid tr { height: 36px; }
+        
         .excel-grid th, .excel-grid td {
-            border: 1px solid var(--nbi-cell-border);
-            padding: 4px 6px;
+            border-bottom: 1px solid var(--nbi-cell-border);
+            border-right: 1px solid var(--nbi-cell-border);
+            padding: 0 12px;
             font-size: 0.85rem;
             vertical-align: middle;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        
         .excel-grid th {
-            background: var(--nbi-blue);
-            color: white;
-            font-weight: normal;
-            text-align: center;
+            background: var(--header-bg);
+            color: var(--header-text);
+            font-weight: 500;
+            text-align: left;
             position: sticky;
             top: 0;
             z-index: 10;
+            border-bottom: 2px solid var(--border-heavy);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 12px;
         }
+        
         .corner-header {
-            width: 40px;
-            background: var(--nbi-blue-light) !important;
+            width: 50px;
+            background: var(--bg-color) !important;
             position: sticky;
             left: 0;
             z-index: 11;
+            border-right: 2px solid var(--border-heavy);
         }
+        
         .row-number {
-            background: var(--nbi-blue-light);
-            color: white;
+            background: var(--bg-color);
+            color: var(--text-muted);
             text-align: center;
             position: sticky;
             left: 0;
             z-index: 9;
-            width: 40px;
-            cursor: pointer;
+            width: 50px;
+            font-size: 0.75rem;
+            border-right: 2px solid var(--border-heavy);
         }
         
-        .column-titles td {
-            background: #e2e8f0;
-            font-weight: bold;
-            text-align: center;
-            cursor: pointer;
+        .excel-grid td {
+            color: var(--text-main);
         }
         
-        /* Cell Selection Interactions */
+        /* Cell Styles */
+        .ccd-cell {
+            font-family: 'JetBrains Mono', 'SF Mono', monospace;
+            font-weight: 500;
+            color: var(--text-accent) !important;
+        }
+        
+        .name-cell {
+            font-weight: 500;
+            color: var(--text-main) !important;
+        }
+        
         .excel-grid td:not(.row-number):not(.corner-header) {
             cursor: cell;
             position: relative;
@@ -271,33 +291,39 @@
         }
         
         .active-cell {
-            box-shadow: inset 0 0 0 2px var(--nbi-blue) !important;
-            background: rgba(245, 158, 11, 0.05);
+            box-shadow: inset 0 0 0 2px var(--focus-border) !important;
+            background: rgba(37, 99, 235, 0.05);
             z-index: 5;
-            border: 1px solid transparent !important;
         }
+        
         .active-cell::after {
             content: '';
             position: absolute;
-            bottom: -3px;
-            right: -3px;
-            width: 6px;
-            height: 6px;
-            background: var(--nbi-yellow);
-            border: 1px solid white;
+            bottom: -4px;
+            right: -4px;
+            width: 8px;
+            height: 8px;
+            background: var(--focus-border);
+            border: 2px solid white;
+            border-radius: 50%;
             cursor: crosshair;
         }
 
-        /* Status Dropdown inside table */
+        /* Modern Badges */
         .status-badge {
-            padding: 2px 6px; font-size: 0.8rem; width: 100%; border:none; text-align: center;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: none;
+            text-align: center;
+            display: inline-block;
+            width: auto;
+            min-width: 90px;
+            appearance: none;
+            outline: none;
         }
-        .status-waiting { background: var(--status-waiting-bg); color: var(--status-waiting-txt); }
-        .status-serving { background: var(--status-serving-bg); color: var(--status-serving-txt); }
-        .status-served { background: var(--status-served-bg); color: var(--status-served-txt); }
-        .status-skipped { background: var(--status-skipped-bg); color: var(--status-skipped-txt); }
-        .status-noshow { background: var(--status-noshow-bg); color: var(--status-noshow-txt); }
-        .badge-priority { background: var(--red); color: white; padding: 2px; font-size: 0.7rem; }
+
 
         /* Sheet Tabs Bottom */
         .sheet-tabs {
@@ -1452,8 +1478,8 @@ updateLedgerDateDisplay = function() {
 
                 tr.innerHTML = `
                     <td tabindex="0">${dateStr}</td>
-                    <td tabindex="0" class="font-mono font-bold text-accent" contenteditable="true" onblur="updateCell(this, 'ccd_no', '${r.id}')">${r.ccd_no}</td>
-                    <td tabindex="0" class="font-semibold text-primary" contenteditable="true" onblur="updateCell(this, 'full_name', '${r.id}')">${r.full_name}</td>
+                    <td tabindex="0" class="ccd-cell" contenteditable="true" onblur="updateCell(this, 'ccd_no', '${r.id}')">${r.ccd_no}</td>
+                    <td tabindex="0" class="name-cell" contenteditable="true" onblur="updateCell(this, 'full_name', '${r.id}')">${r.full_name}</td>
                     <td tabindex="0" contenteditable="true" onblur="updateCell(this, 'age', '${r.id}')">${r.age}</td>
                     <td tabindex="0" contenteditable="true" onblur="updateCell(this, 'contact', '${r.id}')">${r.contact}</td>
                     <td tabindex="0">
@@ -1804,39 +1830,37 @@ updateLedgerDateDisplay = function() {
             box-sizing: border-box;
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
         :root {
-            /* NBI Spreadsheet Theme - Modernized */
-            --bg-color: #f1f5f9;
+            /* Sleek Modern Light Theme */
+            --bg-color: #F9FAFB;
             --panel-bg: #FFFFFF;
-            --border-color: #e2e8f0;
-            --border-heavy: #cbd5e1;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
+            --border-color: #E5E7EB;
+            --border-heavy: #D1D5DB;
             
-            --nbi-blue: #0f172a;
-            --nbi-blue-light: #1e293b;
-            --nbi-yellow: #f59e0b;
-            --nbi-yellow-hover: #fbbf24;
-            --nbi-cell-border: #e2e8f0;
+            --text-main: #111827;
+            --text-muted: #6B7280;
+            --text-accent: #2563EB;
+            
+            --header-bg: #FFFFFF;
+            --header-text: #4B5563;
+            
+            --table-hover: #F3F4F6;
+            --nbi-cell-border: #E5E7EB;
 
-            --btn-bg: #f8fafc;
-            --btn-border: #e2e8f0;
-            --btn-hover: #f1f5f9;
+            --btn-bg: #FFFFFF;
+            --btn-border: #E5E7EB;
+            --btn-hover: #F9FAFB;
             
-            --table-hover: #f1f3f4;
-            --input-bg: #ffffff;
-            --modal-bg: #ffffff;
-            --dropdown-bg: #ffffff;
-            
-            --gold: var(--nbi-yellow);
-            --red: #ea4335;
+            --focus-ring: rgba(37, 99, 235, 0.2);
+            --focus-border: #2563EB;
             
             /* Status Colors */
-            --status-served-bg: #0f9d58; --status-served-txt: #ffffff;
-            --status-waiting-bg: #4285f4; --status-waiting-txt: #ffffff;
-            --status-skipped-bg: #ea4335; --status-skipped-txt: #ffffff;
-            --status-noshow-bg: #5f6368; --status-noshow-txt: #ffffff;
-            --status-serving-bg: #fbbc04; --status-serving-txt: #000000;
+            --status-served-bg: #D1FAE5; --status-served-txt: #065F46;
+            --status-waiting-bg: #DBEAFE; --status-waiting-txt: #1E40AF;
+            --status-skipped-bg: #FEE2E2; --status-skipped-txt: #991B1B;
+            --status-noshow-bg: #F3F4F6; --status-noshow-txt: #374151;
+            --status-serving-bg: #FEF3C7; --status-serving-txt: #92400E;
         }
 
         body, html {
@@ -1847,207 +1871,229 @@ updateLedgerDateDisplay = function() {
             display: flex;
             flex-direction: column;
             color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Ribbon */
+        /* Modernized Ribbon/Header */
         .ribbon-header {
-            background: var(--nbi-blue);
-            color: white;
+            background: var(--panel-bg);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
-            border-bottom: 1px solid var(--border-heavy);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            z-index: 50;
         }
 
         .ribbon-top {
-            padding: 5px 15px;
+            padding: 8px 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-            background: var(--nbi-blue-light);
+            gap: 12px;
+            font-size: 0.85rem;
+            background: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 500;
+            color: var(--text-muted);
         }
-        .ribbon-top img { height: 18px; }
+        
+        .ribbon-top img { height: 20px; border-radius: 4px; }
 
         .ribbon-tabs {
             display: flex;
-            padding: 0 10px;
-            margin-top: 5px;
-            gap: 20px;
+            padding: 0 16px;
+            margin-top: 8px;
+            gap: 24px;
         }
+        
         .ribbon-tab {
-            padding: 6px 12px;
+            padding: 8px 4px;
             cursor: pointer;
             font-size: 0.85rem;
-            color: #ccc;
-            border-top: 2px solid transparent;
-            border-left: 1px solid transparent;
-            border-right: 1px solid transparent;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
         }
+        
+        .ribbon-tab:hover {
+            color: var(--text-main);
+        }
+        
         .ribbon-tab.active {
-            background: var(--panel-bg);
-            color: var(--nbi-blue);
-            border-top: 2px solid var(--nbi-yellow);
-            border-left: 1px solid var(--border-color);
-            border-right: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--panel-bg);
-            margin-bottom: -1px;
-            z-index: 2;
-            font-weight: 600;
+            color: var(--text-accent);
+            border-bottom: 2px solid var(--text-accent);
         }
 
         .ribbon-toolbar {
             background: var(--panel-bg);
-            color: var(--text-main);
-            padding: 5px 10px;
+            padding: 8px 16px;
             display: flex;
-            gap: 15px;
-            border-bottom: 1px solid var(--border-heavy);
-            min-height: 80px;
+            gap: 24px;
+            align-items: center;
         }
 
         .toolbar-group {
             display: flex;
             align-items: center;
+            gap: 8px;
             border-right: 1px solid var(--border-color);
-            padding-right: 15px;
-            position: relative;
-            padding-bottom: 15px;
+            padding-right: 24px;
         }
 
-        .group-label {
-            position: absolute;
-            bottom: 2px;
-            left: 0; width: 100%;
-            text-align: center;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
+        .toolbar-group:last-child { border-right: none; }
+
+        .group-label { display: none; /* Hide old ugly group labels */ }
 
         .ribbon-btn {
-            background: transparent;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            padding: 4px 8px;
+            background: var(--btn-bg);
+            border-radius: 6px;
+            border: 1px solid var(--btn-border);
+            padding: 6px 12px;
             cursor: pointer;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
             color: var(--text-main);
+            transition: all 0.15s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
+        
         .ribbon-btn:hover {
             background: var(--btn-hover);
-            border-color: var(--btn-border);
-        }
-        .ribbon-btn i { font-size: 1.4rem; font-style: normal; }
-
-        .ribbon-input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            padding: 0 5px;
-        }
-        .ribbon-input-group input, .ribbon-input-group select {
-            padding: 4px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            font-size: 0.8rem;
+            border-color: var(--border-heavy);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
 
-        /* Formula Bar */
+        /* Formula Bar - Modernized */
         .formula-bar {
             display: flex;
             background: var(--panel-bg);
-            padding: 4px;
-            border-bottom: 1px solid var(--border-heavy);
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border-color);
             align-items: center;
-            gap: 5px;
+            gap: 12px;
         }
+        
         .name-box {
             width: 80px;
             border: 1px solid var(--border-color);
-            background: white;
-            padding: 4px;
-            font-size: 0.85rem;
+            border-radius: 4px;
+            background: var(--bg-color);
+            padding: 4px 8px;
+            font-size: 0.8rem;
             text-align: center;
-            font-weight: 600;
+            font-weight: 500;
+            color: var(--text-muted);
         }
+        
         .fx-icon {
             color: var(--text-muted);
-            font-style: italic;
-            font-weight: bold;
-            padding: 0 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
+        
         .formula-input {
             flex: 1;
             border: 1px solid var(--border-color);
-            padding: 4px 8px;
-            font-size: 0.9rem;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
             outline: none;
+            transition: all 0.2s;
+            background: var(--bg-color);
         }
-        .formula-input:focus { border-color: var(--nbi-blue); }
+        
+        .formula-input:focus {
+            border-color: var(--focus-border);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+            background: var(--panel-bg);
+        }
 
-        /* Main Grid Workspace */
+        /* Main Grid Workspace - Airtable/Notion Style */
         .grid-workspace {
             flex: 1;
             overflow: auto;
-            background: #f3f3f3;
+            background: var(--panel-bg);
         }
+        
         .excel-grid {
-            border-collapse: collapse;
-            background: white;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--panel-bg);
             table-layout: fixed;
             width: 100%;
             min-width: 1000px;
         }
-        .excel-grid tr {
-            height: 32px; /* Fixed row height to prevent stretching */
-        }
+        
+        .excel-grid tr { height: 36px; }
+        
         .excel-grid th, .excel-grid td {
-            border: 1px solid var(--nbi-cell-border);
-            padding: 4px 6px;
+            border-bottom: 1px solid var(--nbi-cell-border);
+            border-right: 1px solid var(--nbi-cell-border);
+            padding: 0 12px;
             font-size: 0.85rem;
             vertical-align: middle;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        
         .excel-grid th {
-            background: var(--nbi-blue);
-            color: white;
-            font-weight: normal;
-            text-align: center;
+            background: var(--header-bg);
+            color: var(--header-text);
+            font-weight: 500;
+            text-align: left;
             position: sticky;
             top: 0;
             z-index: 10;
+            border-bottom: 2px solid var(--border-heavy);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 12px;
         }
+        
         .corner-header {
-            width: 40px;
-            background: var(--nbi-blue-light) !important;
+            width: 50px;
+            background: var(--bg-color) !important;
             position: sticky;
             left: 0;
             z-index: 11;
+            border-right: 2px solid var(--border-heavy);
         }
+        
         .row-number {
-            background: var(--nbi-blue-light);
-            color: white;
+            background: var(--bg-color);
+            color: var(--text-muted);
             text-align: center;
             position: sticky;
             left: 0;
             z-index: 9;
-            width: 40px;
-            cursor: pointer;
+            width: 50px;
+            font-size: 0.75rem;
+            border-right: 2px solid var(--border-heavy);
         }
         
-        .column-titles td {
-            background: #e2e8f0;
-            font-weight: bold;
-            text-align: center;
-            cursor: pointer;
+        .excel-grid td {
+            color: var(--text-main);
         }
         
-        /* Cell Selection Interactions */
+        /* Cell Styles */
+        .ccd-cell {
+            font-family: 'JetBrains Mono', 'SF Mono', monospace;
+            font-weight: 500;
+            color: var(--text-accent) !important;
+        }
+        
+        .name-cell {
+            font-weight: 500;
+            color: var(--text-main) !important;
+        }
+        
         .excel-grid td:not(.row-number):not(.corner-header) {
             cursor: cell;
             position: relative;
@@ -2055,33 +2101,39 @@ updateLedgerDateDisplay = function() {
         }
         
         .active-cell {
-            box-shadow: inset 0 0 0 2px var(--nbi-blue) !important;
-            background: rgba(245, 158, 11, 0.05);
+            box-shadow: inset 0 0 0 2px var(--focus-border) !important;
+            background: rgba(37, 99, 235, 0.05);
             z-index: 5;
-            border: 1px solid transparent !important;
         }
+        
         .active-cell::after {
             content: '';
             position: absolute;
-            bottom: -3px;
-            right: -3px;
-            width: 6px;
-            height: 6px;
-            background: var(--nbi-yellow);
-            border: 1px solid white;
+            bottom: -4px;
+            right: -4px;
+            width: 8px;
+            height: 8px;
+            background: var(--focus-border);
+            border: 2px solid white;
+            border-radius: 50%;
             cursor: crosshair;
         }
 
-        /* Status Dropdown inside table */
+        /* Modern Badges */
         .status-badge {
-            padding: 2px 6px; font-size: 0.8rem; width: 100%; border:none; text-align: center;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: none;
+            text-align: center;
+            display: inline-block;
+            width: auto;
+            min-width: 90px;
+            appearance: none;
+            outline: none;
         }
-        .status-waiting { background: var(--status-waiting-bg); color: var(--status-waiting-txt); }
-        .status-serving { background: var(--status-serving-bg); color: var(--status-serving-txt); }
-        .status-served { background: var(--status-served-bg); color: var(--status-served-txt); }
-        .status-skipped { background: var(--status-skipped-bg); color: var(--status-skipped-txt); }
-        .status-noshow { background: var(--status-noshow-bg); color: var(--status-noshow-txt); }
-        .badge-priority { background: var(--red); color: white; padding: 2px; font-size: 0.7rem; }
+
 
         /* Sheet Tabs Bottom */
         .sheet-tabs {
