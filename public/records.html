@@ -686,7 +686,124 @@ updateLedgerDateDisplay = function() {
             document.getElementById('themeToggle').textContent = '☀️';
         }
 
+        
+        // --- Status Colors Customization ---
+        const defaultColors = {
+            served: { bg: '#D1FAE5', txt: '#065F46' },
+            waiting: { bg: '#DBEAFE', txt: '#1E40AF' },
+            skipped: { bg: '#FEE2E2', txt: '#991B1B' },
+            noshow: { bg: '#F3F4F6', txt: '#374151' },
+            serving: { bg: '#FEF3C7', txt: '#92400E' }
+        };
+
+        function getStatusColors() {
+            try {
+                const saved = localStorage.getItem('nbi_status_colors');
+                if (saved) return JSON.parse(saved);
+            } catch(e) {}
+            return JSON.parse(JSON.stringify(defaultColors));
+        }
+
+        function applyStatusColors() {
+            const colors = getStatusColors();
+            let styleTag = document.getElementById('dynamic-status-colors');
+            if (!styleTag) {
+                styleTag = document.createElement('style');
+                styleTag.id = 'dynamic-status-colors';
+                document.head.appendChild(styleTag);
+            }
+            
+            let css = ':root {\n';
+            for (const [status, vals] of Object.entries(colors)) {
+                css += `  --status-${status}-bg: ${vals.bg};\n`;
+                css += `  --status-${status}-txt: ${vals.txt};\n`;
+            }
+            css += '}\n';
+            styleTag.innerHTML = css;
+        }
+
+        function openColorSettings() {
+            const colors = getStatusColors();
+            const form = document.getElementById('colorSettingsForm');
+            form.innerHTML = '';
+            
+            for (const [status, vals] of Object.entries(colors)) {
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.gap = '15px';
+                
+                const label = document.createElement('div');
+                label.style.width = '80px';
+                label.style.fontWeight = 'bold';
+                label.style.textTransform = 'capitalize';
+                label.textContent = status;
+                
+                const bgInput = document.createElement('input');
+                bgInput.type = 'color';
+                bgInput.value = vals.bg;
+                bgInput.id = `color_bg_${status}`;
+                bgInput.style.cursor = 'pointer';
+                
+                const txtInput = document.createElement('input');
+                txtInput.type = 'color';
+                txtInput.value = vals.txt;
+                txtInput.id = `color_txt_${status}`;
+                txtInput.style.cursor = 'pointer';
+                
+                const preview = document.createElement('div');
+                preview.className = `status-badge`;
+                preview.style.backgroundColor = vals.bg;
+                preview.style.color = vals.txt;
+                preview.textContent = "Preview";
+                preview.id = `preview_${status}`;
+                
+                bgInput.addEventListener('input', e => preview.style.backgroundColor = e.target.value);
+                txtInput.addEventListener('input', e => preview.style.color = e.target.value);
+                
+                row.appendChild(label);
+                
+                const bgGroup = document.createElement('div');
+                bgGroup.innerHTML = '<span style="font-size:0.8rem; margin-right:5px;">Background:</span>';
+                bgGroup.appendChild(bgInput);
+                row.appendChild(bgGroup);
+                
+                const txtGroup = document.createElement('div');
+                txtGroup.innerHTML = '<span style="font-size:0.8rem; margin-right:5px;">Text:</span>';
+                txtGroup.appendChild(txtInput);
+                row.appendChild(txtGroup);
+                
+                row.appendChild(preview);
+                form.appendChild(row);
+            }
+            openModal('modalColors');
+        }
+
+        function saveStatusColors() {
+            const colors = getStatusColors();
+            for (const status of Object.keys(colors)) {
+                colors[status].bg = document.getElementById(`color_bg_${status}`).value;
+                colors[status].txt = document.getElementById(`color_txt_${status}`).value;
+            }
+            localStorage.setItem('nbi_status_colors', JSON.stringify(colors));
+            applyStatusColors();
+            closeModal('modalColors');
+            showToast("Status colors saved!", false, "success");
+        }
+
+        function resetDefaultColors() {
+            localStorage.removeItem('nbi_status_colors');
+            applyStatusColors();
+            openColorSettings(); // Refresh modal
+            showToast("Reset to default colors.");
+        }
+
+        // Apply colors on page load
+        document.addEventListener('DOMContentLoaded', applyStatusColors);
+
         // --- Initialization ---
+        applyStatusColors();
+
         document.addEventListener('DOMContentLoaded', () => {
             updateLedgerDateDisplay();
             fetchRecords();
@@ -1790,6 +1907,29 @@ updateLedgerDateDisplay = function() {
         }
 
 </script>
+
+    
+    <!-- Status Color Settings Modal -->
+    <div id="modalColors" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span>Status Color Settings</span>
+                <button class="modal-close" onclick="closeModal('modalColors')">&times;</button>
+            </div>
+            <div style="margin-bottom: 20px; font-size: 0.9rem; color: #475569;">
+                Select custom background and text colors for each status. Changes apply immediately.
+            </div>
+            <div id="colorSettingsForm" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Generated by JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-formal" onclick="resetDefaultColors()">Reset Defaults</button>
+                <div style="flex:1"></div>
+                <button class="btn-formal" onclick="closeModal('modalColors')">Cancel</button>
+                <button class="btn-formal btn-primary" onclick="saveStatusColors()">Save Colors</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Confirm Modal -->
     <div id="modalConfirm" class="modal-overlay">

@@ -956,3 +956,21 @@ body, html, * {
 .ccd-cell {
     font-family: 'Google Sans Code', monospace !important;
 }
+
+/* Status Badge Classes */
+.status-served { background-color: var(--status-served-bg) !important; color: var(--status-served-txt) !important; }
+.status-waiting { background-color: var(--status-waiting-bg) !important; color: var(--status-waiting-txt) !important; }
+.status-skipped { background-color: var(--status-skipped-bg) !important; color: var(--status-skipped-txt) !important; }
+.status-noshow { background-color: var(--status-noshow-bg) !important; color: var(--status-noshow-txt) !important; }
+.status-serving { background-color: var(--status-serving-bg) !important; color: var(--status-serving-txt) !important; }
+
+select.status-badge {
+    /* Ensure select tags inherit the color properly */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+select.status-badge option {
+    background-color: white;
+    color: black;
+}
