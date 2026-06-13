@@ -410,6 +410,85 @@
 
     </style>
 
+
+    <!-- Socket.IO for real-time notifications -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        /* React-Toastify Clone */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: #fff;
+            color: #333;
+            min-width: 250px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+        .toast.show {
+            transform: translateX(0);
+        }
+        .toast-icon {
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+        }
+        .toast-icon svg { width: 20px; height: 20px; }
+        .toast-content { flex-grow: 1; }
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            width: 100%;
+            background: #3498db;
+            transform-origin: left;
+            animation: toastProgress 3s linear forwards;
+        }
+        .toast.error .toast-progress { background: #e74c3c; }
+        .toast.success .toast-progress { background: #2ecc71; }
+        
+        @keyframes toastProgress {
+            0% { transform: scaleX(1); }
+            100% { transform: scaleX(0); }
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999; backdrop-filter: blur(2px);
+        }
+        .modal-box {
+            background: #fff; border-radius: 8px; padding: 20px;
+            width: 90%; max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .modal-box h3 { margin-top: 0; color: #1e293b; }
+        .modal-box .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        .modal-box .btn-primary { background: #ea4335; color: white; }
+        .modal-box .btn-secondary { background: #e2e8f0; color: #333; margin-left: 10px; }
+    </style>
+
 </head>
 
 
@@ -941,6 +1020,20 @@ updateLedgerDateDisplay = function() {
             updateLedgerDateDisplay();
             fetchRecords();
 
+        // --- Socket.IO Realtime Notifications ---
+        if (typeof io !== 'undefined') {
+            const socket = io();
+            let previousTotal = null;
+            socket.on('staff_update', (data) => {
+                if (previousTotal !== null && data.stats && data.stats.total > previousTotal) {
+                    showToast("New registration added!", false, "success");
+                    fetchRecords(); // auto refresh grid
+                }
+                if (data.stats) previousTotal = data.stats.total;
+            });
+        }
+
+
             // Dropdowns & Calendar Close
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.dropdown')) {
@@ -1262,6 +1355,17 @@ updateLedgerDateDisplay = function() {
             let payloadValue = newValue;
             if (field === 'is_priority') {
                 payloadValue = (newValue === 'true' || newValue === true);
+                if (payloadValue) {
+                    element.classList.add('badge-priority');
+                } else {
+                    element.classList.remove('badge-priority');
+                }
+            }
+            if (field === 'status') {
+                element.classList.remove('status-waiting', 'status-serving', 'status-served', 'status-skipped', 'status-noshow');
+                let cssClass = 'status-' + newValue.toLowerCase();
+                if (newValue === 'No-show') cssClass = 'status-noshow';
+                element.classList.add(cssClass);
             }
 
             // Optional: add visual saving indicator here
@@ -1928,7 +2032,86 @@ updateLedgerDateDisplay = function() {
 
     </style>
 
-            </head>
+            
+    <!-- Socket.IO for real-time notifications -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        /* React-Toastify Clone */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: #fff;
+            color: #333;
+            min-width: 250px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+        .toast.show {
+            transform: translateX(0);
+        }
+        .toast-icon {
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+        }
+        .toast-icon svg { width: 20px; height: 20px; }
+        .toast-content { flex-grow: 1; }
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            width: 100%;
+            background: #3498db;
+            transform-origin: left;
+            animation: toastProgress 3s linear forwards;
+        }
+        .toast.error .toast-progress { background: #e74c3c; }
+        .toast.success .toast-progress { background: #2ecc71; }
+        
+        @keyframes toastProgress {
+            0% { transform: scaleX(1); }
+            100% { transform: scaleX(0); }
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999; backdrop-filter: blur(2px);
+        }
+        .modal-box {
+            background: #fff; border-radius: 8px; padding: 20px;
+            width: 90%; max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .modal-box h3 { margin-top: 0; color: #1e293b; }
+        .modal-box .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        .modal-box .btn-primary { background: #ea4335; color: white; }
+        .modal-box .btn-secondary { background: #e2e8f0; color: #333; margin-left: 10px; }
+    </style>
+
+</head>
             <body>
 
     <!-- Hidden elements to preserve JS compatibility -->
@@ -1964,7 +2147,20 @@ updateLedgerDateDisplay = function() {
                     <td>${r.is_priority ? 'YES' : 'NO'}</td>
                 </tr>`;
             });
-            html += `</table></body></html>`;
+            html += `</table>
+    <!-- Confirm Modal -->
+    <div id="modalConfirm" class="modal-overlay">
+        <div class="modal-box" style="text-align: center;">
+            <h3 style="margin-bottom: 10px;">Confirm Action</h3>
+            <p id="confirmMessage" style="margin-bottom: 20px; color: #475569;">Are you sure?</p>
+            <div style="display: flex; justify-content: center;">
+                <button class="btn btn-primary" id="confirmYesBtn">Yes, Delete</button>
+                <button class="btn btn-secondary" onclick="closeModal('modalConfirm')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+</body></html>`;
 
             const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const link = document.createElement("a");
@@ -2089,12 +2285,22 @@ updateLedgerDateDisplay = function() {
             reader.readAsText(file);
         }
 
-        // --- Toasts ---
-        function showToast(msg, isError = false) {
-            const container = document.getElementById('toastContainer');
+        // --- Toasts (React-Toastify Style) ---
+        function showToast(msg, isError = false, type = 'info') {
+            const container = document.getElementById('toastContainer') || document.body.appendChild(Object.assign(document.createElement('div'), {id: 'toastContainer', className: 'toast-container'}));
             const toast = document.createElement('div');
-            toast.className = `toast ${isError ? 'error' : ''}`;
-            toast.textContent = msg;
+            let themeClass = isError ? 'error' : type;
+            toast.className = `toast ${themeClass}`;
+            
+            let iconSvg = '<svg viewBox="0 0 24 24" fill="#3498db"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'; // info
+            if(isError) iconSvg = '<svg viewBox="0 0 24 24" fill="#e74c3c"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'; // error
+            if(type === 'success' && !isError) iconSvg = '<svg viewBox="0 0 24 24" fill="#2ecc71"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'; // success
+
+            toast.innerHTML = `
+                <div class="toast-icon">${iconSvg}</div>
+                <div class="toast-content">${msg}</div>
+                <div class="toast-progress"></div>
+            `;
             container.appendChild(toast);
 
             setTimeout(() => toast.classList.add('show'), 10);
@@ -2318,16 +2524,20 @@ updateLedgerDateDisplay = function() {
                     const match = funcStr.match(/'([^']+)'\)$/);
                     if(match && match[1]) {
                         const rowId = match[1];
-                        if(confirm("Are you sure you want to completely delete this record? This cannot be undone.")) {
+                        document.getElementById('confirmMessage').innerText = "Are you sure you want to completely delete this record? This cannot be undone.";
+                        openModal('modalConfirm');
+                        
+                        document.getElementById('confirmYesBtn').onclick = async function() {
+                            closeModal('modalConfirm');
                             const res = await fetch('/api/records/' + rowId, { method: 'DELETE' });
                             const result = await res.json();
                             if(result.success) {
-                                showToast("Row deleted successfully!");
+                                showToast("Row deleted successfully!", false, "success");
                                 fetchRecords();
                             } else {
                                 showToast("Failed to delete row.", true);
                             }
-                        }
+                        };
                     } else {
                         showToast("Error: Could not identify row ID.", true);
                     }
@@ -2337,6 +2547,19 @@ updateLedgerDateDisplay = function() {
         }
 
 </script>
+
+    <!-- Confirm Modal -->
+    <div id="modalConfirm" class="modal-overlay">
+        <div class="modal-box" style="text-align: center;">
+            <h3 style="margin-bottom: 10px;">Confirm Action</h3>
+            <p id="confirmMessage" style="margin-bottom: 20px; color: #475569;">Are you sure?</p>
+            <div style="display: flex; justify-content: center;">
+                <button class="btn btn-primary" id="confirmYesBtn">Yes, Delete</button>
+                <button class="btn btn-secondary" onclick="closeModal('modalConfirm')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
