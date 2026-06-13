@@ -443,7 +443,8 @@
                     <th style="width: 250px;">C</th>
                     <th style="width: 80px;">D</th>
                     <th style="width: 150px;">E</th>
-                    <th style="width: 120px;">F</th>
+                    <th style="width: 100px;">F</th>
+                    <th style="width: 120px;">G</th>
                 </tr>
                 <tr class="column-titles">
                     <td class="row-number">1</td>
@@ -452,7 +453,8 @@
                     <td class="col-title" onclick="handleSort('full_name', 2)">Full Name <span id="sort-2"></span></td>
                     <td class="col-title" onclick="handleSort('age', 3)">Age <span id="sort-3"></span></td>
                     <td class="col-title" onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></td>
-                    <td class="col-title" onclick="handleSort('status', 5)">Status <span id="sort-5"></span></td>
+                    <td class="col-title" onclick="handleSort('is_priority', 5)">Priority <span id="sort-5"></span></td>
+                    <td class="col-title" onclick="handleSort('status', 6)">Status <span id="sort-6"></span></td>
                 </tr>
             </thead>
             <tbody id="recordsBody">
@@ -725,7 +727,7 @@ if (typeof originalRenderTable === 'undefined') {
         const rows = tbody.querySelectorAll('tr');
         
         // Header columns are A, B, C, D, E, F
-        const colLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+        const colLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
         
         rows.forEach((tr, index) => {
             const rowIndex = index + 2; // Data starts at row 2
@@ -1100,9 +1102,15 @@ updateLedgerDateDisplay = function() {
                 tr.innerHTML = `
                     <td tabindex="0">${dateStr}</td>
                     <td tabindex="0" style="font-weight: 800; color: var(--gold);" contenteditable="true" onblur="updateCell(this, 'ccd_no', '${r.id}')">${r.ccd_no}</td>
-                    <td tabindex="0" style="font-weight: 700;" contenteditable="true" onblur="updateCell(this, 'full_name', '${r.id}')">${r.full_name} ${isPrio}</td>
+                    <td tabindex="0" style="font-weight: 700;" contenteditable="true" onblur="updateCell(this, 'full_name', '${r.id}')">${r.full_name}</td>
                     <td tabindex="0" contenteditable="true" onblur="updateCell(this, 'age', '${r.id}')">${r.age}</td>
                     <td tabindex="0" contenteditable="true" onblur="updateCell(this, 'contact', '${r.id}')">${r.contact}</td>
+                    <td tabindex="0">
+                        <select onchange="updateCell(this, 'is_priority', '${r.id}')" class="status-badge ${r.is_priority ? 'badge-priority' : ''}" style="border: none; outline: none; cursor: pointer; width: 100%; text-align: center; padding: 2px 6px; font-size: 0.85rem; font-family: inherit;">
+                            <option value="false" ${!r.is_priority ? 'selected' : ''}>NO</option>
+                            <option value="true" ${r.is_priority ? 'selected' : ''}>YES</option>
+                        </select>
+                    </td>
                     <td tabindex="0">
                         <select onchange="updateCell(this, 'status', '${r.id}')" class="status-badge ${statusClass}" style="border: none; outline: none; cursor: pointer; width: 100%; text-align: center; padding: 2px 6px; font-size: 0.85rem; font-family: inherit;">
                             <option value="Waiting" ${r.status === 'Waiting' ? 'selected' : ''}>Waiting</option>
@@ -1121,6 +1129,11 @@ updateLedgerDateDisplay = function() {
 
         async function updateCell(element, field, id) {
             const newValue = element.value !== undefined ? element.value : element.innerText.trim();
+            let payloadValue = newValue;
+            if (field === 'is_priority') {
+                payloadValue = (newValue === 'true' || newValue === true);
+            }
+
             // Optional: add visual saving indicator here
             element.style.opacity = '0.5';
             
@@ -1128,7 +1141,7 @@ updateLedgerDateDisplay = function() {
                 const response = await fetch('/api/records/' + id, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ [field]: newValue })
+                    body: JSON.stringify({ [field]: payloadValue })
                 });
                 
                 if (!response.ok) {
