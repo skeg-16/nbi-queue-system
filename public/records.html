@@ -569,6 +569,77 @@ function applyFormat(styleProp, value, defaultValue) {
     }
 }
 
+// --- Global Keyboard Shortcuts ---
+document.addEventListener('keydown', function(e) {
+    // Basic Excel Shortcuts
+    if (e.ctrlKey) {
+        if (e.key === 'a' || e.key === 'A') {
+            // Let default select-all work inside editable cells, otherwise just highlight the whole table body
+            if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                showToast("Select All triggered", false, "success");
+            }
+        }
+        else if (e.key === 's' || e.key === 'S') {
+            e.preventDefault();
+            showToast("Database auto-saves on every change!", false, "success");
+        }
+        else if (e.key === 'b' || e.key === 'B') {
+            e.preventDefault();
+            applyFormat('fontWeight', 'bold', 'normal');
+        }
+        else if (e.key === 'i' || e.key === 'I') {
+            e.preventDefault();
+            applyFormat('fontStyle', 'italic', 'normal');
+        }
+        else if (e.key === 'u' || e.key === 'U') {
+            e.preventDefault();
+            applyFormat('textDecoration', 'underline', 'none');
+        }
+        else if (e.key === 'z' || e.key === 'Z') {
+            if(!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                showToast("Undo is available while editing a cell.", true);
+            }
+        }
+        else if (e.key === 'y' || e.key === 'Y') {
+            if(!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                showToast("Redo is available while editing a cell.", true);
+            }
+        }
+    }
+    
+    // Arrow Key Navigation
+    if (activeCellElement && !activeCellElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+        const tr = activeCellElement.parentElement;
+        const tds = Array.from(tr.children);
+        const colIndex = tds.indexOf(activeCellElement);
+        const tbody = tr.parentElement;
+        const trs = Array.from(tbody.children);
+        const rowIndex = trs.indexOf(tr);
+        
+        let targetCell = null;
+        if (e.key === 'ArrowUp') {
+            if (rowIndex > 0) targetCell = trs[rowIndex - 1].children[colIndex];
+            e.preventDefault();
+        } else if (e.key === 'ArrowDown') {
+            if (rowIndex < trs.length - 1) targetCell = trs[rowIndex + 1].children[colIndex];
+            e.preventDefault();
+        } else if (e.key === 'ArrowLeft') {
+            if (colIndex > 1) targetCell = trs[rowIndex].children[colIndex - 1]; // avoid row numbers
+            e.preventDefault();
+        } else if (e.key === 'ArrowRight') {
+            if (colIndex < tds.length - 1) targetCell = trs[rowIndex].children[colIndex + 1];
+            e.preventDefault();
+        }
+        
+        if (targetCell && targetCell.tagName === 'TD') {
+            targetCell.click();
+            targetCell.focus();
+        }
+    }
+});
 
 
 // Intercept the original renderTable to add spreadsheet cell events and row numbers
