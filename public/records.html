@@ -796,53 +796,94 @@ document.addEventListener('keydown', function(e) {
     }
 
     // --- Clipboard Integration (Copy / Cut) ---
+    let pendingCutCells = null;
+
     function performCopy() {
         if (!activeCellElements || activeCellElements.length === 0) return;
         const text = getSelectedCellsText();
-        if (text) {
-            navigator.clipboard.writeText(text).then(() => {
-                document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
-                activeCellElements.forEach(c => c.classList.add('copied-cell'));
-                showToast("Copied to clipboard!", false, "success");
-            }).catch(err => {
-                showToast("Copy failed: " + err, false, "error");
-            });
+        
+        const successCb = () => {
+            document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell', 'cut-cell'));
+            activeCellElements.forEach(c => c.classList.add('copied-cell'));
+            pendingCutCells = null;
+            showToast("Copied to clipboard!", false, "success");
+        };
+        const errorCb = (err) => showToast("Copy failed: " + err, true, "error");
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(successCb).catch(errorCb);
+        } else {
+            fallbackCopyTextToClipboard(text, successCb, errorCb);
         }
     }
 
     function performCut() {
         if (!activeCellElements || activeCellElements.length === 0) return;
         const text = getSelectedCellsText();
-        if (text) {
-            navigator.clipboard.writeText(text).then(() => {
-                document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
-                activeCellElements.forEach(c => c.classList.add('copied-cell'));
-                
-                saveToHistory();
-                activeCellElements.forEach(td => {
-                    td.innerText = '';
-                    td.style.backgroundColor = '';
-                    saveCell(td);
-                });
-                showToast("Cut to clipboard!", false, "success");
-            }).catch(err => {
-                showToast("Cut failed: " + err, false, "error");
-            });
+        
+        const successCb = () => {
+            document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell', 'cut-cell'));
+            activeCellElements.forEach(c => c.classList.add('copied-cell', 'cut-cell'));
+            pendingCutCells = [...activeCellElements];
+            showToast("Cut to clipboard!", false, "success");
+        };
+        const errorCb = (err) => showToast("Cut failed: " + err, true, "error");
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(successCb).catch(errorCb);
+        } else {
+            fallbackCopyTextToClipboard(text, successCb, errorCb);
         }
+    }
+
+    function fallbackCopyTextToClipboard(text, successCb, errorCb) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) successCb();
+            else errorCb('Fallback execCommand failed');
+        } catch (err) {
+            errorCb(err);
+        }
+        document.body.removeChild(textArea);
     }
 
     function performPaste() {
         if (!activeCellElement) return;
-        navigator.clipboard.readText().then(text => {
-            if (text) {
+        
+        const pasteAction = (text) => {
+            if (typeof text === 'string') {
                 saveToHistory();
                 pasteTextIntoCells(text, activeCellElement);
                 showToast("Pasted from clipboard!", false, "success");
                 document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+                
+                if (pendingCutCells) {
+                    pendingCutCells.forEach(td => {
+                        td.innerText = '';
+                        td.style.backgroundColor = '';
+                        saveCell(td);
+                    });
+                    pendingCutCells.forEach(c => c.classList.remove('cut-cell'));
+                    pendingCutCells = null;
+                }
             }
-        }).catch(err => {
-            showToast("Paste blocked by browser.", false, "error");
-        });
+        };
+
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            navigator.clipboard.readText().then(pasteAction).catch(err => {
+                showToast("Paste blocked. Please use Ctrl+V instead.", true, "error");
+            });
+        } else {
+            showToast("Paste button not supported in your browser. Use Ctrl+V.", true, "error");
+        }
     }
 
     function getSelectedCellsText() {

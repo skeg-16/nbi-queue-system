@@ -344,6 +344,10 @@
             z-index: 6;
             animation: borderBlink 1s step-end infinite;
         }
+
+        .cut-cell {
+            opacity: 0.5;
+        }
         
         .active-cell::after { display: none; }
         .active-cell.selection-bottom.selection-right::after {
