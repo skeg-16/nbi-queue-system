@@ -1222,8 +1222,6 @@ updateLedgerDateDisplay = function() {
 
         // --- Ledger Date & Calendar Logic ---
         function updateLedgerDateDisplay() {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('statsContext').textContent = `Showing records for: ${viewDateObj.toLocaleDateString('en-US', options)}`;
             renderSheetTabsUI();
         }
 
