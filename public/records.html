@@ -247,27 +247,20 @@
     </div>
 
     <!-- Sheet Tabs -->
-    <div class="sheet-tabs" style="position: relative;">
-        <div class="sheet-tab" onclick="changeDate(-1)">←</div>
-        
-        <div class="sheet-tab active" id="dateHeader" title="Click to pick a date">
-            <span id="ledgerDateDisplay">Loading...</span>
+    <div class="sheet-tabs" id="sheetTabsContainer" style="position: relative;">
+        <!-- Populated dynamically by JS like Excel Sheet Tabs -->
+    </div>
+    
+    <!-- Calendar Popover (Hidden by default) -->
+    <div class="calendar-popover" id="calendarPopover" style="bottom: 35px; left: 10px;">
+        <div class="cal-header">
+            <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)">◀</button>
+            <div class="cal-title" id="calMonthYear">June 2026</div>
+            <button class="cal-nav-btn" onclick="changeCalendarMonth(1)">▶</button>
         </div>
-        
-        <!-- Calendar Popover re-attached to the tab -->
-        <div class="calendar-popover" id="calendarPopover" style="bottom: 100%; left: 50px;">
-            <div class="cal-header">
-                <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)">◀</button>
-                <div class="cal-title" id="calMonthYear">June 2026</div>
-                <button class="cal-nav-btn" onclick="changeCalendarMonth(1)">▶</button>
-            </div>
-            <div class="cal-grid" id="calGrid">
-                <!-- populated by js -->
-            </div>
+        <div class="cal-grid" id="calGrid">
+            <!-- populated by js -->
         </div>
-
-        <div class="sheet-tab" onclick="changeDate(1)" id="btnNextDay">→</div>
-
     </div>
 
     <!-- Modals -->
@@ -582,26 +575,82 @@ function applyFormat(styleProp, value, defaultValue) {
 // --- Mouse Drag Selection Logic ---
 let isDraggingCells = false;
 let dragStartCell = null;
+let isMultiAddMode = false; // For holding Ctrl
+
+function highlightRectangle(startTd, endTd, append) {
+    const tbody = document.getElementById('recordsBody');
+    const rows = Array.from(tbody.children);
+    
+    const startRow = rows.indexOf(startTd.parentElement);
+    const endRow = rows.indexOf(endTd.parentElement);
+    if (startRow === -1 || endRow === -1) return;
+    
+    const startCol = Array.from(startTd.parentElement.children).indexOf(startTd);
+    const endCol = Array.from(endTd.parentElement.children).indexOf(endTd);
+    
+    const minRow = Math.min(startRow, endRow);
+    const maxRow = Math.max(startRow, endRow);
+    const minCol = Math.min(startCol, endCol);
+    const maxCol = Math.max(startCol, endCol);
+    
+    if (!append) {
+        document.querySelectorAll('.excel-grid td').forEach(c => c.classList.remove('active-cell'));
+        activeCellElements = [];
+    }
+    
+    for (let r = minRow; r <= maxRow; r++) {
+        const rowCells = Array.from(rows[r].children);
+        for (let c = minCol; c <= maxCol; c++) {
+            const cell = rowCells[c];
+            if (cell && !cell.classList.contains('row-number')) {
+                cell.classList.add('active-cell');
+                if (!activeCellElements.includes(cell)) activeCellElements.push(cell);
+            }
+        }
+    }
+    activeCellElement = startTd;
+    
+    // Update Name Box
+    const startLet = String.fromCharCode(65 + startCol - 1);
+    const endLet = String.fromCharCode(65 + endCol - 1);
+    const startNum = startRow + 1;
+    const endNum = endRow + 1;
+    
+    if (startLet === endLet && startNum === endNum) {
+        document.getElementById('nameBox').textContent = startLet + startNum;
+    } else {
+        document.getElementById('nameBox').textContent = `${startLet}${startNum}:${endLet}${endNum}`;
+    }
+}
 
 document.addEventListener('mousedown', function(e) {
     const td = e.target.closest('#recordsBody td:not(.row-number):not(select)');
     if (td && e.button === 0) { // left click
-        // Only prevent default (text selection) if we are clicking OUTSIDE an already active input or if we hold shift
+        // Only start drag if we aren't clicking inside an already focused input
         if (document.activeElement !== td && !td.querySelector('input:focus, select:focus')) {
             isDraggingCells = true;
             dragStartCell = td;
+            isMultiAddMode = e.ctrlKey || e.metaKey;
             
-            if (!e.shiftKey && !e.ctrlKey) {
-                document.querySelectorAll('.excel-grid td').forEach(c => c.classList.remove('active-cell'));
-                activeCellElements = [];
+            if (e.shiftKey && activeCellElement) {
+                // Shift click: draw rectangle from last active to current
+                highlightRectangle(activeCellElement, td, isMultiAddMode);
+            } else {
+                if (!isMultiAddMode) {
+                    document.querySelectorAll('.excel-grid td').forEach(c => c.classList.remove('active-cell'));
+                    activeCellElements = [];
+                }
+                td.classList.add('active-cell');
+                activeCellElement = td;
+                if (!activeCellElements.includes(td)) activeCellElements.push(td);
+                
+                const colLetter = String.fromCharCode(65 + Array.from(td.parentElement.children).indexOf(td) - 1);
+                const rowIndex = Array.from(td.parentElement.parentElement.children).indexOf(td.parentElement) + 1;
+                document.getElementById('nameBox').textContent = colLetter + rowIndex;
+                document.getElementById('formulaInput').value = td.innerText.trim();
             }
-            
-            td.classList.add('active-cell');
-            activeCellElement = td;
-            if (!activeCellElements.includes(td)) activeCellElements.push(td);
         }
     } else {
-        // Clicked outside grid, stop dragging
         isDraggingCells = false;
     }
 });
@@ -610,12 +659,16 @@ document.addEventListener('mouseover', function(e) {
     if (isDraggingCells) {
         const td = e.target.closest('#recordsBody td:not(.row-number):not(select)');
         if (td && td !== dragStartCell) {
-            // Prevent text selection highlight while dragging
-            window.getSelection().removeAllRanges();
+            window.getSelection().removeAllRanges(); // prevent native blue text selection
             
-            if (!activeCellElements.includes(td)) {
-                td.classList.add('active-cell');
-                activeCellElements.push(td);
+            if (isMultiAddMode) {
+                if (!activeCellElements.includes(td)) {
+                    td.classList.add('active-cell');
+                    activeCellElements.push(td);
+                }
+            } else {
+                // Standard bounding-box selection
+                highlightRectangle(dragStartCell, td, false);
             }
         }
     }
@@ -623,7 +676,6 @@ document.addEventListener('mouseover', function(e) {
 
 document.addEventListener('mouseup', function(e) {
     isDraggingCells = false;
-    dragStartCell = null;
 });
 
 // --- Global Keyboard Shortcuts ---
@@ -1036,23 +1088,8 @@ updateLedgerDateDisplay = function() {
                 if (!e.target.closest('.dropdown')) {
                     document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
                 }
-                if (!e.target.closest('#calendarContainer')) {
+                if (!e.target.closest('#calendarPopover') && !e.target.closest('#dateHeader')) {
                     document.getElementById('calendarPopover').classList.remove('active');
-                }
-            });
-
-            // Calendar trigger
-            document.getElementById('dateHeader').addEventListener('click', (e) => {
-                e.stopPropagation();
-                const popover = document.getElementById('calendarPopover');
-                if (popover.classList.contains('active')) {
-                    popover.classList.remove('active');
-                    document.getElementById('ledgerDateDisplay').classList.remove('active');
-                } else {
-                    calDateObj = new Date(viewDateObj);
-                    renderCalendar();
-                    popover.classList.add('active');
-                    document.getElementById('ledgerDateDisplay').classList.add('active');
                 }
             });
 
@@ -1078,16 +1115,66 @@ updateLedgerDateDisplay = function() {
             if (!wasActive) parent.classList.add('active');
         }
 
+        function renderSheetTabsUI() {
+            const container = document.getElementById('sheetTabsContainer');
+            if (!container) return;
+            
+            // Get all unique dates that have records
+            const recordDates = Array.from(new Set(allRecords.map(r => r.created_at.split('T')[0]))).sort((a,b)=>b.localeCompare(a));
+            const currentDateStr = getViewDateString();
+            
+            let datesToShow = [...recordDates];
+            if (!datesToShow.includes(currentDateStr)) {
+                datesToShow.push(currentDateStr);
+            }
+            datesToShow.sort((a,b)=>b.localeCompare(a));
+            
+            // Limit to top 8 recent dates to prevent overflow
+            datesToShow = datesToShow.slice(0, 8);
+            
+            container.innerHTML = '';
+            
+            // Calendar icon tab
+            const calTab = document.createElement('div');
+            calTab.className = 'sheet-tab';
+            calTab.id = 'dateHeader';
+            calTab.innerHTML = '📅 <span style="font-size:0.7em; margin-left:4px;">▼</span>';
+            calTab.title = "Select Date from Calendar";
+            calTab.onclick = (e) => {
+                e.stopPropagation();
+                const popover = document.getElementById('calendarPopover');
+                if (popover.classList.contains('active')) {
+                    popover.classList.remove('active');
+                } else {
+                    calDateObj = new Date(viewDateObj);
+                    renderCalendar();
+                    popover.classList.add('active');
+                }
+            };
+            container.appendChild(calTab);
+            
+            // Excel style tabs for each recent date
+            datesToShow.forEach(dateStr => {
+                const tab = document.createElement('div');
+                tab.className = 'sheet-tab';
+                if (dateStr === currentDateStr) tab.classList.add('active');
+                
+                const dObj = new Date(dateStr);
+                tab.textContent = dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                tab.onclick = () => {
+                    viewDateObj = dObj;
+                    applyFiltersAndSort();
+                };
+                container.appendChild(tab);
+            });
+        }
+
         // --- Ledger Date & Calendar Logic ---
         function updateLedgerDateDisplay() {
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('ledgerDateDisplay').textContent = viewDateObj.toLocaleDateString('en-US', options);
             document.getElementById('statsContext').textContent = `Showing records for: ${viewDateObj.toLocaleDateString('en-US', options)}`;
-
-            // Disable Next Day if viewing today
-            const today = new Date();
-            const isToday = viewDateObj.toDateString() === today.toDateString();
-            document.getElementById('btnNextDay').disabled = isToday;
+            renderSheetTabsUI();
         }
 
         function changeDate(offset) {
@@ -1095,7 +1182,6 @@ updateLedgerDateDisplay = function() {
             const today = new Date();
             if (viewDateObj > today) viewDateObj = new Date(today);
 
-            updateLedgerDateDisplay();
             applyFiltersAndSort();
         }
 

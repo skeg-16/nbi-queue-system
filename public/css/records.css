@@ -842,7 +842,7 @@
         }
         .sheet-tab {
             padding: 4px 15px;
-            background: #e2e8f0;
+            background: var(--bg-color);
             border: 1px solid var(--border-heavy);
             border-bottom: none;
             font-size: 0.8rem;
@@ -850,16 +850,16 @@
             color: var(--text-main);
         }
         .sheet-tab.active {
-            background: white;
+            background: var(--panel-bg);
             font-weight: bold;
-            color: var(--nbi-blue);
+            color: var(--text-accent);
         }
         .sheet-tab.add-sheet {
             font-weight: bold;
             padding: 4px 10px;
         }
         .sheet-tab:hover:not(.active) {
-            background: #cbd5e1;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         /* Modals and Original UI Preserved */
