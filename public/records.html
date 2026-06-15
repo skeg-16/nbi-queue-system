@@ -891,26 +891,6 @@ if (typeof originalRenderTable === 'undefined') {
     };
 }
 
-// Remove context stats element code to prevent error since we removed it from HTML
-const originalUpdateSummaryBar = updateSummaryBar;
-updateSummaryBar = function() {
-    // Just safely call original but suppress missing element errors
-    try { originalUpdateSummaryBar(); } catch(e){}
-};
-
-const originalUpdateLedger = updateLedgerDateDisplay;
-updateLedgerDateDisplay = function() {
-    try { originalUpdateLedger(); } catch(e){}
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('ledgerDateDisplay').textContent = viewDateObj.toLocaleDateString('en-US', options);
-    
-    // Disable Next Day if viewing today
-    const today = new Date();
-    const isToday = viewDateObj.toDateString() === today.toDateString();
-    document.getElementById('btnNextDay').style.opacity = isToday ? '0.3' : '1';
-    document.getElementById('btnNextDay').style.cursor = isToday ? 'not-allowed' : 'pointer';
-}
-
 
         // --- State ---
         let allRecords = [];
