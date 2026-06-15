@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -176,12 +176,12 @@
 <body>
 
     <div class="header">
-        <a href="feedback-tl.html" style="position: absolute; top: 1rem; right: 1rem; color: var(--secondary-color); text-decoration: none; font-weight: 600; font-size: 0.85rem; border: 1px solid var(--secondary-color); padding: 4px 8px; border-radius: 6px; transition: all 0.2s; background: rgba(241, 196, 15, 0.1);" onmouseover="this.style.background='var(--secondary-color)'; this.style.color='var(--bg-color)';" onmouseout="this.style.background='rgba(241, 196, 15, 0.1)'; this.style.color='var(--secondary-color)';">Tagalog</a>
+        <a href="feedback.html" style="position: absolute; top: 1rem; right: 1rem; color: var(--secondary-color); text-decoration: none; font-weight: 600; font-size: 0.85rem; border: 1px solid var(--secondary-color); padding: 4px 8px; border-radius: 6px; transition: all 0.2s; background: rgba(241, 196, 15, 0.1);" onmouseover="this.style.background='var(--secondary-color)'; this.style.color='var(--bg-color)';" onmouseout="this.style.background='rgba(241, 196, 15, 0.1)'; this.style.color='var(--secondary-color)';">English</a>
         <img src="/assets/nbi.png" alt="NBI Logo" onerror="this.style.display='none'">
         <h1>National Bureau of Investigation</h1>
         <h2>Cybercrime Division</h2>
-        <h3>HELP US SERVE YOU BETTER!</h3>
-        <p class="intro-text">This Client Satisfaction Measurement (CSM) tracks the customer experience of government offices. Your feedback on your recently concluded transaction will help this office provide a better service. Personal information shared will be kept confidential and you always have the option to not answer this form.</p>
+        <h3>TULUNGAN MO KAMI MAS MAPABUTI ANG AMING MGA PROSESO AT SERBISYO!</h3>
+        <p class="intro-text">Ang Client Satisfaction Measurement (CSM) ay naglalayong masubaybayan ang karanasan ng taumbayan hinggit sa kanilang pakikipagtransaksyon sa mga tanggapan ng gobyerno. Makatutulong ang inyong kasagutan ukol sa inyong naging karanasan sa kakatapos lamang ng transaksyon, upang mas mapabuti at lalong mapahusay ang aming serbisyo publiko. Ang personal na impormasyon na iyong ibabahagi ay mananatiling kumpidensyal. Maaari ring piliin na hindi sagutan ang sarbey na ito.</p>
     </div>
 
     <div class="progress-container">
@@ -191,22 +191,22 @@
     <div class="form-container" id="form-container">
         <!-- Step 1: Client Info -->
         <div class="step active" id="step-1">
-            <div class="step-indicator">Step 1 of 4 — Client Information</div>
+            <div class="step-indicator">Hakbang 1 ng 4 — Impormasyon ng Kliyente</div>
             
             <div class="grid-2">
                 <div class="form-group" id="group-client_type">
-                    <label>Client type<span class="req">*</span></label>
+                    <label>Uri ng Kliyente<span class="req">*</span></label>
                     <select id="client_type">
-                        <option value="" disabled selected>Select client type</option>
-                        <option value="Citizen">Citizen</option>
-                        <option value="Business">Business</option>
-                        <option value="Government (Employees or another agency)">Government (Employees or another agency)</option>
+                        <option value="" disabled selected>Pumili ng uri ng kliyente</option>
+                        <option value="Citizen">Mamamayan</option>
+                        <option value="Business">Negosyo</option>
+                        <option value="Government (Employees or another agency)">Gobyerno (Empleyado o Ahensya)</option>
                     </select>
                     <div class="error-text">⚠ Please select a client type.</div>
                 </div>
 
                 <div class="form-group" id="group-date">
-                    <label>Date<span class="req">*</span></label>
+                    <label>Petsa<span class="req">*</span></label>
                     <input type="date" id="date">
                     <div class="error-text">⚠ Please select a date.</div>
                 </div>
@@ -214,17 +214,17 @@
 
             <div class="grid-2">
                 <div class="form-group" id="group-sex">
-                    <label>Sex<span class="req">*</span></label>
+                    <label>Kasarian<span class="req">*</span></label>
                     <select id="sex">
-                        <option value="" disabled selected>Select sex</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
+                        <option value="" disabled selected>Pumili ng kasarian</option>
+                        <option value="Male">Lalaki</option>
+                        <option value="Female">Babae</option>
                     </select>
                     <div class="error-text">⚠ Please select sex.</div>
                 </div>
 
                 <div class="form-group" id="group-age">
-                    <label>Age<span class="req">*</span></label>
+                    <label>Edad<span class="req">*</span></label>
                     <input type="number" id="age" min="1" max="150" placeholder="e.g. 30">
                     <div class="error-text">⚠ Please enter a valid age.</div>
                 </div>
@@ -232,9 +232,9 @@
 
             <div class="grid-2">
                 <div class="form-group" id="group-region">
-                    <label>Region of Residence<span class="req">*</span></label>
+                    <label>Rehiyon<span class="req">*</span></label>
                     <select id="region">
-                        <option value="" disabled selected>Select region</option>
+                        <option value="" disabled selected>Pumili ng rehiyon</option>
                         <option value="NCR">National Capital Region (NCR)</option>
                         <option value="CAR">Cordillera Administrative Region (CAR)</option>
                         <option value="Region I">Region I (Ilocos Region)</option>
@@ -257,72 +257,72 @@
                 </div>
 
                 <div class="form-group" id="group-service_availed">
-                    <label>Service Availed<span class="req">*</span></label>
+                    <label>Uri ng transaksyon o serbisyo<span class="req">*</span></label>
                     <input type="text" id="service_availed" placeholder="e.g. Filing a complaint">
                     <div class="error-text">⚠ Please enter the service availed.</div>
                 </div>
             </div>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-next" onclick="nextStep(1)">Next Step →</button>
+                <button type="button" class="btn btn-next" onclick="nextStep(1)">Susunod na Hakbang →</button>
             </div>
         </div>
 
         <!-- Step 2: Citizen's Charter -->
         <div class="step" id="step-2">
-            <div class="step-indicator">Step 2 of 4 — Citizen's Charter (CC)</div>
+            <div class="step-indicator">Hakbang 2 ng 4 — Citizen's Charter (CC)</div>
             <p class="helper-text" style="margin-bottom: 1.5rem; color: var(--text-main);">
-                INSTRUCTIONS: Check mark your answer to the Citizen's Charter (CC) questions. The Citizen's Charter is an official document that reflects the services of a government agency/office including its requirements, fees, and processing times among others.
+                PANUTO: Lagyan ng tsek (✓) ang iyong sagot sa mga sumusunod na katanungan tungkol sa Citizen's Charter (CC). Ito ay isang opisyal na dokument na naglalaman ng mga serbisyo sa isang ahensya/opisina ng gobyernom nakikita rito ang kinakailangan na dokumento, kaukulang bayarin, at pangkabuuang oras ng pagproseso.
             </p>
 
             <div class="form-group" id="group-cc1">
-                <label>CC1. Which of the following best describes your awareness of a CC?<span class="req">*</span></label>
+                <label>CC1. Alin sa mga susunod ang naglalarawan sa iyong kaalaman sa CC?<span class="req">*</span></label>
                 <select id="cc1">
                     <option value="" disabled selected>Select an option</option>
-                    <option value="1">1. I know what a CC is and I saw this office's CC.</option>
-                    <option value="2">2. I know what a CC is but I did NOT see this office's CC.</option>
-                    <option value="3">3. I learned of the CC only when I saw this office's CC.</option>
-                    <option value="4">4. I do not know what a CC is and I did not see one in this office. (Answer "N/A" on CC2 and CC3)</option>
+                    <option value="1">1. Alam ko ang CC at nakita ko ito sa napuntahan opisina.</option>
+                    <option value="2">2. Alam ko ang CC pero hindi ko ito nakita sa napuntahang opisina.</option>
+                    <option value="3">3. Nalaman ko ang CC nang makita ko ito sa napuntahan opisina.</option>
+                    <option value="4">4. Hindi ko alam kung ano ang CC at wala akong nakita sa napuntahan opisina (Lagyan ng tsek at "N/A" sa CC2 at CC3 kapag ito ang iyong sagot).</option>
                 </select>
                 <div class="error-text">⚠ Please select an option.</div>
             </div>
 
             <div class="form-group" id="group-cc2">
-                <label>CC2. If aware of CC (Answered 1-3 in CC1), would you say that the CC of this office was...?<span class="req">*</span></label>
+                <label>CC2. Kung alam ang CC (Nag-tsek sa opsyon 1-3 sa CC1), masasabi mo ba na ang CC nang napuntahang opisina ay...<span class="req">*</span></label>
                 <select id="cc2">
                     <option value="" disabled selected>Select an option</option>
-                    <option value="1">1. Easy to see</option>
-                    <option value="2">2. Somewhat easy to see</option>
-                    <option value="3">3. Difficult to see</option>
-                    <option value="4">4. Not visible at all</option>
+                    <option value="1">1. Madaling makita</option>
+                    <option value="2">2. Medyo madaling makita</option>
+                    <option value="3">3. Mahirap makita</option>
+                    <option value="4">4. Hindi makita</option>
                     <option value="5">5. N/A</option>
                 </select>
                 <div class="error-text">⚠ Please select an option.</div>
             </div>
 
             <div class="form-group" id="group-cc3">
-                <label>CC3. If aware of CC (answered codes 1-3 in CC1), how much did the CC help you in your transaction?<span class="req">*</span></label>
+                <label>CC3. Kung alam ang CC (nag-tsek sa opsyon 1-3 sa CC1), gaano nakatulong ang CC sa transaksyon mo?<span class="req">*</span></label>
                 <select id="cc3">
                     <option value="" disabled selected>Select an option</option>
-                    <option value="1">1. Helped very much</option>
-                    <option value="2">2. Somewhat helped</option>
-                    <option value="3">3. Did not help</option>
+                    <option value="1">1. Sobrang nakatulong</option>
+                    <option value="2">2. Nakatulong naman</option>
+                    <option value="3">3. Hindi nakatulong</option>
                     <option value="4">4. N/A</option>
                 </select>
                 <div class="error-text">⚠ Please select an option.</div>
             </div>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-back" onclick="prevStep(2)">← Previous</button>
-                <button type="button" class="btn btn-next" onclick="nextStep(2)">Next Step →</button>
+                <button type="button" class="btn btn-back" onclick="prevStep(2)">← Nakaraan</button>
+                <button type="button" class="btn btn-next" onclick="nextStep(2)">Susunod na Hakbang →</button>
             </div>
         </div>
 
         <!-- Step 3: SQD -->
         <div class="step" id="step-3">
-            <div class="step-indicator">Step 3 of 4 — Service Quality Dimensions</div>
+            <div class="step-indicator">Hakbang 3 ng 4 — Kalidad ng Serbisyo</div>
             <p class="helper-text" style="margin-bottom: 1.5rem; color: var(--text-main);">
-                INSTRUCTIONS: For SQD 0-8, please select the option that best corresponds to your answer.
+                PANUTO: Para sa SQD 0-8, lagyan ng tsek (✓) ang hanay na pinalaangko sa iyong sagot.
             </p>
 
             <div id="sqd-errors" class="error-text" style="margin-bottom: 1rem; font-size: 1rem;">⚠ Please answer all SQD questions.</div>
@@ -331,122 +331,122 @@
                 <thead>
                     <tr>
                         <th>Question</th>
-                        <th><span class="emoji-header">😠</span>Strongly<br>Disagree</th>
-                        <th><span class="emoji-header">🙁</span>Disagree</th>
-                        <th><span class="emoji-header">😐</span>Neither Agree<br>nor Disagree</th>
-                        <th><span class="emoji-header">🙂</span>Agree</th>
-                        <th><span class="emoji-header">😀</span>Strongly<br>Agree</th>
+                        <th><span class="emoji-header">😠</span>Lubos na hindi<br>sumasang-ayon</th>
+                        <th><span class="emoji-header">🙁</span>Hindi<br>sumasang-ayon</th>
+                        <th><span class="emoji-header">😐</span>Walang<br>kinikilingan</th>
+                        <th><span class="emoji-header">🙂</span>Sumasang-<br>ayon</th>
+                        <th><span class="emoji-header">😀</span>Labis na<br>sumasang-ayon</th>
                         <th><br>N/A</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="question-text">SQD0. I am satisfied with the service that I availed.<span class="req">*</span></td>
-                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd0" value="Strongly Disagree"></label></td>
-                        <td data-label="Disagree"><label><input type="radio" name="sqd0" value="Disagree"></label></td>
-                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd0" value="Neither Agree nor Disagree"></label></td>
-                        <td data-label="Agree"><label><input type="radio" name="sqd0" value="Agree"></label></td>
-                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd0" value="Strongly Agree"></label></td>
+                        <td class="question-text">SQD0. Nasiyahan ako sa serbisyo na aking natanggap sa napuntahan na tanggapan.<span class="req">*</span></td>
+                        <td data-label="Lubos na hindi sumasang-ayon"><label><input type="radio" name="sqd0" value="Strongly Disagree"></label></td>
+                        <td data-label="Hindi sumasang-ayon"><label><input type="radio" name="sqd0" value="Disagree"></label></td>
+                        <td data-label="Walang kinikilingan"><label><input type="radio" name="sqd0" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Sumasang-ayon"><label><input type="radio" name="sqd0" value="Agree"></label></td>
+                        <td data-label="Labis na sumasang-ayon"><label><input type="radio" name="sqd0" value="Strongly Agree"></label></td>
                         <td data-label="N/A"><label><input type="radio" name="sqd0" value="N/A"></label></td>
                     </tr>
                     <tr>
-                        <td class="question-text">SQD1. I spent a reasonable amount of time for my transaction.<span class="req">*</span></td>
-                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd1" value="Strongly Disagree"></label></td>
-                        <td data-label="Disagree"><label><input type="radio" name="sqd1" value="Disagree"></label></td>
-                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd1" value="Neither Agree nor Disagree"></label></td>
-                        <td data-label="Agree"><label><input type="radio" name="sqd1" value="Agree"></label></td>
-                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd1" value="Strongly Agree"></label></td>
+                        <td class="question-text">SQD1. Makatwiran ang oras na aking ginugol para sa pag proseso ng aking transaksyon.<span class="req">*</span></td>
+                        <td data-label="Lubos na hindi sumasang-ayon"><label><input type="radio" name="sqd1" value="Strongly Disagree"></label></td>
+                        <td data-label="Hindi sumasang-ayon"><label><input type="radio" name="sqd1" value="Disagree"></label></td>
+                        <td data-label="Walang kinikilingan"><label><input type="radio" name="sqd1" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Sumasang-ayon"><label><input type="radio" name="sqd1" value="Agree"></label></td>
+                        <td data-label="Labis na sumasang-ayon"><label><input type="radio" name="sqd1" value="Strongly Agree"></label></td>
                         <td data-label="N/A"><label><input type="radio" name="sqd1" value="N/A"></label></td>
                     </tr>
                     <tr>
-                        <td class="question-text">SQD2. The office followed the transaction's requirements and steps based on the information provided.<span class="req">*</span></td>
-                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd2" value="Strongly Disagree"></label></td>
-                        <td data-label="Disagree"><label><input type="radio" name="sqd2" value="Disagree"></label></td>
-                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd2" value="Neither Agree nor Disagree"></label></td>
-                        <td data-label="Agree"><label><input type="radio" name="sqd2" value="Agree"></label></td>
-                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd2" value="Strongly Agree"></label></td>
+                        <td class="question-text">SQD2. Ang opisina ay sumusunod sa mga kinakailangang dokumento at mga hakbang batay sa impormasyong ibinigay.<span class="req">*</span></td>
+                        <td data-label="Lubos na hindi sumasang-ayon"><label><input type="radio" name="sqd2" value="Strongly Disagree"></label></td>
+                        <td data-label="Hindi sumasang-ayon"><label><input type="radio" name="sqd2" value="Disagree"></label></td>
+                        <td data-label="Walang kinikilingan"><label><input type="radio" name="sqd2" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Sumasang-ayon"><label><input type="radio" name="sqd2" value="Agree"></label></td>
+                        <td data-label="Labis na sumasang-ayon"><label><input type="radio" name="sqd2" value="Strongly Agree"></label></td>
                         <td data-label="N/A"><label><input type="radio" name="sqd2" value="N/A"></label></td>
                     </tr>
                     <tr style="pointer-events: none; opacity: 0.85;">
-                        <td class="question-text">SQD3. The steps (including payment) I needed to do for my transactions were easy and simple.<span class="req">*</span><br><span style="font-size: 0.8rem; color: var(--secondary-color); font-weight: 600;">(Automatically set to N/A)</span></td>
-                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd3" value="Strongly Disagree"></label></td>
-                        <td data-label="Disagree"><label><input type="radio" name="sqd3" value="Disagree"></label></td>
-                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd3" value="Neither Agree nor Disagree"></label></td>
-                        <td data-label="Agree"><label><input type="radio" name="sqd3" value="Agree"></label></td>
-                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd3" value="Strongly Agree"></label></td>
+                        <td class="question-text">SQD3. Ang mga hakbang sa pagproseso, kasama na ang pagbayad ay madali at simple lamang.<span class="req">*</span><br><span style="font-size: 0.8rem; color: var(--secondary-color); font-weight: 600;">(Awtomatikong nakatakda sa N/A)</span></td>
+                        <td data-label="Lubos na hindi sumasang-ayon"><label><input type="radio" name="sqd3" value="Strongly Disagree"></label></td>
+                        <td data-label="Hindi sumasang-ayon"><label><input type="radio" name="sqd3" value="Disagree"></label></td>
+                        <td data-label="Walang kinikilingan"><label><input type="radio" name="sqd3" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Sumasang-ayon"><label><input type="radio" name="sqd3" value="Agree"></label></td>
+                        <td data-label="Labis na sumasang-ayon"><label><input type="radio" name="sqd3" value="Strongly Agree"></label></td>
                         <td data-label="N/A"><label><input type="radio" name="sqd3" value="N/A" checked></label></td>
                     </tr>
                     <tr style="pointer-events: none; opacity: 0.85;">
-                        <td class="question-text">SQD4. I easily found information about my transaction. (If service was free, mark the "N/A" column)<span class="req">*</span><br><span style="font-size: 0.8rem; color: var(--secondary-color); font-weight: 600;">(Automatically set to N/A)</span></td>
-                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd4" value="Strongly Disagree"></label></td>
-                        <td data-label="Disagree"><label><input type="radio" name="sqd4" value="Disagree"></label></td>
-                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd4" value="Neither Agree nor Disagree"></label></td>
-                        <td data-label="Agree"><label><input type="radio" name="sqd4" value="Agree"></label></td>
-                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd4" value="Strongly Agree"></label></td>
+                        <td class="question-text">SQD4. Mabilis at madali akong nakahanap ng impormasyon tungkol sa aking transaksyon mula sa opisina o sa website nito.<span class="req">*</span><br><span style="font-size: 0.8rem; color: var(--secondary-color); font-weight: 600;">(Awtomatikong nakatakda sa N/A)</span></td>
+                        <td data-label="Lubos na hindi sumasang-ayon"><label><input type="radio" name="sqd4" value="Strongly Disagree"></label></td>
+                        <td data-label="Hindi sumasang-ayon"><label><input type="radio" name="sqd4" value="Disagree"></label></td>
+                        <td data-label="Walang kinikilingan"><label><input type="radio" name="sqd4" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Sumasang-ayon"><label><input type="radio" name="sqd4" value="Agree"></label></td>
+                        <td data-label="Labis na sumasang-ayon"><label><input type="radio" name="sqd4" value="Strongly Agree"></label></td>
                         <td data-label="N/A"><label><input type="radio" name="sqd4" value="N/A" checked></label></td>
                     </tr>
                     <tr style="pointer-events: none; opacity: 0.85;">
-                        <td class="question-text">SQD5. I paid a reasonable amount of fees for my transaction. (If service was free, mark the "N/A" column)<span class="req">*</span><br><span style="font-size: 0.8rem; color: var(--secondary-color); font-weight: 600;">(Automatically set to N/A)</span></td>
-                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd5" value="Strongly Disagree"></label></td>
-                        <td data-label="Disagree"><label><input type="radio" name="sqd5" value="Disagree"></label></td>
-                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd5" value="Neither Agree nor Disagree"></label></td>
-                        <td data-label="Agree"><label><input type="radio" name="sqd5" value="Agree"></label></td>
-                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd5" value="Strongly Agree"></label></td>
+                        <td class="question-text">SQD5. Nagbayad ako ng makatwirang halaga para sa aking transaksyon. (Kung ang serbisyo ay ibinigay ng libre, maglagay ng tsek sa hanay ng N/A).<span class="req">*</span><br><span style="font-size: 0.8rem; color: var(--secondary-color); font-weight: 600;">(Awtomatikong nakatakda sa N/A)</span></td>
+                        <td data-label="Lubos na hindi sumasang-ayon"><label><input type="radio" name="sqd5" value="Strongly Disagree"></label></td>
+                        <td data-label="Hindi sumasang-ayon"><label><input type="radio" name="sqd5" value="Disagree"></label></td>
+                        <td data-label="Walang kinikilingan"><label><input type="radio" name="sqd5" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Sumasang-ayon"><label><input type="radio" name="sqd5" value="Agree"></label></td>
+                        <td data-label="Labis na sumasang-ayon"><label><input type="radio" name="sqd5" value="Strongly Agree"></label></td>
                         <td data-label="N/A"><label><input type="radio" name="sqd5" value="N/A" checked></label></td>
                     </tr>
                     <tr>
-                        <td class="question-text">SQD6. I feel the office was fair to everyone, or "walang palakasan" during my transaction.<span class="req">*</span></td>
-                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd6" value="Strongly Disagree"></label></td>
-                        <td data-label="Disagree"><label><input type="radio" name="sqd6" value="Disagree"></label></td>
-                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd6" value="Neither Agree nor Disagree"></label></td>
-                        <td data-label="Agree"><label><input type="radio" name="sqd6" value="Agree"></label></td>
-                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd6" value="Strongly Agree"></label></td>
+                        <td class="question-text">SQD6. Pakiramdam ko ay patas ang opisina sa lahat, o "walang palakasan", sa aking transaksyon.<span class="req">*</span></td>
+                        <td data-label="Lubos na hindi sumasang-ayon"><label><input type="radio" name="sqd6" value="Strongly Disagree"></label></td>
+                        <td data-label="Hindi sumasang-ayon"><label><input type="radio" name="sqd6" value="Disagree"></label></td>
+                        <td data-label="Walang kinikilingan"><label><input type="radio" name="sqd6" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Sumasang-ayon"><label><input type="radio" name="sqd6" value="Agree"></label></td>
+                        <td data-label="Labis na sumasang-ayon"><label><input type="radio" name="sqd6" value="Strongly Agree"></label></td>
                         <td data-label="N/A"><label><input type="radio" name="sqd6" value="N/A"></label></td>
                     </tr>
                     <tr>
-                        <td class="question-text">SQD7. I was treated courteously by the staff, and (if asked for help) the staff was helpful.<span class="req">*</span></td>
-                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd7" value="Strongly Disagree"></label></td>
-                        <td data-label="Disagree"><label><input type="radio" name="sqd7" value="Disagree"></label></td>
-                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd7" value="Neither Agree nor Disagree"></label></td>
-                        <td data-label="Agree"><label><input type="radio" name="sqd7" value="Agree"></label></td>
-                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd7" value="Strongly Agree"></label></td>
+                        <td class="question-text">SQD7. Magalang akong trinato ng mga tauhan, at (kung sakali ako ay humingi ng tulong) alam ko na sila ay handang tumulong sa akin.<span class="req">*</span></td>
+                        <td data-label="Lubos na hindi sumasang-ayon"><label><input type="radio" name="sqd7" value="Strongly Disagree"></label></td>
+                        <td data-label="Hindi sumasang-ayon"><label><input type="radio" name="sqd7" value="Disagree"></label></td>
+                        <td data-label="Walang kinikilingan"><label><input type="radio" name="sqd7" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Sumasang-ayon"><label><input type="radio" name="sqd7" value="Agree"></label></td>
+                        <td data-label="Labis na sumasang-ayon"><label><input type="radio" name="sqd7" value="Strongly Agree"></label></td>
                         <td data-label="N/A"><label><input type="radio" name="sqd7" value="N/A"></label></td>
                     </tr>
                     <tr>
-                        <td class="question-text">SQD8. I got what I needed from the government office, or (if denied) denial of request was sufficiently explained to me.<span class="req">*</span></td>
-                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd8" value="Strongly Disagree"></label></td>
-                        <td data-label="Disagree"><label><input type="radio" name="sqd8" value="Disagree"></label></td>
-                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd8" value="Neither Agree nor Disagree"></label></td>
-                        <td data-label="Agree"><label><input type="radio" name="sqd8" value="Agree"></label></td>
-                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd8" value="Strongly Agree"></label></td>
+                        <td class="question-text">SQD8. Nakuha ko ang kinakailangan ko mula sa tanggapan ng gobyerna, kung tinanggihan man, ito ay sapat na ipinaliwanag sa akin.<span class="req">*</span></td>
+                        <td data-label="Lubos na hindi sumasang-ayon"><label><input type="radio" name="sqd8" value="Strongly Disagree"></label></td>
+                        <td data-label="Hindi sumasang-ayon"><label><input type="radio" name="sqd8" value="Disagree"></label></td>
+                        <td data-label="Walang kinikilingan"><label><input type="radio" name="sqd8" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Sumasang-ayon"><label><input type="radio" name="sqd8" value="Agree"></label></td>
+                        <td data-label="Labis na sumasang-ayon"><label><input type="radio" name="sqd8" value="Strongly Agree"></label></td>
                         <td data-label="N/A"><label><input type="radio" name="sqd8" value="N/A"></label></td>
                     </tr>
                 </tbody>
             </table>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-back" onclick="prevStep(3)">← Previous</button>
-                <button type="button" class="btn btn-next" onclick="nextStep(3)">Next Step →</button>
+                <button type="button" class="btn btn-back" onclick="prevStep(3)">← Nakaraan</button>
+                <button type="button" class="btn btn-next" onclick="nextStep(3)">Susunod na Hakbang →</button>
             </div>
         </div>
 
         <!-- Step 4: Suggestions & Contact -->
         <div class="step" id="step-4">
-            <div class="step-indicator">Step 4 of 4 — Suggestions & Contact</div>
+            <div class="step-indicator">Hakbang 4 ng 4 — Mga Suhestiyon at Kontak</div>
             
             <div class="form-group">
-                <label for="suggestions">Suggestions on how we can further improve our services (optional):</label>
+                <label for="suggestions">Mga suhestiyon kung paano pa mapapabuti ang aming mga serbisyo (opsyonal):</label>
                 <textarea id="suggestions" placeholder="Your suggestions..."></textarea>
             </div>
 
             <div class="form-group">
-                <label for="email">E-mail address (optional):</label>
+                <label for="email">E-mail address (opsyonal):</label>
                 <input type="email" id="email" placeholder="your.email@example.com">
             </div>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-back" onclick="prevStep(4)">← Previous</button>
-                <button type="button" class="btn btn-submit" onclick="submitForm()">SUBMIT FEEDBACK →</button>
+                <button type="button" class="btn btn-back" onclick="prevStep(4)">← Nakaraan</button>
+                <button type="button" class="btn btn-submit" onclick="submitForm()">IPASA ANG FEEDBACK →</button>
             </div>
         </div>
 
@@ -456,9 +456,9 @@
         <div class="checkmark-circle">
             <span class="checkmark">✓</span>
         </div>
-        <h2>Thank You!</h2>
-        <p>Your feedback has been recorded. We appreciate you taking the time to help us improve.</p>
-        <button type="button" class="btn btn-back" style="margin-top: 2rem; width: 100%; max-width: 300px; flex: none; min-height: 54px; height: 54px;" onclick="window.location.reload()">Submit Another</button>
+        <h2>Maraming Salamat po!</h2>
+        <p>Naitala na ang iyong feedback. Pinahahalagahan namin ang oras mo para tulungan kaming mapabuti.</p>
+        <button type="button" class="btn btn-back" style="margin-top: 2rem; width: 100%; max-width: 300px; flex: none; min-height: 54px; height: 54px;" onclick="window.location.reload()">Magpasa Ulit</button>
     </div>
 
     <div id="loading-overlay">
