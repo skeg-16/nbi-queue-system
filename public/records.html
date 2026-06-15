@@ -522,10 +522,15 @@
 // Spreadsheet Interaction Logic
 let activeCellRef = "A1";
 let activeCellElement = null;
+let activeCellElements = [];
 
-function setActiveCell(cell, colLetter, rowIndex) {
-    // Remove active class from all cells
-    document.querySelectorAll('.excel-grid td').forEach(td => td.classList.remove('active-cell'));
+function setActiveCell(cell, colLetter, rowIndex, isMultiSelect = false) {
+    if (!isMultiSelect) {
+        document.querySelectorAll('.excel-grid td').forEach(td => td.classList.remove('active-cell'));
+        activeCellElements = [cell];
+    } else {
+        if (!activeCellElements.includes(cell)) activeCellElements.push(cell);
+    }
     
     // Add active class to clicked cell
     cell.classList.add('active-cell');
@@ -558,12 +563,11 @@ function updateActiveCell(value) {
 }
 
 function applyFormat(styleProp, value, defaultValue) {
-    if (activeCellElement) {
-        if (activeCellElement.style[styleProp] === value) {
-            activeCellElement.style[styleProp] = defaultValue;
-        } else {
-            activeCellElement.style[styleProp] = value;
-        }
+    if (activeCellElements && activeCellElements.length > 0) {
+        const toggleValue = activeCellElement.style[styleProp] === value ? defaultValue : value;
+        activeCellElements.forEach(cell => {
+            cell.style[styleProp] = toggleValue;
+        });
     } else {
         showToast("Select a cell first!", true);
     }
@@ -577,7 +581,15 @@ document.addEventListener('keydown', function(e) {
             // Let default select-all work inside editable cells, otherwise just highlight the whole table body
             if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                showToast("Select All triggered", false, "success");
+                document.querySelectorAll('.excel-grid td').forEach(td => td.classList.remove('active-cell'));
+                activeCellElements = [];
+                document.querySelectorAll('#recordsBody td').forEach(td => {
+                    if(td.style.borderRight !== 'none' && !td.classList.contains('row-number')) {
+                        td.classList.add('active-cell');
+                        activeCellElements.push(td);
+                    }
+                });
+                if(activeCellElements.length > 0) activeCellElement = activeCellElements[0];
             }
         }
         else if (e.key === 's' || e.key === 'S') {
@@ -599,13 +611,13 @@ document.addEventListener('keydown', function(e) {
         else if (e.key === 'z' || e.key === 'Z') {
             if(!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT') {
                 e.preventDefault();
-                showToast("Undo is available while editing a cell.", true);
+                performUndo();
             }
         }
         else if (e.key === 'y' || e.key === 'Y') {
             if(!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT') {
                 e.preventDefault();
-                showToast("Redo is available while editing a cell.", true);
+                performRedo();
             }
         }
     }
@@ -1322,7 +1334,41 @@ updateLedgerDateDisplay = function() {
             }
         }
 
-        async function updateCell(element, field, id) {
+        // --- GLOBAL HISTORY STACK ---
+        let undoStack = [];
+        let redoStack = [];
+
+        async function performUndo() {
+            if (undoStack.length === 0) return showToast("Nothing to undo.", true);
+            const action = undoStack.pop();
+            redoStack.push({ ...action, oldValue: action.newValue, newValue: action.oldValue });
+            
+            // revert UI
+            if (action.element) {
+                if (action.element.tagName === 'SELECT') action.element.value = action.oldValue;
+                else action.element.innerText = action.oldValue;
+            }
+            // push to db natively
+            await updateCell(action.element, action.field, action.id, true);
+            showToast("Undo successful.", false, "success");
+        }
+
+        async function performRedo() {
+            if (redoStack.length === 0) return showToast("Nothing to redo.", true);
+            const action = redoStack.pop();
+            undoStack.push({ ...action, oldValue: action.newValue, newValue: action.oldValue });
+            
+            // revert UI
+            if (action.element) {
+                if (action.element.tagName === 'SELECT') action.element.value = action.oldValue;
+                else action.element.innerText = action.oldValue;
+            }
+            // push to db natively
+            await updateCell(action.element, action.field, action.id, true);
+            showToast("Redo successful.", false, "success");
+        }
+
+        async function updateCell(element, field, id, skipHistory = false) {
             let newValue = element.value !== undefined ? element.value : element.innerText.trim();
             
             // Check for formula
@@ -1337,6 +1383,17 @@ updateLedgerDateDisplay = function() {
             if (field === 'is_priority') {
                 payloadValue = (newValue === 'true' || newValue === true);
             }
+
+            // Capture History
+            const oldRecord = allRecords.find(x => x.id === id);
+            let oldValue = oldRecord ? oldRecord[field] : '';
+            if (field === 'is_priority') oldValue = (oldValue === 'true' || oldValue === true);
+            
+            if (!skipHistory && payloadValue !== oldValue) {
+                undoStack.push({ element, field, id, oldValue, newValue: payloadValue });
+                redoStack = []; // clear redo on new action
+            }
+            if (oldRecord) oldRecord[field] = payloadValue; // keep local cache fresh so next rapid undo works
 
             // Optional: add visual saving indicator here
             element.style.opacity = '0.5';
