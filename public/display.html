@@ -165,8 +165,6 @@
             }
 
             overlay.style.display = 'none';
-
-            loadAndSelectVoices();
         });
 
         // Robust async voice loading
@@ -259,6 +257,9 @@
                 }
             });
         }
+        
+        // Execute voice loading immediately on startup so spreadsheet sees it
+        loadAndSelectVoices();
 
         // Audio SFX Setup
         const sfxBefore = new Audio('assets/sound.mp3');
