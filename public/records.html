@@ -917,20 +917,23 @@ if (typeof originalRenderTable === 'undefined') {
         // --- Theme Logic ---
         function toggleTheme() {
             const root = document.documentElement;
-            const currentTheme = root.getAttribute('data-theme');
+            const currentTheme = root.getAttribute('data-theme') || 'light';
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             root.setAttribute('data-theme', newTheme);
             localStorage.setItem('nbi_theme', newTheme);
+            document.getElementById('themeToggle').textContent = newTheme === 'light' ? '☀️' : '🌙';
             
             // Re-apply pill colors on theme switch so they instantly swap
             setTimeout(applyGlobalColorsToGrid, 10);
         }
         
         // Initialize theme on load
-        if (localStorage.getItem('nbi_theme') === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light');
-        } else {
+        if (localStorage.getItem('nbi_theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('themeToggle').textContent = '🌙';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.getElementById('themeToggle').textContent = '☀️';
         }
 
         
