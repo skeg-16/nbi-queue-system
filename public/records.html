@@ -71,6 +71,10 @@
                 <button class="ribbon-btn" onclick="performUndo()" title="Undo (Ctrl+Z)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></button>
                 <button class="ribbon-btn" onclick="performRedo()" title="Redo (Ctrl+Y)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.06-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg></button>
                 <div class="ribbon-divider" style="width: 1px; height: 20px; background: var(--border-color); margin: 0 4px;"></div>
+                <button class="ribbon-btn" onclick="performCopy()" title="Copy (Ctrl+C)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+                <button class="ribbon-btn" onclick="performCut()" title="Cut (Ctrl+X)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zM6 8c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm0 12c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm6-7.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM19 3l-6 6 2 2 7-7V3h-3z"/></svg></button>
+                <button class="ribbon-btn" onclick="performPaste()" title="Paste (Ctrl+V)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></svg></button>
+                <div class="ribbon-divider" style="width: 1px; height: 20px; background: var(--border-color); margin: 0 4px;"></div>
                 <button class="ribbon-btn" onclick="applyFormat('fontWeight', 'bold', 'normal')" title="Bold"><b style="font-family: serif; font-size: 1.2em;">B</b></button>
                 <button class="ribbon-btn" onclick="applyFormat('fontStyle', 'italic', 'normal')" title="Italic"><i style="font-family: serif; font-size: 1.2em;">I</i></button>
                 <button class="ribbon-btn" onclick="applyFormat('textDecoration', 'underline', 'none')" title="Underline"><u style="font-family: serif; font-size: 1.2em;">U</u></button>
@@ -764,48 +768,19 @@ document.addEventListener('keydown', function(e) {
         else if (e.key === 'c' || e.key === 'C') {
             if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                const text = getSelectedCellsText();
-                if (text) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
-                        activeCellElements.forEach(c => c.classList.add('copied-cell'));
-                        showToast("Copied to clipboard!", false, "success");
-                    });
-                }
+                performCopy();
             }
         }
         else if (e.key === 'x' || e.key === 'X') {
             if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                const text = getSelectedCellsText();
-                if (text) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
-                        activeCellElements.forEach(c => c.classList.add('copied-cell'));
-                        
-                        activeCellElements.forEach(td => {
-                            td.innerText = '';
-                            td.style.backgroundColor = '';
-                            saveCell(td);
-                        });
-                        showToast("Cut to clipboard!", false, "success");
-                    });
-                }
+                performCut();
             }
         }
         else if (e.key === 'v' || e.key === 'V') {
             if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                navigator.clipboard.readText().then(text => {
-                    if (text && activeCellElement) {
-                        pasteTextIntoCells(text, activeCellElement);
-                        showToast("Pasted from clipboard!", false, "success");
-                        // clear marching ants after paste
-                        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
-                    }
-                }).catch(err => {
-                    showToast("Paste blocked by browser.", false, "error");
-                });
+                performPaste();
             }
         }
     }
@@ -821,6 +796,55 @@ document.addEventListener('keydown', function(e) {
     }
 
     // --- Clipboard Integration (Copy / Cut) ---
+    function performCopy() {
+        if (!activeCellElements || activeCellElements.length === 0) return;
+        const text = getSelectedCellsText();
+        if (text) {
+            navigator.clipboard.writeText(text).then(() => {
+                document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+                activeCellElements.forEach(c => c.classList.add('copied-cell'));
+                showToast("Copied to clipboard!", false, "success");
+            }).catch(err => {
+                showToast("Copy failed: " + err, false, "error");
+            });
+        }
+    }
+
+    function performCut() {
+        if (!activeCellElements || activeCellElements.length === 0) return;
+        const text = getSelectedCellsText();
+        if (text) {
+            navigator.clipboard.writeText(text).then(() => {
+                document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+                activeCellElements.forEach(c => c.classList.add('copied-cell'));
+                
+                saveToHistory();
+                activeCellElements.forEach(td => {
+                    td.innerText = '';
+                    td.style.backgroundColor = '';
+                    saveCell(td);
+                });
+                showToast("Cut to clipboard!", false, "success");
+            }).catch(err => {
+                showToast("Cut failed: " + err, false, "error");
+            });
+        }
+    }
+
+    function performPaste() {
+        if (!activeCellElement) return;
+        navigator.clipboard.readText().then(text => {
+            if (text) {
+                saveToHistory();
+                pasteTextIntoCells(text, activeCellElement);
+                showToast("Pasted from clipboard!", false, "success");
+                document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+            }
+        }).catch(err => {
+            showToast("Paste blocked by browser.", false, "error");
+        });
+    }
+
     function getSelectedCellsText() {
         if (!activeCellElements || activeCellElements.length === 0) return '';
         
