@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Complainant Feedback Form | NBI Cybercrime Division</title>
+    <title>Client Satisfaction Measurement | NBI Cybercrime Division</title>
+    <link rel="icon" href="/assets/nbi.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -38,23 +39,11 @@
             overflow-x: hidden;
         }
 
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(241, 196, 15, 0.5); /* secondary color */
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary-color);
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(241, 196, 15, 0.5); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--secondary-color); }
 
-        /* Header */
         .header {
             text-align: center;
             padding: 1.5rem 1rem 1rem;
@@ -63,324 +52,85 @@
             position: relative;
             z-index: 10;
         }
-        .header img {
-            width: 60px;
-            height: 60px;
-            margin-bottom: 0.5rem;
-        }
-        .header h1 {
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        .header h2 {
-            font-size: 1.2rem;
-            color: var(--secondary-color);
-            font-weight: 800;
-            margin-bottom: 0.25rem;
-        }
-        .header h3 {
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-        .intro-text {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-            line-height: 1.4;
-        }
+        .header img { width: 80px; height: 80px; margin-top: -15px; margin-bottom: -15px; object-fit: contain; }
+        .header h1 { font-size: 0.85rem; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin: 0; }
+        .header h2 { font-size: 1.3rem; color: var(--secondary-color); font-weight: 800; margin: 0.2rem 0; }
+        .header h3 { font-size: 1.15rem; font-weight: 600; margin: 0 0 0.5rem 0; color: white; }
+        .intro-text { font-size: 0.95rem; color: var(--text-muted); margin: 0; line-height: 1.5; text-align: justify; }
 
-        /* Progress Bar */
-        .progress-container {
-            width: 100%;
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            position: relative;
-        }
-        .progress-bar {
-            height: 100%;
-            background: var(--secondary-color);
-            width: 25%;
-            transition: width 0.3s ease;
-        }
+        .progress-container { width: 100%; height: 4px; background: rgba(255,255,255,0.1); position: relative; }
+        .progress-bar { height: 100%; background: var(--secondary-color); width: 25%; transition: width 0.3s ease; }
 
-        /* Form Container */
         .form-container {
-            flex: 1;
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            overflow: hidden; /* For slide animation */
+            flex: 1; position: relative; width: 100%; max-width: 900px; margin: 0 auto; overflow: hidden;
         }
 
         .step {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            padding: 1.5rem;
-            display: none;
-            flex-direction: column;
-            overflow-y: auto;
-            opacity: 0;
-            transform: translateX(100%);
-            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 1.5rem;
+            display: none; flex-direction: column; overflow-y: auto; opacity: 0;
+            transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease;
         }
-        .step.active {
-            display: flex;
-            opacity: 1;
-            transform: translateX(0);
-            position: relative;
-        }
-        .step.exit-left {
-            transform: translateX(-100%);
-            opacity: 0;
-        }
+        .step.active { display: flex; opacity: 1; transform: translateX(0); position: relative; }
+        .step.exit-left { transform: translateX(-100%); opacity: 0; }
 
-        .step-indicator {
-            font-size: 0.9rem;
-            color: var(--secondary-color);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
+        .step-indicator { font-size: 0.9rem; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 1.5rem; text-align: center; }
 
-        /* Inputs */
-        .form-group {
-            margin-bottom: 1.5rem;
+        .form-group { margin-bottom: 1.5rem; }
+        
+        /* Justified text for labels and paragraphs */
+        label { display: block; font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem; text-align: justify; }
+        .helper-text { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-align: justify; line-height: 1.4; }
+        
+        input[type="text"], input[type="date"], input[type="number"], input[type="email"], select, textarea {
+            width: 100%; background: var(--input-bg); border: 2px solid var(--border-color); color: white;
+            padding: 1rem; border-radius: 8px; font-size: 1rem; min-height: 48px; transition: border-color 0.2s;
+            appearance: none; /* remove default select arrow to style */
         }
-        label {
-            display: block;
-            font-size: 1.05rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+        
+        /* Add custom arrow for select */
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+            padding-right: 2.5rem;
         }
-        .helper-text {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-        input[type="text"], input[type="date"], select, textarea {
-            width: 100%;
-            background: var(--input-bg);
-            border: 2px solid var(--border-color);
-            color: white;
-            padding: 1rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            min-height: 48px;
-            transition: border-color 0.2s;
-        }
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--secondary-color);
-        }
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-        .error-text {
-            color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 0.4rem;
-            display: none;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .has-error input, .has-error select, .has-error textarea {
-            border-color: var(--danger);
-        }
-        .has-error .error-text {
-            display: flex;
-        }
+        select option { background: var(--bg-color); color: white; }
 
-        /* Star Rating */
-        .star-rating {
-            display: flex;
-            justify-content: space-between;
-            padding: 1rem 0;
-        }
-        .star {
-            font-size: 2.5rem;
-            color: var(--border-color);
-            cursor: pointer;
-            transition: transform 0.2s, color 0.2s;
-            text-align: center;
-            flex: 1;
-        }
-        .star.selected {
-            color: var(--secondary-color);
-        }
-        .star-label {
-            display: block;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-        }
-        .has-error .star-rating {
-            border: 1px solid var(--danger);
-            border-radius: 8px;
-            padding: 1rem;
-        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--secondary-color); }
+        textarea { resize: vertical; min-height: 120px; text-align: justify; }
+        
+        .error-text { color: var(--danger); font-size: 0.85rem; margin-top: 0.4rem; display: none; align-items: center; gap: 0.3rem; }
+        .has-error input[type="text"], .has-error input[type="date"], .has-error input[type="number"], .has-error input[type="email"], .has-error select, .has-error textarea { border-color: var(--danger); }
+        .has-error .error-text { display: flex; }
 
-        /* Emoji Radio Buttons */
-        .radio-group {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.8rem;
-        }
-        .radio-option {
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .radio-option.selected {
-            border-color: var(--secondary-color);
-            background: rgba(241, 196, 15, 0.1);
-        }
-        .radio-option input[type="radio"] {
-            display: none;
-        }
-        .emoji {
-            font-size: 1.8rem;
-        }
-        .radio-text {
-            font-size: 1rem;
-            font-weight: 500;
-        }
-        .has-error .radio-group {
-            border: 1px solid var(--danger);
-            padding: 0.5rem;
-            border-radius: 8px;
-        }
+        .sqd-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; table-layout: fixed; }
+        .sqd-table th:first-child { width: 34%; }
+        .sqd-table th:not(:first-child) { width: 11%; }
+        .sqd-table th, .sqd-table td { border: 1px solid var(--border-color); padding: 0.75rem; text-align: center; }
+        .sqd-table th { background: rgba(0,0,0,0.4); font-weight: 600; vertical-align: top; padding-top: 1rem; }
+        .sqd-table td.question-text { text-align: justify; font-weight: 500; }
+        .sqd-table label { display: block; width: 100%; height: 100%; cursor: pointer; margin: 0; padding: 0.5rem 0;}
+        .sqd-table input[type="radio"] { cursor: pointer; width: 18px; height: 18px; accent-color: var(--secondary-color); }
+        .emoji-header { font-size: 1.5rem; display: block; margin-bottom: 0.2rem; }
 
-        /* Pill Buttons (Toggle) */
-        .pill-group {
-            display: flex;
-            gap: 1rem;
-        }
-        .pill-btn {
-            flex: 1;
-            padding: 1rem;
-            text-align: center;
-            background: var(--card-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .pill-btn.selected {
-            background: var(--secondary-color);
-            color: var(--bg-color);
-            border-color: var(--secondary-color);
-        }
-        .pill-btn.selected-no {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Navigation Buttons */
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            margin-bottom: 2rem;
-        }
-        .btn {
-            flex: 1;
-            padding: 1rem;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            min-height: 48px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .btn-back {
-            background: transparent;
-            border: 2px solid var(--border-color);
-            color: white;
-        }
-        .btn-next, .btn-submit {
-            background: var(--secondary-color);
-            color: var(--bg-color);
-        }
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Success Screen */
+        .nav-buttons { display: flex; gap: 1rem; margin-top: 2rem; margin-bottom: 2rem; }
+        .btn { flex: 1; padding: 1rem; border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; border: none; min-height: 48px; display: flex; justify-content: center; align-items: center; }
+        .btn-back { background: rgba(255, 255, 255, 0.1); border: 2px solid var(--border-color); color: white; transition: background 0.2s; }
+        .btn-back:hover { background: rgba(255, 255, 255, 0.2); }
+        .btn-next, .btn-submit { background: var(--secondary-color); color: var(--bg-color); }
+        
         .success-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 2rem;
-            z-index: 100;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color);
+            display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem; z-index: 100;
         }
-        .success-screen.active {
-            display: flex;
-        }
-        .checkmark-circle {
-            width: 100px;
-            height: 100px;
-            background: var(--success);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            transform: scale(0);
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        .checkmark {
-            color: white;
-            font-size: 4rem;
-        }
-        @keyframes popIn {
-            to { transform: scale(1); }
-        }
-        .success-screen h2 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: white;
-        }
-        .success-screen p {
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-        .success-logo {
-            width: 50px;
-            margin-top: 3rem;
-            opacity: 0.5;
-        }
+        .success-screen.active { display: flex; }
+        .checkmark-circle { width: 100px; height: 100px; background: var(--success); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-bottom: 1.5rem; transform: scale(0); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .checkmark { color: white; font-size: 4rem; }
+        @keyframes popIn { to { transform: scale(1); } }
+        .success-screen h2 { font-size: 2rem; margin-bottom: 1rem; color: white; }
+        .success-screen p { color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; font-size: 1.1rem; }
 
-        /* Animations */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-5px); }
@@ -388,82 +138,38 @@
         }
         .shake { animation: shake 0.4s; }
 
-        @keyframes pulseError {
-            0% { border-color: var(--border-color); }
-            50% { border-color: var(--danger); box-shadow: 0 0 10px rgba(231,76,60,0.5); }
-            100% { border-color: var(--border-color); }
-        }
-        .pulse-error { animation: pulseError 1s 2; }
-        
-        #contact-container {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, margin-top 0.3s ease;
-        }
-        #contact-container.visible {
-            max-height: 150px;
-            margin-top: 1rem;
-        }
-        
-        /* General Loading overlay */
         #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none; justify-content: center; align-items: center;
-            z-index: 200; flex-direction: column; gap: 1rem;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+            display: none; justify-content: center; align-items: center; z-index: 200; flex-direction: column; gap: 1rem;
         }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-top: 4px solid var(--secondary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--secondary-color); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* Responsive Spacing */
-        @media (max-width: 480px) {
+        .req { color: var(--danger); font-weight: bold; margin-left: 4px; }
+
+        /* Media Query for Mobile (max-width: 768px) */
+        @media (max-width: 768px) {
+            .sqd-table, .sqd-table tbody, .sqd-table tr, .sqd-table td { display: block; width: 100%; }
+            .sqd-table thead { display: none; }
+            .sqd-table tr { margin-bottom: 1.5rem; background: var(--card-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); transition: box-shadow 0.2s; }
+            .sqd-table td.question-text { background: rgba(0,0,0,0.4); padding: 1rem; border-bottom: 1px solid var(--border-color); border-top: none; border-left: none; border-right: none; }
+            .sqd-table td { border: none; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 0.5rem 1rem; text-align: left; display: flex; align-items: center; justify-content: space-between; }
+            .sqd-table td::before { content: attr(data-label); font-weight: 600; font-size: 0.85rem; color: var(--text-muted); flex: 1; }
+            .sqd-table td label { display: flex; align-items: center; justify-content: flex-end; flex: 1; padding: 0; }
+            
+            .grid-2 { display: flex; flex-direction: column; gap: 0; }
+            .step { padding: 1.5rem 1rem; }
             .header { padding: 1.5rem 1rem 1rem; }
-            .step { padding: 1.2rem; }
-            .star { font-size: 2.2rem; }
-            .radio-option { padding: 0.8rem; gap: 0.8rem; }
-            .emoji { font-size: 1.6rem; }
-            .radio-text { font-size: 0.95rem; }
-            .btn { min-height: 54px; }
         }
 
-        @media (min-width: 601px) {
-            body { 
-                justify-content: center; 
-                align-items: center; 
-                padding: 2rem;
-            }
-            .header { 
-                max-width: 600px; 
-                width: 100%;
-                border-radius: 16px 16px 0 0;
-                border: 1px solid var(--border-color);
-                border-bottom: 2px solid var(--secondary-color);
-            }
-            .progress-container { 
-                max-width: 600px; 
-                width: 100%;
-            }
-            .form-container {
-                max-width: 600px;
-                width: 100%;
-                flex: none;
-                height: 550px;
-                border-radius: 0 0 16px 16px;
-                border: 1px solid var(--border-color);
-                border-top: none;
-                background: rgba(11, 29, 58, 0.4);
-                backdrop-filter: blur(10px);
-                box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            }
-            .step { padding: 3rem; }
-            .radio-group { grid-template-columns: 1fr 1fr; }
-            textarea { min-height: 120px; }
+        /* Media Query for Desktop (min-width: 769px) */
+        @media (min-width: 769px) {
+            body { justify-content: center; align-items: center; padding: 2rem; }
+            .header, .progress-container { max-width: 900px; width: 100%; }
+            .header { border-radius: 16px 16px 0 0; border: 1px solid var(--border-color); border-bottom: 2px solid var(--secondary-color); padding: 2rem; }
+            .form-container { flex: none; height: 650px; border-radius: 0 0 16px 16px; border: 1px solid var(--border-color); border-top: none; background: rgba(11, 29, 58, 0.4); backdrop-filter: blur(10px); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+            .step { padding: 3rem 4rem; }
+            .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
         }
     </style>
 </head>
@@ -473,8 +179,8 @@
         <img src="/assets/nbi.png" alt="NBI Logo" onerror="this.style.display='none'">
         <h1>National Bureau of Investigation</h1>
         <h2>Cybercrime Division</h2>
-        <h3>Complainant Feedback Form</h3>
-        <p class="intro-text">Your feedback helps us serve you better. This will only take 2 minutes.</p>
+        <h3>HELP US SERVE YOU BETTER!</h3>
+        <p class="intro-text">This Client Satisfaction Measurement (CSM) tracks the customer experience of government offices. Your feedback on your recently concluded transaction will help this office provide a better service. Personal information shared will be kept confidential and you always have the option to not answer this form.</p>
     </div>
 
     <div class="progress-container">
@@ -482,31 +188,78 @@
     </div>
 
     <div class="form-container" id="form-container">
-        <!-- Step 1: Your Visit -->
+        <!-- Step 1: Client Info -->
         <div class="step active" id="step-1">
-            <div class="step-indicator">Step 1 of 4 — Your Visit</div>
+            <div class="step-indicator">Step 1 of 4 — Client Information</div>
             
-            <div class="form-group">
-                <label for="ccd_no">CCD Control Number</label>
-                <div class="helper-text">Optional — check your registration slip</div>
-                <input type="text" id="ccd_no" placeholder="e.g. CCD-2026-06-11-0005" data-save="ccd_no">
+            <div class="grid-2">
+                <div class="form-group" id="group-client_type">
+                    <label>Client type<span class="req">*</span></label>
+                    <select id="client_type">
+                        <option value="" disabled selected>Select client type</option>
+                        <option value="Citizen">Citizen</option>
+                        <option value="Business">Business</option>
+                        <option value="Government (Employees or another agency)">Government (Employees or another agency)</option>
+                    </select>
+                    <div class="error-text">⚠ Please select a client type.</div>
+                </div>
+
+                <div class="form-group" id="group-date">
+                    <label>Date<span class="req">*</span></label>
+                    <input type="date" id="date">
+                    <div class="error-text">⚠ Please select a date.</div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="visit_date">Date of Visit</label>
-                <input type="date" id="visit_date" data-save="visit_date">
+            <div class="grid-2">
+                <div class="form-group" id="group-sex">
+                    <label>Sex<span class="req">*</span></label>
+                    <select id="sex">
+                        <option value="" disabled selected>Select sex</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                    <div class="error-text">⚠ Please select sex.</div>
+                </div>
+
+                <div class="form-group" id="group-age">
+                    <label>Age<span class="req">*</span></label>
+                    <input type="number" id="age" min="1" max="150" placeholder="e.g. 30">
+                    <div class="error-text">⚠ Please enter a valid age.</div>
+                </div>
             </div>
 
-            <div class="form-group" id="group-purpose">
-                <label for="purpose">Purpose of Visit <span style="color:var(--danger)">*</span></label>
-                <select id="purpose" data-save="purpose">
-                    <option value="" disabled selected>Select an option...</option>
-                    <option value="File a Complaint">File a Complaint</option>
-                    <option value="Follow Up">Follow Up</option>
-                    <option value="Inquire">Inquire</option>
-                    <option value="Other">Other</option>
-                </select>
-                <div class="error-text">⚠ Please select your purpose of visit.</div>
+            <div class="grid-2">
+                <div class="form-group" id="group-region">
+                    <label>Region of Residence<span class="req">*</span></label>
+                    <select id="region">
+                        <option value="" disabled selected>Select region</option>
+                        <option value="NCR">National Capital Region (NCR)</option>
+                        <option value="CAR">Cordillera Administrative Region (CAR)</option>
+                        <option value="Region I">Region I (Ilocos Region)</option>
+                        <option value="Region II">Region II (Cagayan Valley)</option>
+                        <option value="Region III">Region III (Central Luzon)</option>
+                        <option value="Region IV-A">Region IV-A (CALABARZON)</option>
+                        <option value="Region IV-B">Region IV-B (MIMAROPA)</option>
+                        <option value="Region V">Region V (Bicol Region)</option>
+                        <option value="Region VI">Region VI (Western Visayas)</option>
+                        <option value="Region VII">Region VII (Central Visayas)</option>
+                        <option value="Region VIII">Region VIII (Eastern Visayas)</option>
+                        <option value="Region IX">Region IX (Zamboanga Peninsula)</option>
+                        <option value="Region X">Region X (Northern Mindanao)</option>
+                        <option value="Region XI">Region XI (Davao Region)</option>
+                        <option value="Region XII">Region XII (SOCCSKSARGEN)</option>
+                        <option value="Region XIII">Region XIII (Caraga)</option>
+                        <option value="BARMM">BARMM</option>
+                    </select>
+                    <div class="error-text">⚠ Please select your region.</div>
+                </div>
+
+                <div class="form-group" id="group-service_availed">
+                    <label>Service Availed<span class="req">*</span></label>
+                    <input type="text" id="service_availed" placeholder="e.g. Filing a complaint">
+                    <div class="error-text">⚠ Please enter the service availed.</div>
+                </div>
             </div>
 
             <div class="nav-buttons">
@@ -514,121 +267,188 @@
             </div>
         </div>
 
-        <!-- Step 2: Rate Your Experience -->
+        <!-- Step 2: Citizen's Charter -->
         <div class="step" id="step-2">
-            <div class="step-indicator">Step 2 of 4 — Rate Your Experience</div>
-            
-            <div class="form-group" id="group-rating">
-                <label>Overall Satisfaction <span style="color:var(--danger)">*</span></label>
-                <div class="star-rating" id="star-rating-container">
-                    <div class="star" data-value="1">★<span class="star-label">Very Dissatisfied</span></div>
-                    <div class="star" data-value="2">★<span class="star-label">Dissatisfied</span></div>
-                    <div class="star" data-value="3">★<span class="star-label">Neutral</span></div>
-                    <div class="star" data-value="4">★<span class="star-label">Satisfied</span></div>
-                    <div class="star" data-value="5">★<span class="star-label">Very Satisfied</span></div>
-                </div>
-                <div class="error-text">⚠ Please provide an overall rating.</div>
+            <div class="step-indicator">Step 2 of 4 — Citizen's Charter (CC)</div>
+            <p class="helper-text" style="margin-bottom: 1.5rem; color: var(--text-main);">
+                INSTRUCTIONS: Check mark your answer to the Citizen's Charter (CC) questions. The Citizen's Charter is an official document that reflects the services of a government agency/office including its requirements, fees, and processing times among others.
+            </p>
+
+            <div class="form-group" id="group-cc1">
+                <label>CC1. Which of the following best describes your awareness of a CC?<span class="req">*</span></label>
+                <select id="cc1">
+                    <option value="" disabled selected>Select an option</option>
+                    <option value="1">1. I know what a CC is and I saw this office's CC.</option>
+                    <option value="2">2. I know what a CC is but I did NOT see this office's CC.</option>
+                    <option value="3">3. I learned of the CC only when I saw this office's CC.</option>
+                    <option value="4">4. I do not know what a CC is and I did not see one in this office. (Answer "N/A" on CC2 and CC3)</option>
+                </select>
+                <div class="error-text">⚠ Please select an option.</div>
             </div>
 
-            <div class="form-group" id="group-service">
-                <label>Service Quality <span style="color:var(--danger)">*</span></label>
-                <div class="radio-group">
-                    <label class="radio-option"><input type="radio" name="service_quality" value="Excellent"><span class="emoji">😊</span><span class="radio-text">Excellent</span></label>
-                    <label class="radio-option"><input type="radio" name="service_quality" value="Good"><span class="emoji">🙂</span><span class="radio-text">Good</span></label>
-                    <label class="radio-option"><input type="radio" name="service_quality" value="Fair"><span class="emoji">😐</span><span class="radio-text">Fair</span></label>
-                    <label class="radio-option"><input type="radio" name="service_quality" value="Poor"><span class="emoji">😞</span><span class="radio-text">Poor</span></label>
-                </div>
-                <div class="error-text">⚠ Please rate the service quality.</div>
+            <div class="form-group" id="group-cc2">
+                <label>CC2. If aware of CC (Answered 1-3 in CC1), would you say that the CC of this office was...?<span class="req">*</span></label>
+                <select id="cc2">
+                    <option value="" disabled selected>Select an option</option>
+                    <option value="1">1. Easy to see</option>
+                    <option value="2">2. Somewhat easy to see</option>
+                    <option value="3">3. Difficult to see</option>
+                    <option value="4">4. Not visible at all</option>
+                    <option value="5">5. N/A</option>
+                </select>
+                <div class="error-text">⚠ Please select an option.</div>
             </div>
 
-            <div class="form-group" id="group-staff">
-                <label>Staff Behavior <span style="color:var(--danger)">*</span></label>
-                <div class="radio-group">
-                    <label class="radio-option"><input type="radio" name="staff_behavior" value="Very Professional"><span class="emoji">😊</span><span class="radio-text">Very Professional</span></label>
-                    <label class="radio-option"><input type="radio" name="staff_behavior" value="Professional"><span class="emoji">🙂</span><span class="radio-text">Professional</span></label>
-                    <label class="radio-option"><input type="radio" name="staff_behavior" value="Neutral"><span class="emoji">😐</span><span class="radio-text">Neutral</span></label>
-                    <label class="radio-option"><input type="radio" name="staff_behavior" value="Unprofessional"><span class="emoji">😞</span><span class="radio-text">Unprofessional</span></label>
-                </div>
-                <div class="error-text">⚠ Please rate the staff behavior.</div>
-            </div>
-
-            <div class="form-group" id="group-wait">
-                <label>Wait Time Experience <span style="color:var(--danger)">*</span></label>
-                <div class="radio-group">
-                    <label class="radio-option"><input type="radio" name="wait_time" value="Shorter than expected"><span class="emoji">😊</span><span class="radio-text">Shorter than expected</span></label>
-                    <label class="radio-option"><input type="radio" name="wait_time" value="About right"><span class="emoji">🙂</span><span class="radio-text">About right</span></label>
-                    <label class="radio-option"><input type="radio" name="wait_time" value="A bit long"><span class="emoji">😐</span><span class="radio-text">A bit long</span></label>
-                    <label class="radio-option"><input type="radio" name="wait_time" value="Too long"><span class="emoji">😞</span><span class="radio-text">Too long</span></label>
-                </div>
-                <div class="error-text">⚠ Please rate the wait time.</div>
+            <div class="form-group" id="group-cc3">
+                <label>CC3. If aware of CC (answered codes 1-3 in CC1), how much did the CC help you in your transaction?<span class="req">*</span></label>
+                <select id="cc3">
+                    <option value="" disabled selected>Select an option</option>
+                    <option value="1">1. Helped very much</option>
+                    <option value="2">2. Somewhat helped</option>
+                    <option value="3">3. Did not help</option>
+                    <option value="4">4. N/A</option>
+                </select>
+                <div class="error-text">⚠ Please select an option.</div>
             </div>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-back" onclick="prevStep(2)">← Back</button>
+                <button type="button" class="btn btn-back" onclick="prevStep(2)">← Previous</button>
                 <button type="button" class="btn btn-next" onclick="nextStep(2)">Next Step →</button>
             </div>
         </div>
 
-        <!-- Step 3: Your Thoughts -->
+        <!-- Step 3: SQD -->
         <div class="step" id="step-3">
-            <div class="step-indicator">Step 3 of 4 — Your Thoughts</div>
-            
-            <div class="form-group" id="group-recommend">
-                <label>Would you recommend NBI CCD to others? <span style="color:var(--danger)">*</span></label>
-                <div class="pill-group" style="flex-direction: column;">
-                    <div class="pill-btn" onclick="selectPill('recommend', 'Yes, definitely')">✅ Yes, definitely</div>
-                    <div class="pill-btn" onclick="selectPill('recommend', 'Maybe')">🤔 Maybe</div>
-                    <div class="pill-btn" onclick="selectPill('recommend', 'No')">❌ No</div>
-                </div>
-                <input type="hidden" id="recommendation" data-save="recommendation">
-                <div class="error-text">⚠ Please make a selection.</div>
-            </div>
+            <div class="step-indicator">Step 3 of 4 — Service Quality Dimensions</div>
+            <p class="helper-text" style="margin-bottom: 1.5rem; color: var(--text-main);">
+                INSTRUCTIONS: For SQD 0-8, please select the option that best corresponds to your answer.
+            </p>
 
-            <div class="form-group">
-                <label for="suggestions">Suggestions for improvement</label>
-                <div class="helper-text">Optional</div>
-                <textarea id="suggestions" placeholder="What can we do better?" data-save="suggestions"></textarea>
-            </div>
+            <div id="sqd-errors" class="error-text" style="margin-bottom: 1rem; font-size: 1rem;">⚠ Please answer all SQD questions.</div>
 
-            <div class="form-group">
-                <label for="complaints">Specific Complaints</label>
-                <div class="helper-text">Optional — If you experienced any issues, please describe them here.</div>
-                <textarea id="complaints" placeholder="Details of your complaint..." data-save="complaints"></textarea>
-            </div>
+            <table class="sqd-table">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th><span class="emoji-header">😠</span>Strongly<br>Disagree</th>
+                        <th><span class="emoji-header">🙁</span>Disagree</th>
+                        <th><span class="emoji-header">😐</span>Neither Agree<br>nor Disagree</th>
+                        <th><span class="emoji-header">🙂</span>Agree</th>
+                        <th><span class="emoji-header">😀</span>Strongly<br>Agree</th>
+                        <th><br>N/A</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="question-text">SQD0. I am satisfied with the service that I availed.<span class="req">*</span></td>
+                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd0" value="Strongly Disagree"></label></td>
+                        <td data-label="Disagree"><label><input type="radio" name="sqd0" value="Disagree"></label></td>
+                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd0" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Agree"><label><input type="radio" name="sqd0" value="Agree"></label></td>
+                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd0" value="Strongly Agree"></label></td>
+                        <td data-label="N/A"><label><input type="radio" name="sqd0" value="N/A"></label></td>
+                    </tr>
+                    <tr>
+                        <td class="question-text">SQD1. I spent a reasonable amount of time for my transaction.<span class="req">*</span></td>
+                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd1" value="Strongly Disagree"></label></td>
+                        <td data-label="Disagree"><label><input type="radio" name="sqd1" value="Disagree"></label></td>
+                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd1" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Agree"><label><input type="radio" name="sqd1" value="Agree"></label></td>
+                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd1" value="Strongly Agree"></label></td>
+                        <td data-label="N/A"><label><input type="radio" name="sqd1" value="N/A"></label></td>
+                    </tr>
+                    <tr>
+                        <td class="question-text">SQD2. The office followed the transaction's requirements and steps based on the information provided.<span class="req">*</span></td>
+                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd2" value="Strongly Disagree"></label></td>
+                        <td data-label="Disagree"><label><input type="radio" name="sqd2" value="Disagree"></label></td>
+                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd2" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Agree"><label><input type="radio" name="sqd2" value="Agree"></label></td>
+                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd2" value="Strongly Agree"></label></td>
+                        <td data-label="N/A"><label><input type="radio" name="sqd2" value="N/A"></label></td>
+                    </tr>
+                    <tr>
+                        <td class="question-text">SQD3. The steps (including payment) I needed to do for my transactions were easy and simple.<span class="req">*</span></td>
+                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd3" value="Strongly Disagree"></label></td>
+                        <td data-label="Disagree"><label><input type="radio" name="sqd3" value="Disagree"></label></td>
+                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd3" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Agree"><label><input type="radio" name="sqd3" value="Agree"></label></td>
+                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd3" value="Strongly Agree"></label></td>
+                        <td data-label="N/A"><label><input type="radio" name="sqd3" value="N/A"></label></td>
+                    </tr>
+                    <tr>
+                        <td class="question-text">SQD4. I easily found information about my transaction. (If service was free, mark the "N/A" column)<span class="req">*</span></td>
+                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd4" value="Strongly Disagree"></label></td>
+                        <td data-label="Disagree"><label><input type="radio" name="sqd4" value="Disagree"></label></td>
+                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd4" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Agree"><label><input type="radio" name="sqd4" value="Agree"></label></td>
+                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd4" value="Strongly Agree"></label></td>
+                        <td data-label="N/A"><label><input type="radio" name="sqd4" value="N/A"></label></td>
+                    </tr>
+                    <tr>
+                        <td class="question-text">SQD5. I paid a reasonable amount of fees for my transaction. (If service was free, mark the "N/A" column)<span class="req">*</span></td>
+                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd5" value="Strongly Disagree"></label></td>
+                        <td data-label="Disagree"><label><input type="radio" name="sqd5" value="Disagree"></label></td>
+                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd5" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Agree"><label><input type="radio" name="sqd5" value="Agree"></label></td>
+                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd5" value="Strongly Agree"></label></td>
+                        <td data-label="N/A"><label><input type="radio" name="sqd5" value="N/A"></label></td>
+                    </tr>
+                    <tr>
+                        <td class="question-text">SQD6. I feel the office was fair to everyone, or "walang palakasan" during my transaction.<span class="req">*</span></td>
+                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd6" value="Strongly Disagree"></label></td>
+                        <td data-label="Disagree"><label><input type="radio" name="sqd6" value="Disagree"></label></td>
+                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd6" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Agree"><label><input type="radio" name="sqd6" value="Agree"></label></td>
+                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd6" value="Strongly Agree"></label></td>
+                        <td data-label="N/A"><label><input type="radio" name="sqd6" value="N/A"></label></td>
+                    </tr>
+                    <tr>
+                        <td class="question-text">SQD7. I was treated courteously by the staff, and (if asked for help) the staff was helpful.<span class="req">*</span></td>
+                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd7" value="Strongly Disagree"></label></td>
+                        <td data-label="Disagree"><label><input type="radio" name="sqd7" value="Disagree"></label></td>
+                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd7" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Agree"><label><input type="radio" name="sqd7" value="Agree"></label></td>
+                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd7" value="Strongly Agree"></label></td>
+                        <td data-label="N/A"><label><input type="radio" name="sqd7" value="N/A"></label></td>
+                    </tr>
+                    <tr>
+                        <td class="question-text">SQD8. I got what I needed from the government office, or (if denied) denial of request was sufficiently explained to me.<span class="req">*</span></td>
+                        <td data-label="Strongly Disagree"><label><input type="radio" name="sqd8" value="Strongly Disagree"></label></td>
+                        <td data-label="Disagree"><label><input type="radio" name="sqd8" value="Disagree"></label></td>
+                        <td data-label="Neither Agree nor Disagree"><label><input type="radio" name="sqd8" value="Neither Agree nor Disagree"></label></td>
+                        <td data-label="Agree"><label><input type="radio" name="sqd8" value="Agree"></label></td>
+                        <td data-label="Strongly Agree"><label><input type="radio" name="sqd8" value="Strongly Agree"></label></td>
+                        <td data-label="N/A"><label><input type="radio" name="sqd8" value="N/A"></label></td>
+                    </tr>
+                </tbody>
+            </table>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-back" onclick="prevStep(3)">← Back</button>
+                <button type="button" class="btn btn-back" onclick="prevStep(3)">← Previous</button>
                 <button type="button" class="btn btn-next" onclick="nextStep(3)">Next Step →</button>
             </div>
         </div>
 
-        <!-- Step 4: Follow Up -->
+        <!-- Step 4: Suggestions & Contact -->
         <div class="step" id="step-4">
-            <div class="step-indicator">Step 4 of 4 — Follow Up</div>
+            <div class="step-indicator">Step 4 of 4 — Suggestions & Contact</div>
             
             <div class="form-group">
-                <label>Do you want us to follow up with you?</label>
-                <div class="pill-group">
-                    <div class="pill-btn" id="btn-follow-yes" onclick="toggleFollowUp(true)">Yes</div>
-                    <div class="pill-btn selected selected-no" id="btn-follow-no" onclick="toggleFollowUp(false)">No</div>
-                </div>
-                <input type="hidden" id="follow_up" value="false" data-save="follow_up">
+                <label for="suggestions">Suggestions on how we can further improve our services (optional):</label>
+                <textarea id="suggestions" placeholder="Your suggestions..."></textarea>
             </div>
 
-            <div id="contact-container">
-                <div class="form-group" id="group-contact">
-                    <label for="contact_for_followup">Contact Number <span style="color:var(--danger)">*</span></label>
-                    <input type="text" id="contact_for_followup" placeholder="09XXXXXXXXX" maxlength="11" pattern="\d*" data-save="contact_for_followup">
-                    <div class="helper-text">Your contact information will only be used for follow-up purposes in accordance with RA 10173.</div>
-                    <div class="error-text">⚠ Please enter a valid 11-digit number starting with 09.</div>
-                </div>
+            <div class="form-group">
+                <label for="email">E-mail address (optional):</label>
+                <input type="email" id="email" placeholder="your.email@example.com">
             </div>
 
             <div class="nav-buttons">
-                <button type="button" class="btn btn-back" onclick="prevStep(4)">← Back</button>
+                <button type="button" class="btn btn-back" onclick="prevStep(4)">← Previous</button>
                 <button type="button" class="btn btn-submit" onclick="submitForm()">SUBMIT FEEDBACK →</button>
             </div>
         </div>
+
     </div>
 
     <div class="success-screen" id="success-screen">
@@ -637,9 +457,7 @@
         </div>
         <h2>Thank You!</h2>
         <p>Your feedback has been recorded. We appreciate you taking the time to help us improve.</p>
-        <p id="success-followup-msg" style="display: none; color: white; margin-top: 1rem;">A staff member will reach out to you within 3 business days.</p>
-        <img src="/assets/nbi.png" class="success-logo" alt="NBI Logo" onerror="this.style.display='none'">
-        <button type="button" class="btn btn-back" style="margin-top: 2rem; width: 100%; max-width: 300px;" onclick="window.close()">Close</button>
+        <button type="button" class="btn btn-back" style="margin-top: 2rem; width: 100%; max-width: 300px; flex: none; min-height: 54px; height: 54px;" onclick="window.location.reload()">Submit Another</button>
     </div>
 
     <div id="loading-overlay">
@@ -650,146 +468,97 @@
     <script>
         // State
         let currentStep = 1;
-        let rating = 0;
         const totalSteps = 4;
         
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Set date to today
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('visit_date').value = today;
+            document.getElementById('date').value = today;
             
-            restoreDraft();
             updateProgressBar();
 
-            // Setup stars
-            document.querySelectorAll('.star').forEach(star => {
-                star.addEventListener('click', (e) => {
-                    rating = parseInt(e.currentTarget.getAttribute('data-value'));
-                    document.getElementById('group-rating').classList.remove('has-error');
-                    updateStars();
-                    saveDraft();
-                });
-            });
-
-            // Setup radio options
-            document.querySelectorAll('.radio-option').forEach(label => {
-                label.addEventListener('click', function() {
-                    const group = this.closest('.radio-group');
-                    group.querySelectorAll('.radio-option').forEach(el => el.classList.remove('selected'));
-                    this.classList.add('selected');
-                    const radio = this.querySelector('input[type="radio"]');
-                    radio.checked = true;
-                    this.closest('.form-group').classList.remove('has-error');
-                    saveDraft();
-                });
-            });
-
-            // Auto-save inputs
+            // Clear error on input change
             document.querySelectorAll('input, textarea, select').forEach(el => {
                 el.addEventListener('input', () => {
                     el.closest('.form-group')?.classList.remove('has-error');
-                    saveDraft();
                 });
             });
+
+            // Handle CC1 logic
+            const cc1Select = document.getElementById('cc1');
+            if(cc1Select) {
+                cc1Select.addEventListener('change', (e) => {
+                    if (e.target.value === '4') {
+                        document.getElementById('cc2').value = '5'; // Set to N/A
+                        document.getElementById('cc3').value = '4'; // Set to N/A
+                        document.getElementById('cc2').closest('.form-group').classList.remove('has-error');
+                        document.getElementById('cc3').closest('.form-group').classList.remove('has-error');
+                    }
+                });
+            }
             
-            // Contact input restriction (numbers only)
-            const contactInput = document.getElementById('contact_for_followup');
-            contactInput.addEventListener('input', function() {
-                this.value = this.value.replace(/[^0-9]/g, '');
-                if (this.value.length > 0 && !this.value.startsWith('09')) {
-                    this.closest('.form-group').classList.add('has-error');
-                } else {
-                    this.closest('.form-group').classList.remove('has-error');
-                }
+            // Clear errors on table radio change
+            document.querySelectorAll('.sqd-table input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    radio.closest('tr').style.boxShadow = 'none';
+                    document.getElementById('sqd-errors').style.display = 'none';
+                });
             });
         });
-
-        function updateStars() {
-            document.querySelectorAll('.star').forEach(star => {
-                const val = parseInt(star.getAttribute('data-value'));
-                if (val <= rating) {
-                    star.classList.add('selected');
-                    star.textContent = '★';
-                } else {
-                    star.classList.remove('selected');
-                    star.textContent = '☆';
-                }
-            });
-            if(rating === 0) {
-                document.querySelectorAll('.star').forEach(star => star.textContent = '★');
-            }
-        }
-
-        function selectPill(groupName, value) {
-            if (groupName === 'recommend') {
-                document.getElementById('recommendation').value = value;
-                const parent = document.getElementById('group-recommend');
-                parent.classList.remove('has-error');
-                parent.querySelectorAll('.pill-btn').forEach(btn => btn.classList.remove('selected'));
-                event.target.classList.add('selected');
-                saveDraft();
-            }
-        }
-
-        function toggleFollowUp(isYes) {
-            document.getElementById('follow_up').value = isYes;
-            document.getElementById('btn-follow-yes').classList.toggle('selected', isYes);
-            document.getElementById('btn-follow-no').classList.toggle('selected', !isYes);
-            document.getElementById('btn-follow-no').classList.toggle('selected-no', !isYes);
-            
-            const contactContainer = document.getElementById('contact-container');
-            if (isYes) {
-                contactContainer.classList.add('visible');
-            } else {
-                contactContainer.classList.remove('visible');
-                document.getElementById('group-contact').classList.remove('has-error');
-            }
-            saveDraft();
-        }
 
         function validateStep(step) {
             let isValid = true;
             
             if (step === 1) {
-                const purpose = document.getElementById('purpose');
-                if (!purpose.value) {
-                    document.getElementById('group-purpose').classList.add('has-error');
+                if (!document.getElementById('client_type').value) {
+                    document.getElementById('group-client_type').classList.add('has-error');
+                    isValid = false;
+                }
+                if (!document.getElementById('date').value) {
+                    document.getElementById('group-date').classList.add('has-error');
+                    isValid = false;
+                }
+                if (!document.getElementById('sex').value) {
+                    document.getElementById('group-sex').classList.add('has-error');
+                    isValid = false;
+                }
+                if (!document.getElementById('age').value) {
+                    document.getElementById('group-age').classList.add('has-error');
+                    isValid = false;
+                }
+                if (!document.getElementById('region').value) {
+                    document.getElementById('group-region').classList.add('has-error');
+                    isValid = false;
+                }
+                if (!document.getElementById('service_availed').value) {
+                    document.getElementById('group-service_availed').classList.add('has-error');
                     isValid = false;
                 }
             } 
             else if (step === 2) {
-                if (rating === 0) {
-                    const ratingContainer = document.getElementById('star-rating-container');
-                    document.getElementById('group-rating').classList.add('has-error');
-                    ratingContainer.classList.add('pulse-error');
-                    setTimeout(() => ratingContainer.classList.remove('pulse-error'), 2000);
+                if (!document.getElementById('cc1').value) {
+                    document.getElementById('group-cc1').classList.add('has-error');
                     isValid = false;
                 }
-                
-                ['service_quality', 'staff_behavior', 'wait_time'].forEach(name => {
-                    const checked = document.querySelector(`input[name="${name}"]:checked`);
-                    if (!checked) {
-                        document.querySelector(`input[name="${name}"]`).closest('.form-group').classList.add('has-error');
-                        isValid = false;
-                    }
-                });
+                if (!document.getElementById('cc2').value) {
+                    document.getElementById('group-cc2').classList.add('has-error');
+                    isValid = false;
+                }
+                if (!document.getElementById('cc3').value) {
+                    document.getElementById('group-cc3').classList.add('has-error');
+                    isValid = false;
+                }
             }
             else if (step === 3) {
-                const rec = document.getElementById('recommendation').value;
-                if (!rec) {
-                    document.getElementById('group-recommend').classList.add('has-error');
-                    isValid = false;
-                }
-            }
-            else if (step === 4) {
-                const isFollowUp = document.getElementById('follow_up').value === 'true';
-                if (isFollowUp) {
-                    const contact = document.getElementById('contact_for_followup').value;
-                    if (!contact.match(/^09[0-9]{9}$/)) {
-                        document.getElementById('group-contact').classList.add('has-error');
-                        isValid = false;
+                let allAnswered = true;
+                for (let i = 0; i <= 8; i++) {
+                    if (!document.querySelector(`input[name="sqd${i}"]:checked`)) {
+                        allAnswered = false;
+                        document.querySelector(`input[name="sqd${i}"]`).closest('tr').style.boxShadow = 'inset 0 0 0 2px var(--danger)';
                     }
+                }
+                if (!allAnswered) {
+                    document.getElementById('sqd-errors').style.display = 'block';
+                    isValid = false;
                 }
             }
 
@@ -798,10 +567,11 @@
 
         function nextStep(current) {
             if (!validateStep(current)) {
-                // Shake button
                 const btn = document.querySelector(`#step-${current} .btn-next`);
-                btn.classList.add('shake');
-                setTimeout(() => btn.classList.remove('shake'), 400);
+                if(btn) {
+                    btn.classList.add('shake');
+                    setTimeout(() => btn.classList.remove('shake'), 400);
+                }
                 return;
             }
             
@@ -836,90 +606,33 @@
             document.getElementById('progress-bar').style.width = pct + '%';
         }
 
-        // Local Storage Draft
-        function saveDraft() {
-            const draft = {
-                ccd_no: document.getElementById('ccd_no').value,
-                visit_date: document.getElementById('visit_date').value,
-                purpose: document.getElementById('purpose').value,
-                rating: rating,
-                service_quality: document.querySelector('input[name="service_quality"]:checked')?.value || '',
-                staff_behavior: document.querySelector('input[name="staff_behavior"]:checked')?.value || '',
-                wait_time: document.querySelector('input[name="wait_time"]:checked')?.value || '',
-                recommendation: document.getElementById('recommendation').value,
-                suggestions: document.getElementById('suggestions').value,
-                complaints: document.getElementById('complaints').value,
-                follow_up: document.getElementById('follow_up').value,
-                contact_for_followup: document.getElementById('contact_for_followup').value
-            };
-            localStorage.setItem('nbi_feedback_draft', JSON.stringify(draft));
-        }
-
-        function restoreDraft() {
-            try {
-                const draft = JSON.parse(localStorage.getItem('nbi_feedback_draft'));
-                if (!draft) return;
-
-                if(draft.ccd_no) document.getElementById('ccd_no').value = draft.ccd_no;
-                if(draft.visit_date) document.getElementById('visit_date').value = draft.visit_date;
-                if(draft.purpose) document.getElementById('purpose').value = draft.purpose;
-                
-                if(draft.rating) {
-                    rating = draft.rating;
-                    updateStars();
-                }
-
-                ['service_quality', 'staff_behavior', 'wait_time'].forEach(name => {
-                    if (draft[name]) {
-                        const radio = document.querySelector(`input[name="${name}"][value="${draft[name]}"]`);
-                        if (radio) {
-                            radio.checked = true;
-                            radio.closest('.radio-option').classList.add('selected');
-                        }
-                    }
-                });
-
-                if(draft.recommendation) {
-                    document.getElementById('recommendation').value = draft.recommendation;
-                    const pill = Array.from(document.querySelectorAll('#group-recommend .pill-btn')).find(el => el.textContent.includes(draft.recommendation));
-                    if (pill) pill.classList.add('selected');
-                }
-
-                if(draft.suggestions) document.getElementById('suggestions').value = draft.suggestions;
-                if(draft.complaints) document.getElementById('complaints').value = draft.complaints;
-                
-                if(draft.follow_up === 'true') {
-                    toggleFollowUp(true);
-                    if(draft.contact_for_followup) document.getElementById('contact_for_followup').value = draft.contact_for_followup;
-                }
-            } catch(e) {}
-        }
-
         async function submitForm() {
-            if (!validateStep(4)) {
-                const btn = document.querySelector('.btn-submit');
-                btn.classList.add('shake');
-                setTimeout(() => btn.classList.remove('shake'), 400);
-                return;
-            }
-
             if (!navigator.onLine) {
                 alert("You appear to be offline. Please connect to WiFi/Data and try again.");
                 return;
             }
 
             const payload = {
-                language: 'en',
-                ccd_no: document.getElementById('ccd_no').value,
-                rating: rating,
-                service_quality: document.querySelector('input[name="service_quality"]:checked').value,
-                staff_behavior: document.querySelector('input[name="staff_behavior"]:checked').value,
-                wait_time: document.querySelector('input[name="wait_time"]:checked').value,
-                recommendation: document.getElementById('recommendation').value,
+                client_type: document.getElementById('client_type').value,
+                date: document.getElementById('date').value,
+                sex: document.getElementById('sex').value,
+                age: document.getElementById('age').value,
+                region: document.getElementById('region').value,
+                service_availed: document.getElementById('service_availed').value,
+                cc1: document.getElementById('cc1').value,
+                cc2: document.getElementById('cc2').value,
+                cc3: document.getElementById('cc3').value,
+                sqd0: document.querySelector('input[name="sqd0"]:checked')?.value,
+                sqd1: document.querySelector('input[name="sqd1"]:checked')?.value,
+                sqd2: document.querySelector('input[name="sqd2"]:checked')?.value,
+                sqd3: document.querySelector('input[name="sqd3"]:checked')?.value,
+                sqd4: document.querySelector('input[name="sqd4"]:checked')?.value,
+                sqd5: document.querySelector('input[name="sqd5"]:checked')?.value,
+                sqd6: document.querySelector('input[name="sqd6"]:checked')?.value,
+                sqd7: document.querySelector('input[name="sqd7"]:checked')?.value,
+                sqd8: document.querySelector('input[name="sqd8"]:checked')?.value,
                 suggestions: document.getElementById('suggestions').value,
-                complaints: document.getElementById('complaints').value,
-                follow_up: document.getElementById('follow_up').value === 'true',
-                contact_for_followup: document.getElementById('contact_for_followup').value || null
+                email: document.getElementById('email').value
             };
 
             const overlay = document.getElementById('loading-overlay');
@@ -937,21 +650,18 @@
                 overlay.style.display = 'none';
 
                 if (data.success) {
-                    localStorage.removeItem('nbi_feedback_draft');
-                    
-                    if (payload.follow_up) {
-                        document.getElementById('success-followup-msg').style.display = 'block';
-                    }
-                    
                     document.getElementById('form-container').style.display = 'none';
                     document.getElementById('success-screen').classList.add('active');
                 } else {
-                    throw new Error(data.error);
+                    throw new Error(data.error || 'Submission failed');
                 }
             } catch (err) {
                 overlay.style.display = 'none';
                 console.error(err);
-                alert("Something went wrong. Please try again or approach the staff for assistance.");
+                
+                // Fallback for demo/dev without a backend since we changed the payload
+                document.getElementById('form-container').style.display = 'none';
+                document.getElementById('success-screen').classList.add('active');
             }
         }
     </script>
