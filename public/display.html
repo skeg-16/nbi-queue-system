@@ -242,19 +242,23 @@
         function loadAndSelectVoices() {
             loadVoicesAsync().then(function (v) {
                 voices = v;
-                if (voices.length === 0) return;
-
-                filipinoVoice = voices.find(function (v) { return v.lang.startsWith('fil') || v.lang.startsWith('tl'); });
-                selectedVoice = getBestVoice(voices);
+                // We add our own Custom Cloud Voice at the very top!
+                const cloudVoice = {
+                    name: 'Google Cloud Voice (Highly Recommended)',
+                    lang: 'tl-PH',
+                    voiceURI: 'cloud_tts',
+                    isCloud: true
+                };
+                
+                voices.unshift(cloudVoice);
+                selectedVoice = cloudVoice; // default to cloud voice
 
                 // Send voices to server so staff can see them!
                 const simpleVoices = voices.map(voice => ({ name: voice.name, lang: voice.lang, voiceURI: voice.voiceURI }));
                 socket.emit('register_display_voices', simpleVoices);
                 
                 // Tell staff what the actual selected default voice is
-                if (selectedVoice) {
-                    socket.emit('update_voice_settings', { voiceURI: selectedVoice.voiceURI });
-                }
+                socket.emit('update_voice_settings', { voiceURI: selectedVoice.voiceURI });
             });
         }
         
@@ -323,38 +327,67 @@
                 sfxBefore.onended = null; // FIX: Prevent double firing from previous play requests
 
                 var parts = [];
-
                 var nameText = complainantName ? ", " + complainantName + ", " : ", ";
+                
+                var fullText = "";
 
                 if (isPriority) {
                     if (useFilipino) {
-                        parts.push({ text: "Priority number " + num + nameText + "handa na po ang counter 1 para sa inyo.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        fullText = "Priority number " + num + nameText + "handa na po ang counter 1 para sa inyo.";
+                        parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        parts.push({ text: "Priority number " + num + nameText + "Please proceed to the designated area.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        fullText = "Priority number " + num + nameText + "Please proceed to the designated area.";
+                        parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 } else {
                     if (useFilipino) {
-                        parts.push({ text: "Number " + num + nameText + "handa na po ang counter 1 para sa inyo.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        fullText = "Number " + num + nameText + "handa na po ang counter 1 para sa inyo.";
+                        parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        parts.push({ text: "Number " + num + nameText + "Please proceed to the designated area.", rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
+                        fullText = "Number " + num + nameText + "Please proceed to the designated area.";
+                        parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 }
 
                 // Play SFX Before, then speak
                 sfxBefore.onended = function () {
-                    setTimeout(function() { speakParts(parts, 0); }, 50);
+                    setTimeout(function() { 
+                        if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
+                            // Use Google Cloud Proxy
+                            const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
+                            const cloudAudio = new Audio(audioUrl);
+                            cloudAudio.play().catch(e => console.error("Cloud TTS Play Error:", e));
+                        } else {
+                            // Use Local Speech Synthesis
+                            speakParts(parts, 0); 
+                        }
+                    }, 50);
                 };
 
                 var playPromise = sfxBefore.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(e => {
                         console.log('SFX before error:', e);
-                        setTimeout(function() { speakParts(parts, 0); }, 50);
+                        setTimeout(function() { 
+                            if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
+                                const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
+                                new Audio(audioUrl).play().catch(e=>console.log(e));
+                            } else {
+                                speakParts(parts, 0); 
+                            }
+                        }, 50);
                     });
                 } else {
                     // For very old browsers
                     sfxBefore.onended = function () {
-                        setTimeout(function() { speakParts(parts, 0); }, 50);
+                        setTimeout(function() { 
+                            if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
+                                const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
+                                new Audio(audioUrl).play().catch(e=>console.log(e));
+                            } else {
+                                speakParts(parts, 0); 
+                            }
+                        }, 50);
                     };
                 }
 

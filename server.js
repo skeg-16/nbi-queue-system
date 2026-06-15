@@ -338,6 +338,35 @@ app.get('/api/ping', (req, res) => {
     });
 });
 
+// Google TTS Proxy Endpoint
+app.get('/api/tts', async (req, res) => {
+    try {
+        const text = req.query.text;
+        const lang = req.query.lang || 'tl'; // Default to Filipino/Tagalog
+        if (!text) return res.status(400).send('Text is required');
+
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${lang}&client=tw-ob`;
+        
+        // Use dynamic import for node-fetch if using Node 16+, or native fetch in Node 18+
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+            }
+        });
+
+        if (!response.ok) throw new Error(`Google TTS returned ${response.status}`);
+        
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+        
+        const buffer = await response.arrayBuffer();
+        res.send(Buffer.from(buffer));
+    } catch (err) {
+        console.error("TTS Proxy Error:", err);
+        res.status(500).send('TTS Generation failed');
+    }
+});
+
 
 async function broadcastStaffUpdate() {
     const todayStr = getTodayDateStr();
