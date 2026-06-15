@@ -131,6 +131,15 @@
         socket.on('voice_settings_update', (settings) => {
             currentLang = settings.lang || 'en';
             currentRate = settings.rate || 0.85;
+            
+            if (settings.voiceURI && voices.length > 0) {
+                var match = voices.find(function(v) { return v.voiceURI === settings.voiceURI; });
+                if (match) {
+                    selectedVoice = match;
+                }
+            } else if (!settings.voiceURI && voices.length > 0) {
+                selectedVoice = getBestVoice(voices); // revert to system choice
+            }
         });
 
         socket.on('trigger_test_voice_display', () => {
