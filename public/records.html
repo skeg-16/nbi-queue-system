@@ -737,9 +737,9 @@ updateLedgerDateDisplay = function() {
         function applyGlobalColorsToGrid() {
             const colors = getGlobalColors();
             // Apply to all select elements in the grid
-            const selects = document.querySelectorAll('.excel-grid select, .status-badge');
+            const selects = document.querySelectorAll('.excel-grid select, .excel-grid .status-badge');
             selects.forEach(select => {
-                const val = select.value;
+                const val = select.tagName === 'SELECT' ? select.options[select.selectedIndex].text.trim() : (select.value || select.innerText).trim();
                 if (colors[val]) {
                     select.style.backgroundColor = colors[val].bg;
                     select.style.color = colors[val].txt;
