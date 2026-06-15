@@ -966,7 +966,7 @@ function pasteTextIntoCells(text, startCell) {
 
 // Global Document Clipboard Events
 document.addEventListener('copy', function(e) {
-    if (activeCellElements && activeCellElements.length > 0 && !document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+    if (activeCellElements && activeCellElements.length > 0 && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
         const text = getSelectedCellsText();
         e.clipboardData.setData('text/plain', text);
         e.preventDefault();
@@ -979,7 +979,7 @@ document.addEventListener('copy', function(e) {
 });
 
 document.addEventListener('cut', function(e) {
-    if (activeCellElements && activeCellElements.length > 0 && !document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+    if (activeCellElements && activeCellElements.length > 0 && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
         const text = getSelectedCellsText();
         e.clipboardData.setData('text/plain', text);
         e.preventDefault();
@@ -992,27 +992,35 @@ document.addEventListener('cut', function(e) {
 });
 
 document.addEventListener('paste', function(e) {
-    if (activeCellElement && !document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+    if (activeCellElement && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
         e.preventDefault();
         const text = (e.clipboardData || window.clipboardData).getData('text');
         if (text) {
-            pasteTextIntoCells(text, activeCellElement);
-            showToast("Pasted from clipboard!", false, "success");
-            document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
-            
-            if (pendingCutCells) {
-                pendingCutCells.forEach(td => {
-                    const input = td.querySelector('input, select, textarea');
-                    if(input) {
-                        input.value = '';
-                    } else {
-                        td.innerText = '';
-                    }
-                    td.style.backgroundColor = '';
-                    saveCell(td);
-                });
-                pendingCutCells.forEach(c => c.classList.remove('cut-cell'));
-                pendingCutCells = null;
+            try {
+                pasteTextIntoCells(text, activeCellElement);
+                let snippet = text.trim().substring(0, 25);
+                if (text.length > 25) snippet += '...';
+                if (snippet.length === 0) snippet = '(empty spaces)';
+                showToast("Pasted: " + snippet, false, "success");
+                
+                document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+                
+                if (pendingCutCells) {
+                    pendingCutCells.forEach(td => {
+                        const input = td.querySelector('input, select, textarea');
+                        if(input) {
+                            input.value = '';
+                        } else {
+                            td.innerText = '';
+                        }
+                        td.style.backgroundColor = '';
+                        saveCell(td);
+                    });
+                    pendingCutCells.forEach(c => c.classList.remove('cut-cell'));
+                    pendingCutCells = null;
+                }
+            } catch (err) {
+                showToast("Paste error: " + err.message, true, "error");
             }
         }
     }
