@@ -916,15 +916,21 @@ if (typeof originalRenderTable === 'undefined') {
 
         // --- Theme Logic ---
         function toggleTheme() {
-            const body = document.body;
-            body.classList.toggle('light-mode');
-            const isLight = body.classList.contains('light-mode');
-            localStorage.setItem('nbi_theme', isLight ? 'light' : 'dark');
-            document.getElementById('themeToggle').textContent = isLight ? '☀️' : '🌙';
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            root.setAttribute('data-theme', newTheme);
+            localStorage.setItem('nbi_theme', newTheme);
+            
+            // Re-apply pill colors on theme switch so they instantly swap
+            setTimeout(applyGlobalColorsToGrid, 10);
         }
+        
+        // Initialize theme on load
         if (localStorage.getItem('nbi_theme') === 'light') {
-            document.body.classList.add('light-mode');
-            document.getElementById('themeToggle').textContent = '☀️';
+            document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
         }
 
         
