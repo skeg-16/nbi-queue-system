@@ -333,6 +333,17 @@
         .active-cell.primary-cell {
             background: transparent !important;
         }
+
+        @keyframes borderBlink {
+            50% { outline-color: transparent; }
+        }
+        
+        .copied-cell {
+            outline: 2px dashed #1a73e8 !important;
+            outline-offset: -2px;
+            z-index: 6;
+            animation: borderBlink 1s step-end infinite;
+        }
         
         .active-cell::after { display: none; }
         .active-cell.selection-bottom.selection-right::after {

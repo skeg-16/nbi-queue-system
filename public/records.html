@@ -758,6 +758,63 @@ document.addEventListener('keydown', function(e) {
             document.getElementById('searchInput').focus();
             document.getElementById('searchInput').select();
         }
+        else if (e.key === 'c' || e.key === 'C') {
+            if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                const text = getSelectedCellsText();
+                if (text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+                        activeCellElements.forEach(c => c.classList.add('copied-cell'));
+                        showToast("Copied to clipboard!", false, "success");
+                    });
+                }
+            }
+        }
+        else if (e.key === 'x' || e.key === 'X') {
+            if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                const text = getSelectedCellsText();
+                if (text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+                        activeCellElements.forEach(c => c.classList.add('copied-cell'));
+                        
+                        activeCellElements.forEach(td => {
+                            td.innerText = '';
+                            td.style.backgroundColor = '';
+                            saveCell(td);
+                        });
+                        showToast("Cut to clipboard!", false, "success");
+                    });
+                }
+            }
+        }
+        else if (e.key === 'v' || e.key === 'V') {
+            if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                navigator.clipboard.readText().then(text => {
+                    if (text && activeCellElement) {
+                        pasteTextIntoCells(text, activeCellElement);
+                        showToast("Pasted from clipboard!", false, "success");
+                        // clear marching ants after paste
+                        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+                    }
+                }).catch(err => {
+                    showToast("Paste blocked by browser.", false, "error");
+                });
+            }
+        }
+    }
+    
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+        document.querySelectorAll('.excel-grid td').forEach(c => {
+            c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
+        });
+        activeCellElements = [];
+        activeCellElement = null;
+        document.getElementById('nameBox').textContent = '';
     }
 
     // --- Clipboard Integration (Copy / Cut) ---
@@ -790,37 +847,31 @@ document.addEventListener('keydown', function(e) {
         });
         
         return text;
-    }
-
-    document.addEventListener('copy', function(e) {
-        if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'TEXTAREA') {
-            const text = getSelectedCellsText();
-            if (text) {
-                e.clipboardData.setData('text/plain', text);
-                e.preventDefault();
-                showToast("Copied to clipboard!", false, "success");
-            }
-        }
-    });
-
-    document.addEventListener('cut', function(e) {
-        if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'TEXTAREA') {
-            const text = getSelectedCellsText();
-            if (text) {
-                e.clipboardData.setData('text/plain', text);
-                e.preventDefault();
-                
-                // Clear the cut cells and save
-                activeCellElements.forEach(td => {
-                    td.innerText = '';
-                    td.style.backgroundColor = '';
-                    saveCell(td);
+    function pasteTextIntoCells(text, startCell) {
+        const rows = text.split('\n');
+        const tbody = document.getElementById('recordsBody');
+        const tableRows = Array.from(tbody.children);
+        
+        const startRowIdx = tableRows.indexOf(startCell.parentElement);
+        const startColIdx = Array.from(startCell.parentElement.children).indexOf(startCell);
+        
+        if (startRowIdx === -1 || startColIdx === -1) return;
+        
+        rows.forEach((rowData, rOffset) => {
+            const cols = rowData.split('\t');
+            const targetRow = tableRows[startRowIdx + rOffset];
+            if (targetRow) {
+                const targetCells = Array.from(targetRow.children);
+                cols.forEach((cellData, cOffset) => {
+                    const targetCell = targetCells[startColIdx + cOffset];
+                    if (targetCell && !targetCell.classList.contains('row-number')) {
+                        targetCell.innerText = cellData.trim();
+                        saveCell(targetCell);
+                    }
                 });
-                showToast("Cut to clipboard!", false, "success");
             }
-        }
-    });
-    
+        });
+    }
 
     // Arrow Key Navigation
     if (activeCellElement && !activeCellElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
