@@ -250,11 +250,12 @@
                     isCloud: true
                 };
                 
-                voices.unshift(cloudVoice);
+                var customVoicesList = [cloudVoice].concat(Array.from(voices));
+                voices = customVoicesList;
                 selectedVoice = cloudVoice; // default to cloud voice
 
                 // Send voices to server so staff can see them!
-                const simpleVoices = voices.map(voice => ({ name: voice.name, lang: voice.lang, voiceURI: voice.voiceURI }));
+                const simpleVoices = customVoicesList.map(voice => ({ name: voice.name, lang: voice.lang, voiceURI: voice.voiceURI }));
                 socket.emit('register_display_voices', simpleVoices);
                 
                 // Tell staff what the actual selected default voice is
@@ -351,8 +352,8 @@
                 sfxBefore.onended = function () {
                     setTimeout(function() { 
                         if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-                            // Use Google Cloud Proxy
-                            const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
+                            // Use Google Translate free TTS API
+                            const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(fullText)}&tl=${useFilipino ? 'tl' : 'en'}&client=tw-ob`;
                             const cloudAudio = new Audio(audioUrl);
                             cloudAudio.play().catch(e => console.error("Cloud TTS Play Error:", e));
                         } else {
@@ -368,7 +369,7 @@
                         console.log('SFX before error:', e);
                         setTimeout(function() { 
                             if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-                                const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
+                                const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(fullText)}&tl=${useFilipino ? 'tl' : 'en'}&client=tw-ob`;
                                 new Audio(audioUrl).play().catch(e=>console.log(e));
                             } else {
                                 speakParts(parts, 0); 
@@ -380,7 +381,7 @@
                     sfxBefore.onended = function () {
                         setTimeout(function() { 
                             if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-                                const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
+                                const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(fullText)}&tl=${useFilipino ? 'tl' : 'en'}&client=tw-ob`;
                                 new Audio(audioUrl).play().catch(e=>console.log(e));
                             } else {
                                 speakParts(parts, 0); 
