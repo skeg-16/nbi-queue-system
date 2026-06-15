@@ -186,14 +186,14 @@
             <thead>
                 <tr>
                     <th class="corner-header"></th>
-                    <th style="width: 150px;">A</th>
-                    <th style="width: 150px;">B</th>
-                    <th style="width: 250px;">C</th>
-                    <th style="width: 80px;">D</th>
-                    <th style="width: 150px;">E</th>
-                    <th style="width: 100px;">F</th>
-                    <th style="width: 120px;">G</th>
-                    <th style="width: auto; border-right: none;"></th>
+                    <th>A</th>
+                    <th>B</th>
+                    <th>C</th>
+                    <th>D</th>
+                    <th>E</th>
+                    <th>F</th>
+                    <th>G</th>
+                    <th style="border-right: none;"></th>
                 </tr>
                 <tr class="column-titles">
                     <td class="row-number">1</td>
@@ -234,7 +234,7 @@
         </div>
 
         <div class="sheet-tab" onclick="changeDate(1)" id="btnNextDay">→</div>
-        <div class="sheet-tab add-sheet" onclick="openModal('modalView')">View Details Form (Demo)</div>
+
     </div>
 
     <!-- Modals -->
@@ -273,7 +273,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Contact</label>
-                        <input type="text" id="editContact" class="form-input" required>
+                        <input type="tel" id="editContact" class="form-input" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="11" required>
                     </div>
                     <div class="form-group full-width">
                         <label class="form-label">Email</label>
@@ -374,6 +374,22 @@
             <div class="modal-footer">
                 <button class="btn-formal" onclick="closeModal('modalRemarks')">Cancel</button>
                 <button class="btn-formal btn-primary" onclick="submitRemarks()">Save Remarks</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Settings Modal -->
+    <div class="modal-overlay" id="modalColors">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <div class="modal-title">Color Rules</div>
+                <button class="modal-close" onclick="closeModal('modalColors')">&times;</button>
+            </div>
+            <div id="colorSettingsForm" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;"></div>
+            <button class="btn-formal" onclick="addNewColorRule()">+ Add Rule</button>
+            <div class="modal-footer">
+                <button class="btn-formal" onclick="resetDefaultColors()">Reset Defaults</button>
+                <button class="btn-formal btn-primary" onclick="saveColorRules()">Save Rules</button>
             </div>
         </div>
     </div>

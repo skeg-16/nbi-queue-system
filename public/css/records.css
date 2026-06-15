@@ -196,9 +196,9 @@
             border-collapse: separate;
             border-spacing: 0;
             background: var(--panel-bg);
-            table-layout: fixed;
-            width: 100%;
-            min-width: 1000px;
+            table-layout: auto;
+            width: max-content;
+            min-width: 100%;
         }
         
         .excel-grid tr { height: 36px; }
