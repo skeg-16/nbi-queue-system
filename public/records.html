@@ -53,7 +53,7 @@
     <div class="ribbon-header">
         <div class="ribbon-top">
             <img src="/assets/nbi.png" alt="NBI Logo">
-            <span class="ribbon-title">NBI Cybercrime Division - Complaint Registry.xlsx</span>
+            <span class="ribbon-title">NBI Cybercrime Division - Complaint Registry</span>
             <span id="lastUpdated" style="margin-left: auto; font-size: 0.75rem; color: #cbd5e1; font-style: italic;">Connecting...</span>
         </div>
         <div class="ribbon-tabs" style="background: #f8f9fa; border-bottom: 1px solid #dadce0; padding: 2px 10px;">
@@ -68,23 +68,33 @@
         <!-- Home Toolbar -->
         <div class="ribbon-toolbar" id="toolbar-home">
             <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="applyFormat('fontWeight', 'bold', 'normal')" title="Bold"><b>B</b></button>
-                <button class="ribbon-btn" onclick="applyFormat('fontStyle', 'italic', 'normal')" title="Italic"><i>I</i></button>
-                <button class="ribbon-btn" onclick="applyFormat('textDecoration', 'underline', 'none')" title="Underline"><u>U</u></button>
+                <button class="ribbon-btn" onclick="applyFormat('fontWeight', 'bold', 'normal')" title="Bold"><b style="font-family: serif; font-size: 1.2em;">B</b></button>
+                <button class="ribbon-btn" onclick="applyFormat('fontStyle', 'italic', 'normal')" title="Italic"><i style="font-family: serif; font-size: 1.2em;">I</i></button>
+                <button class="ribbon-btn" onclick="applyFormat('textDecoration', 'underline', 'none')" title="Underline"><u style="font-family: serif; font-size: 1.2em;">U</u></button>
+                <div class="ribbon-divider" style="width: 1px; height: 20px; background: #dadce0; margin: 0 4px;"></div>
+                <div class="ribbon-btn" title="Text Color" style="padding: 0 4px; display: flex; align-items: center;">
+                    <span style="font-weight:bold; color: #444; border-bottom: 3px solid #000; margin-right:4px;">A</span>
+                    <input type="color" style="width: 20px; height: 20px; border: none; padding: 0; background: transparent; cursor:pointer;" onchange="applyFormat('color', this.value, '')" value="#000000">
+                </div>
+                <div class="ribbon-btn" title="Fill Color" style="padding: 0 4px; display: flex; align-items: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right:2px;"><path d="M16.56 8.94L7.62 0 6.21 1.41l2.38 2.38-5.15 5.15c-.59.59-.59 1.54 0 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10L10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z"/><path d="M0 20h24v4H0z" fill="#000"/></svg>
+                    <input type="color" style="width: 20px; height: 20px; border: none; padding: 0; background: transparent; cursor:pointer;" onchange="applyFormat('backgroundColor', this.value, '')" value="#ffffff">
+                </div>
             </div>
             <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'left', 'center')" title="Align Left">⬅️</button>
-                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'center', 'center')" title="Align Center">↔️</button>
-                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'right', 'center')" title="Align Right">➡️</button>
+                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'left', 'center')" title="Align Left"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21h18v-2H3v2zm0-4h12v-2H3v2zm0-4h18v-2H3v2zm0-4h12V7H3v2zm0-6v2h18V3H3z"/></svg></button>
+                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'center', 'center')" title="Align Center"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21h18v-2H3v2zm4-4h10v-2H7v2zm-4-4h18v-2H3v2zm4-4h10V7H7v2zM3 3v2h18V3H3z"/></svg></button>
+                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'right', 'center')" title="Align Right"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/></svg></button>
             </div>
             <div class="toolbar-group">
                 <button class="ribbon-btn" onclick="openColorSettings()" title="Color Rules">
-                    🎨 Color Rules
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="margin-right: 4px;"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    Color Rules
                 </button>
             </div>
             <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="generateEODReport()"><i class="icon">📊</i>EOD Report</button>
-                <button class="ribbon-btn" onclick="window.print()"><i class="icon">🖨️</i>Print</button>
+                <button class="ribbon-btn" onclick="generateEODReport()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Report</button>
+                <button class="ribbon-btn" onclick="window.print()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg> Print</button>
                 <div class="group-label">Reports</div>
             </div>
             
@@ -114,11 +124,11 @@
         <!-- Insert Toolbar -->
         <div class="ribbon-toolbar" id="toolbar-insert" style="display: none;">
             <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="insertRow()"><i class="icon">➕</i>Add Row</button>
-                <button class="ribbon-btn" onclick="insertColumn()"><i class="icon">⊞</i>Add Column</button>
+                <button class="ribbon-btn" onclick="insertRow()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Row</button>
+                <button class="ribbon-btn" onclick="insertColumn()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Column</button>
 
                 <button class="ribbon-btn" onclick="openColorSettings()">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="margin-right:4px;"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
                     Color Rules
                 </button>
 
@@ -129,10 +139,10 @@
         <!-- Data Toolbar -->
         <div class="ribbon-toolbar" id="toolbar-data" style="display: none;">
             <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="document.getElementById('csvFileInput').click()"><i class="icon">📥</i>Import CSV</button>
+                <button class="ribbon-btn" onclick="document.getElementById('csvFileInput').click()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Import CSV</button>
                 <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleCSVImport(event)">
-                <button class="ribbon-btn" onclick="exportToExcel()"><i class="icon">📤</i>Export Excel</button>
-                <button class="ribbon-btn" onclick="exportToPDF()"><i class="icon">📄</i>Export PDF</button>
+                <button class="ribbon-btn" onclick="exportToExcel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zm-4 9v2H9v-2h6z"/></svg> Export Excel</button>
+                <button class="ribbon-btn" onclick="exportToPDF()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zm-4 9v2H9v-2h6z"/></svg> Export PDF</button>
                 <div class="group-label">Data Management</div>
             </div>
         </div>
