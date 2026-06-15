@@ -255,7 +255,8 @@ app.put('/api/records/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
-        const { data, error, count } = await supabase.from('registrations').update(updates, { count: 'exact' }).eq('id', id);
+        // MUST append .select() to get the row back to check ccd_no for the display!
+        const { data, error, count } = await supabase.from('registrations').update(updates, { count: 'exact' }).eq('id', id).select();
         
         if (error) {
             console.error("Supabase PUT Error Details:", JSON.stringify(error, null, 2));
@@ -265,6 +266,22 @@ app.put('/api/records/:id', async (req, res) => {
         if (count === 0) {
             console.warn("Supabase PUT warning: 0 rows updated. Possible RLS block or invalid ID:", id);
             return res.status(403).json({ success: false, error: "Row not updated. Permission denied by Supabase RLS, or row does not exist." });
+        }
+
+        // Feature: Trigger TV Display when spreadsheet user manually forces a status update
+        if (updates.status === 'Serving' && data && data.length > 0) {
+            const person = data[0];
+            state.currentlyServing = {
+                id: person.id,
+                ccdNo: person.ccd_no,
+                fullName: person.full_name,
+                isPriority: person.is_priority,
+                status: 'Serving'
+            };
+            broadcastDisplayUpdate(true);
+        } else if (updates.status === 'Skipped' && state.currentlyServing && state.currentlyServing.id === id && data && data.length > 0) {
+            state.currentlyServing = null;
+            broadcastDisplayUpdate(false, `${data[0].ccd_no} Skipped`);
         }
 
         auditLog('Edit Record', `Edited record ID ${id}`);

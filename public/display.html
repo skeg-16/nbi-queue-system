@@ -142,6 +142,12 @@
             audioUnlocked = true;
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
+            // Warm up audio elements to bypass Autoplay policies
+            let p = sfxBefore.play();
+            if (p !== undefined) {
+                p.then(() => { sfxBefore.pause(); sfxBefore.currentTime = 0; }).catch(() => {});
+            }
+
             // Warm-up utterance
             if ('speechSynthesis' in window) {
                 var dummy = new SpeechSynthesisUtterance('');
