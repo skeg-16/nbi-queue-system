@@ -259,6 +259,13 @@
             <button class="cal-nav-btn" onclick="changeCalendarMonth(1)">▶</button>
         </div>
         <div class="cal-grid" id="calGrid">
+            <div class="cal-day-label">Su</div>
+            <div class="cal-day-label">Mo</div>
+            <div class="cal-day-label">Tu</div>
+            <div class="cal-day-label">We</div>
+            <div class="cal-day-label">Th</div>
+            <div class="cal-day-label">Fr</div>
+            <div class="cal-day-label">Sa</div>
             <!-- populated by js -->
         </div>
     </div>
@@ -1115,22 +1122,27 @@ updateLedgerDateDisplay = function() {
             if (!wasActive) parent.classList.add('active');
         }
 
+        let openTabs = [];
+
         function renderSheetTabsUI() {
             const container = document.getElementById('sheetTabsContainer');
             if (!container) return;
             
-            // Get all unique dates that have records
-            const recordDates = Array.from(new Set(allRecords.map(r => r.created_at.split('T')[0]))).sort((a,b)=>b.localeCompare(a));
             const currentDateStr = getViewDateString();
             
-            let datesToShow = [...recordDates];
-            if (!datesToShow.includes(currentDateStr)) {
-                datesToShow.push(currentDateStr);
+            // Initialize open tabs on first load with up to 5 recent dates
+            if (openTabs.length === 0) {
+                const recordDates = Array.from(new Set(allRecords.map(r => r.created_at.split('T')[0]))).sort((a,b)=>b.localeCompare(a));
+                openTabs = recordDates.slice(0, 5);
             }
-            datesToShow.sort((a,b)=>b.localeCompare(a));
             
-            // Limit to top 8 recent dates to prevent overflow
-            datesToShow = datesToShow.slice(0, 8);
+            // Ensure the currently viewed date is always added to open tabs
+            if (!openTabs.includes(currentDateStr)) {
+                openTabs.push(currentDateStr);
+            }
+            
+            // Sort tabs descending
+            openTabs.sort((a,b)=>b.localeCompare(a));
             
             container.innerHTML = '';
             
@@ -1139,7 +1151,7 @@ updateLedgerDateDisplay = function() {
             calTab.className = 'sheet-tab';
             calTab.id = 'dateHeader';
             calTab.innerHTML = '📅 <span style="font-size:0.7em; margin-left:4px;">▼</span>';
-            calTab.title = "Select Date from Calendar";
+            calTab.title = "Open Date from Calendar";
             calTab.onclick = (e) => {
                 e.stopPropagation();
                 const popover = document.getElementById('calendarPopover');
@@ -1153,14 +1165,39 @@ updateLedgerDateDisplay = function() {
             };
             container.appendChild(calTab);
             
-            // Excel style tabs for each recent date
-            datesToShow.forEach(dateStr => {
+            // Render open tabs
+            openTabs.forEach(dateStr => {
                 const tab = document.createElement('div');
                 tab.className = 'sheet-tab';
                 if (dateStr === currentDateStr) tab.classList.add('active');
                 
                 const dObj = new Date(dateStr);
-                tab.textContent = dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                tab.appendChild(titleSpan);
+                
+                // Add close button if there is more than 1 tab open
+                if (openTabs.length > 1) {
+                    const closeBtn = document.createElement('span');
+                    closeBtn.innerHTML = '&times;';
+                    closeBtn.style.marginLeft = '8px';
+                    closeBtn.style.color = 'inherit';
+                    closeBtn.style.fontSize = '1.2em';
+                    closeBtn.style.lineHeight = '0.5';
+                    closeBtn.style.verticalAlign = 'middle';
+                    closeBtn.style.opacity = '0.5';
+                    closeBtn.style.cursor = 'pointer';
+                    
+                    closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
+                    closeBtn.onmouseout = () => closeBtn.style.opacity = '0.5';
+                    
+                    closeBtn.onclick = (e) => {
+                        e.stopPropagation(); // prevent tab click
+                        closeTab(dateStr);
+                    };
+                    tab.appendChild(closeBtn);
+                }
                 
                 tab.onclick = () => {
                     viewDateObj = dObj;
@@ -1168,6 +1205,19 @@ updateLedgerDateDisplay = function() {
                 };
                 container.appendChild(tab);
             });
+        }
+
+        function closeTab(dateStr) {
+            openTabs = openTabs.filter(d => d !== dateStr);
+            const currentDateStr = getViewDateString();
+            
+            if (dateStr === currentDateStr && openTabs.length > 0) {
+                // If we closed the active tab, switch to the first available open tab
+                viewDateObj = new Date(openTabs[0]);
+                applyFiltersAndSort();
+            } else {
+                renderSheetTabsUI();
+            }
         }
 
         // --- Ledger Date & Calendar Logic ---
@@ -1246,7 +1296,8 @@ updateLedgerDateDisplay = function() {
         function selectCalendarDate(y, m, d) {
             viewDateObj = new Date(y, m, d);
             document.getElementById('calendarPopover').classList.remove('active');
-            document.getElementById('ledgerDateDisplay').classList.remove('active');
+            const ledgerDisplay = document.getElementById('ledgerDateDisplay');
+            if (ledgerDisplay) ledgerDisplay.classList.remove('active');
             updateLedgerDateDisplay();
             applyFiltersAndSort();
         }

@@ -371,8 +371,42 @@
         .detail-value { width: 70%;}
         
         /* Calendar Specific Overrides for compatibility */
-        .calendar-popover { display: none; position: absolute; bottom: 30px; background: white; border: 1px solid #ccc; padding: 10px; z-index: 100;}
+        .calendar-popover {
+            display: none;
+            position: absolute;
+            bottom: 35px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-heavy);
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            width: 280px;
+        }
         .calendar-popover.active { display: block; }
+        .cal-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; color: var(--text-main);
+        }
+        .cal-nav-btn {
+            background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1rem;
+        }
+        .cal-nav-btn:hover { color: var(--text-main); }
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+        .cal-day-label { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; margin-bottom: 5px;}
+        .cal-day {
+            padding: 8px 0; border-radius: 4px; font-size: 0.85rem; cursor: pointer; color: var(--text-main);
+        }
+        .cal-day:hover:not(.empty):not(.disabled) { background: rgba(255,255,255,0.1); }
+        .cal-day.has-records { font-weight: bold; color: var(--text-accent); background: rgba(241, 196, 15, 0.1); }
+        .cal-day.selected { background: var(--text-accent); color: var(--panel-bg); font-weight: bold; }
+        .cal-day.today { border: 1px solid var(--text-accent); }
+        .cal-day.disabled { color: var(--border-heavy); cursor: default; }
+        .cal-day.empty { cursor: default; background: transparent; }
     
         
         .context-menu {
