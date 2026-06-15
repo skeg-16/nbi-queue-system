@@ -926,14 +926,22 @@ if (typeof originalRenderTable === 'undefined') {
         
         // --- Global Value Colors Customization ---
         const defaultGlobalColors = {
-            'Served': { bg: '#D1FAE5', txt: '#065F46' },
-            'Waiting': { bg: '#DBEAFE', txt: '#1E40AF' },
-            'Skipped': { bg: '#FEE2E2', txt: '#991B1B' },
-            'No-show': { bg: '#F3F4F6', txt: '#374151' },
-            'Serving': { bg: '#FEF3C7', txt: '#92400E' },
-            'YES': { bg: '#D1FAE5', txt: '#065F46' },
-            'NO': { bg: '#FEE2E2', txt: '#991B1B' }
+            'Served': { bg: '#064e3b', txt: '#34d399' },
+            'Waiting': { bg: '#1e3a8a', txt: '#60a5fa' },
+            'Skipped': { bg: '#7f1d1d', txt: '#f87171' },
+            'No-show': { bg: '#374151', txt: '#9ca3af' },
+            'Serving': { bg: '#78350f', txt: '#fbbf24' },
+            'YES': { bg: '#064e3b', txt: '#34d399' },
+            'NO': { bg: '#7f1d1d', txt: '#f87171' }
         };
+
+        // Auto-purge old bright colors from cache if they exist
+        try {
+            const saved = localStorage.getItem('nbi_global_colors');
+            if (saved && saved.includes('#D1FAE5')) {
+                localStorage.removeItem('nbi_global_colors');
+            }
+        } catch(e) {}
 
         function getGlobalColors() {
             try {
