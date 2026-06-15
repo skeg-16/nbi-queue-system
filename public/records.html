@@ -656,6 +656,11 @@ document.addEventListener('mousedown', function(e) {
     if (td && e.button === 0) { // left click
         // Only start drag if we aren't clicking inside an already focused input
         if (document.activeElement !== td && !td.querySelector('input:focus, select:focus')) {
+            // Force blur the currently active element to prevent phantom cursors and native paste bugs
+            if (document.activeElement && document.activeElement.blur && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+
             // Prevent default text selection so dragging works cleanly
             if (!td.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
                 e.preventDefault();
@@ -915,6 +920,19 @@ document.addEventListener('keydown', function(e) {
         });
         
         return text;
+    }
+    function saveCell(td) {
+        const onblurAttr = td.getAttribute('onblur');
+        if (onblurAttr && onblurAttr.includes('updateCell')) {
+            const match = onblurAttr.match(/updateCell\(this,\s*'([^']+)',\s*'([^']+)'\)/);
+            if (match) {
+                const field = match[1];
+                const id = match[2];
+                if (id !== 'temp' && typeof updateCell === 'function') {
+                    updateCell(td, field, id);
+                }
+            }
+        }
     }
 
     function pasteTextIntoCells(text, startCell) {
