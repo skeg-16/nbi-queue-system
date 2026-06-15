@@ -579,6 +579,53 @@ function applyFormat(styleProp, value, defaultValue) {
     }
 }
 
+// --- Mouse Drag Selection Logic ---
+let isDraggingCells = false;
+let dragStartCell = null;
+
+document.addEventListener('mousedown', function(e) {
+    const td = e.target.closest('#recordsBody td:not(.row-number):not(select)');
+    if (td && e.button === 0) { // left click
+        // Only prevent default (text selection) if we are clicking OUTSIDE an already active input or if we hold shift
+        if (document.activeElement !== td && !td.querySelector('input:focus, select:focus')) {
+            isDraggingCells = true;
+            dragStartCell = td;
+            
+            if (!e.shiftKey && !e.ctrlKey) {
+                document.querySelectorAll('.excel-grid td').forEach(c => c.classList.remove('active-cell'));
+                activeCellElements = [];
+            }
+            
+            td.classList.add('active-cell');
+            activeCellElement = td;
+            if (!activeCellElements.includes(td)) activeCellElements.push(td);
+        }
+    } else {
+        // Clicked outside grid, stop dragging
+        isDraggingCells = false;
+    }
+});
+
+document.addEventListener('mouseover', function(e) {
+    if (isDraggingCells) {
+        const td = e.target.closest('#recordsBody td:not(.row-number):not(select)');
+        if (td && td !== dragStartCell) {
+            // Prevent text selection highlight while dragging
+            window.getSelection().removeAllRanges();
+            
+            if (!activeCellElements.includes(td)) {
+                td.classList.add('active-cell');
+                activeCellElements.push(td);
+            }
+        }
+    }
+});
+
+document.addEventListener('mouseup', function(e) {
+    isDraggingCells = false;
+    dragStartCell = null;
+});
+
 // --- Global Keyboard Shortcuts ---
 document.addEventListener('keydown', function(e) {
     // Basic Excel Shortcuts
