@@ -68,6 +68,21 @@
         <!-- Home Toolbar -->
         <div class="ribbon-toolbar" id="toolbar-home">
             <div class="toolbar-group">
+                <button class="ribbon-btn" onclick="applyFormat('fontWeight', 'bold', 'normal')" title="Bold"><b>B</b></button>
+                <button class="ribbon-btn" onclick="applyFormat('fontStyle', 'italic', 'normal')" title="Italic"><i>I</i></button>
+                <button class="ribbon-btn" onclick="applyFormat('textDecoration', 'underline', 'none')" title="Underline"><u>U</u></button>
+            </div>
+            <div class="toolbar-group">
+                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'left', 'center')" title="Align Left">⬅️</button>
+                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'center', 'center')" title="Align Center">↔️</button>
+                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'right', 'center')" title="Align Right">➡️</button>
+            </div>
+            <div class="toolbar-group">
+                <button class="ribbon-btn" onclick="openColorSettings()" title="Color Rules">
+                    🎨 Color Rules
+                </button>
+            </div>
+            <div class="toolbar-group">
                 <button class="ribbon-btn" onclick="generateEODReport()"><i class="icon">📊</i>EOD Report</button>
                 <button class="ribbon-btn" onclick="window.print()"><i class="icon">🖨️</i>Print</button>
                 <div class="group-label">Reports</div>
@@ -193,11 +208,13 @@
                     <th>E</th>
                     <th>F</th>
                     <th>G</th>
+                    <th>H</th>
                     <th style="border-right: none;"></th>
                 </tr>
                 <tr class="column-titles">
                     <td class="row-number">1</td>
-                    <td class="col-title" onclick="handleSort('created_at', 0)">Date & Time <span id="sort-0"></span></td>
+                    <td class="col-title" onclick="handleSort('created_at', 0)">Date <span id="sort-0"></span></td>
+                    <td class="col-title">Time</td>
                     <td class="col-title" onclick="handleSort('ccd_no', 1)">CCD No. <span id="sort-1"></span></td>
                     <td class="col-title" onclick="handleSort('full_name', 2)">Full Name <span id="sort-2"></span></td>
                     <td class="col-title" onclick="handleSort('age', 3)">Age <span id="sort-3"></span></td>
@@ -530,6 +547,18 @@ function updateActiveCell(value) {
     }
 }
 
+function applyFormat(styleProp, value, defaultValue) {
+    if (activeCellElement) {
+        if (activeCellElement.style[styleProp] === value) {
+            activeCellElement.style[styleProp] = defaultValue;
+        } else {
+            activeCellElement.style[styleProp] = value;
+        }
+    } else {
+        showToast("Select a cell first!", true);
+    }
+}
+
 
 
 // Intercept the original renderTable to add spreadsheet cell events and row numbers
@@ -552,8 +581,8 @@ if (typeof originalRenderTable === 'undefined') {
         // Append empty rows
         for(let i = 0; i < rowsToFill; i++) {
             const emptyTr = document.createElement('tr');
-            // We have 7 data columns: A,B,C,D,E,F,G
-            for(let c=0; c<7; c++) {
+            // We have 8 data columns: A,B,C,D,E,F,G,H
+            for(let c=0; c<8; c++) {
                 const td = document.createElement('td');
                 td.textContent = "";
                 emptyTr.appendChild(td);
@@ -1133,7 +1162,9 @@ updateLedgerDateDisplay = function() {
 
             filteredRecords.forEach(r => {
                 const isPrio = r.is_priority ? '<span class="badge badge-priority" style="margin-left: 5px;">PRIORITY</span>' : '';
-                const dateStr = new Date(r.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+                const dateObj = new Date(r.created_at);
+                const dateStr = dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+                const timeStr = dateObj.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
 
                 let statusClass = 'status-waiting';
                 if (r.status === 'Serving') statusClass = 'status-serving';
@@ -1146,10 +1177,11 @@ updateLedgerDateDisplay = function() {
 
                 tr.innerHTML = `
                     <td tabindex="0">${dateStr}</td>
+                    <td tabindex="0">${timeStr}</td>
                     <td tabindex="0" class="ccd-cell" contenteditable="true" onblur="updateCell(this, 'ccd_no', '${r.id}')">${r.ccd_no}</td>
                     <td tabindex="0" class="name-cell" contenteditable="true" onblur="updateCell(this, 'full_name', '${r.id}')">${r.full_name}</td>
-                    <td tabindex="0" contenteditable="true" onblur="updateCell(this, 'age', '${r.id}')">${r.age}</td>
-                    <td tabindex="0" contenteditable="true" onblur="updateCell(this, 'contact', '${r.id}')">${r.contact}</td>
+                    <td tabindex="0" contenteditable="true" onkeypress="return event.charCode >= 48 && event.charCode <= 57" onblur="updateCell(this, 'age', '${r.id}')">${r.age}</td>
+                    <td tabindex="0" contenteditable="true" onkeypress="return event.charCode >= 48 && event.charCode <= 57" onblur="updateCell(this, 'contact', '${r.id}')">${r.contact}</td>
                     <td tabindex="0">
                         <select onchange="updateCell(this, 'is_priority', '${r.id}')" class="status-badge ${r.is_priority ? 'badge-priority' : ''}" >
                             <option value="false" ${!r.is_priority ? 'selected' : ''}>NO</option>

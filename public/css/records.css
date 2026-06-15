@@ -213,6 +213,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            text-align: center;
         }
         
         .excel-grid th {
@@ -728,6 +729,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            text-align: center;
         }
         
         .excel-grid th {
