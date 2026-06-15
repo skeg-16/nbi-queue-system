@@ -606,7 +606,9 @@ function highlightRectangle(startTd, endTd, append) {
     const maxCol = Math.max(startCol, endCol);
     
     if (!append) {
-        document.querySelectorAll('.excel-grid td').forEach(c => c.classList.remove('active-cell'));
+        document.querySelectorAll('.excel-grid td').forEach(c => {
+            c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
+        });
         activeCellElements = [];
     }
     
@@ -616,11 +618,18 @@ function highlightRectangle(startTd, endTd, append) {
             const cell = rowCells[c];
             if (cell && !cell.classList.contains('row-number')) {
                 cell.classList.add('active-cell');
+                if (r === minRow) cell.classList.add('selection-top');
+                if (r === maxRow) cell.classList.add('selection-bottom');
+                if (c === minCol) cell.classList.add('selection-left');
+                if (c === maxCol) cell.classList.add('selection-right');
+                
                 if (!activeCellElements.includes(cell)) activeCellElements.push(cell);
             }
         }
     }
+    
     activeCellElement = startTd;
+    startTd.classList.add('primary-cell');
     
     // Update Name Box
     const startLet = String.fromCharCode(65 + startCol - 1);
@@ -640,6 +649,11 @@ document.addEventListener('mousedown', function(e) {
     if (td && e.button === 0) { // left click
         // Only start drag if we aren't clicking inside an already focused input
         if (document.activeElement !== td && !td.querySelector('input:focus, select:focus')) {
+            // Prevent default text selection so dragging works cleanly
+            if (!td.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+                e.preventDefault();
+            }
+            
             isDraggingCells = true;
             dragStartCell = td;
             isMultiAddMode = e.ctrlKey || e.metaKey;
@@ -649,10 +663,12 @@ document.addEventListener('mousedown', function(e) {
                 highlightRectangle(activeCellElement, td, isMultiAddMode);
             } else {
                 if (!isMultiAddMode) {
-                    document.querySelectorAll('.excel-grid td').forEach(c => c.classList.remove('active-cell'));
+                    document.querySelectorAll('.excel-grid td').forEach(c => {
+                        c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
+                    });
                     activeCellElements = [];
                 }
-                td.classList.add('active-cell');
+                td.classList.add('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
                 activeCellElement = td;
                 if (!activeCellElements.includes(td)) activeCellElements.push(td);
                 
@@ -675,7 +691,7 @@ document.addEventListener('mouseover', function(e) {
             
             if (isMultiAddMode) {
                 if (!activeCellElements.includes(td)) {
-                    td.classList.add('active-cell');
+                    td.classList.add('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right');
                     activeCellElements.push(td);
                 }
             } else {
@@ -698,7 +714,7 @@ document.addEventListener('keydown', function(e) {
             // Let default select-all work inside editable cells, otherwise just highlight the whole table body
             if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                document.querySelectorAll('.excel-grid td').forEach(td => td.classList.remove('active-cell'));
+                document.querySelectorAll('.excel-grid td').forEach(td => td.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell'));
                 activeCellElements = [];
                 document.querySelectorAll('#recordsBody td').forEach(td => {
                     if(td.style.borderRight !== 'none' && !td.classList.contains('row-number')) {
@@ -737,8 +753,75 @@ document.addEventListener('keydown', function(e) {
                 performRedo();
             }
         }
+        else if (e.key === 'f' || e.key === 'F') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+            document.getElementById('searchInput').select();
+        }
     }
+
+    // --- Clipboard Integration (Copy / Cut) ---
+    function getSelectedCellsText() {
+        if (!activeCellElements || activeCellElements.length === 0) return '';
+        
+        // Sort cells by row, then by column
+        const sortedCells = [...activeCellElements].sort((a, b) => {
+            const rowA = Array.from(a.parentElement.parentElement.children).indexOf(a.parentElement);
+            const rowB = Array.from(b.parentElement.parentElement.children).indexOf(b.parentElement);
+            if (rowA !== rowB) return rowA - rowB;
+            
+            const colA = Array.from(a.parentElement.children).indexOf(a);
+            const colB = Array.from(b.parentElement.children).indexOf(b);
+            return colA - colB;
+        });
+
+        let text = '';
+        let currentRow = Array.from(sortedCells[0].parentElement.parentElement.children).indexOf(sortedCells[0].parentElement);
+        
+        sortedCells.forEach(td => {
+            const rowIdx = Array.from(td.parentElement.parentElement.children).indexOf(td.parentElement);
+            if (rowIdx !== currentRow) {
+                text += '\n';
+                currentRow = rowIdx;
+            } else if (text !== '' && !text.endsWith('\n')) {
+                text += '\t';
+            }
+            text += td.innerText.trim();
+        });
+        
+        return text;
+    }
+
+    document.addEventListener('copy', function(e) {
+        if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'TEXTAREA') {
+            const text = getSelectedCellsText();
+            if (text) {
+                e.clipboardData.setData('text/plain', text);
+                e.preventDefault();
+                showToast("Copied to clipboard!", false, "success");
+            }
+        }
+    });
+
+    document.addEventListener('cut', function(e) {
+        if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'TEXTAREA') {
+            const text = getSelectedCellsText();
+            if (text) {
+                e.clipboardData.setData('text/plain', text);
+                e.preventDefault();
+                
+                // Clear the cut cells and save
+                activeCellElements.forEach(td => {
+                    td.innerText = '';
+                    td.style.backgroundColor = '';
+                    saveCell(td);
+                });
+                showToast("Cut to clipboard!", false, "success");
+            }
+        }
+    });
     
+
     // Arrow Key Navigation
     if (activeCellElement && !activeCellElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
         const tr = activeCellElement.parentElement;
