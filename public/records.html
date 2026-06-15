@@ -724,7 +724,7 @@ document.addEventListener('keydown', function(e) {
     if (e.ctrlKey) {
         if (e.key === 'a' || e.key === 'A') {
             // Let default select-all work inside editable cells, otherwise just highlight the whole table body
-            if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            if (!document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
                 e.preventDefault();
                 document.querySelectorAll('.excel-grid td').forEach(td => td.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell'));
                 activeCellElements = [];
@@ -739,6 +739,9 @@ document.addEventListener('keydown', function(e) {
         }
         else if (e.key === 's' || e.key === 'S') {
             e.preventDefault();
+            if (document.activeElement && document.activeElement.blur && document.activeElement !== document.body) {
+                document.activeElement.blur();
+            }
             showToast("Database auto-saves on every change!", false, "success");
         }
         else if (e.key === 'b' || e.key === 'B') {
@@ -754,13 +757,13 @@ document.addEventListener('keydown', function(e) {
             applyFormat('textDecoration', 'underline', 'none');
         }
         else if (e.key === 'z' || e.key === 'Z') {
-            if(!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT') {
+            if(!document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
                 e.preventDefault();
                 performUndo();
             }
         }
         else if (e.key === 'y' || e.key === 'Y') {
-            if(!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT') {
+            if(!document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
                 e.preventDefault();
                 performRedo();
             }
@@ -770,22 +773,29 @@ document.addEventListener('keydown', function(e) {
             document.getElementById('searchInput').focus();
             document.getElementById('searchInput').select();
         }
-        else if (e.key === 'c' || e.key === 'C') {
-            if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-                performCopy();
-            }
-        }
-        else if (e.key === 'x' || e.key === 'X') {
-            if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-                performCut();
-            }
-        }
-        else if (e.key === 'v' || e.key === 'V') {
-            if (!document.activeElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-                performPaste();
+        // Removed manual c/x/v checks. Relying on native copy/cut/paste events instead.
+    }
+    
+    // Allow clearing cells with Delete or Backspace
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (!document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+            e.preventDefault();
+            if (activeCellElements && activeCellElements.length > 0) {
+                activeCellElements.forEach(td => {
+                    const input = td.querySelector('input, select, textarea');
+                    if (input) {
+                        input.value = '';
+                        if (input.tagName === 'SELECT') {
+                            input.dispatchEvent(new Event('change'));
+                        } else {
+                            input.dispatchEvent(new Event('keyup'));
+                        }
+                    } else {
+                        td.innerText = '';
+                    }
+                    saveCell(td);
+                });
+                showToast("Cleared selected cells", false, "success");
             }
         }
     }
@@ -798,168 +808,7 @@ document.addEventListener('keydown', function(e) {
         activeCellElements = [];
         activeCellElement = null;
         document.getElementById('nameBox').textContent = '';
-    }
-
-    // --- Clipboard Integration (Copy / Cut) ---
-    let pendingCutCells = null;
-
-    function performCopy() {
-        if (!activeCellElements || activeCellElements.length === 0) return;
-        const text = getSelectedCellsText();
-        
-        const successCb = () => {
-            document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell', 'cut-cell'));
-            activeCellElements.forEach(c => c.classList.add('copied-cell'));
-            pendingCutCells = null;
-            showToast("Copied to clipboard!", false, "success");
-        };
-        const errorCb = (err) => showToast("Copy failed: " + err, true, "error");
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(successCb).catch(errorCb);
-        } else {
-            fallbackCopyTextToClipboard(text, successCb, errorCb);
-        }
-    }
-
-    function performCut() {
-        if (!activeCellElements || activeCellElements.length === 0) return;
-        const text = getSelectedCellsText();
-        
-        const successCb = () => {
-            document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell', 'cut-cell'));
-            activeCellElements.forEach(c => c.classList.add('copied-cell', 'cut-cell'));
-            pendingCutCells = [...activeCellElements];
-            showToast("Cut to clipboard!", false, "success");
-        };
-        const errorCb = (err) => showToast("Cut failed: " + err, true, "error");
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(successCb).catch(errorCb);
-        } else {
-            fallbackCopyTextToClipboard(text, successCb, errorCb);
-        }
-    }
-
-    function fallbackCopyTextToClipboard(text, successCb, errorCb) {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.top = "0";
-        textArea.style.left = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-            const successful = document.execCommand('copy');
-            if (successful) successCb();
-            else errorCb('Fallback execCommand failed');
-        } catch (err) {
-            errorCb(err);
-        }
-        document.body.removeChild(textArea);
-    }
-
-    function performPaste() {
-        if (!activeCellElement) return;
-        
-        const pasteAction = (text) => {
-            if (typeof text === 'string') {
-                saveToHistory();
-                pasteTextIntoCells(text, activeCellElement);
-                showToast("Pasted from clipboard!", false, "success");
-                document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
-                
-                if (pendingCutCells) {
-                    pendingCutCells.forEach(td => {
-                        td.innerText = '';
-                        td.style.backgroundColor = '';
-                        saveCell(td);
-                    });
-                    pendingCutCells.forEach(c => c.classList.remove('cut-cell'));
-                    pendingCutCells = null;
-                }
-            }
-        };
-
-        if (navigator.clipboard && navigator.clipboard.readText) {
-            navigator.clipboard.readText().then(pasteAction).catch(err => {
-                showToast("Paste blocked. Please use Ctrl+V instead.", true, "error");
-            });
-        } else {
-            showToast("Paste button not supported in your browser. Use Ctrl+V.", true, "error");
-        }
-    }
-
-    function getSelectedCellsText() {
-        if (!activeCellElements || activeCellElements.length === 0) return '';
-        
-        // Sort cells by row, then by column
-        const sortedCells = [...activeCellElements].sort((a, b) => {
-            const rowA = Array.from(a.parentElement.parentElement.children).indexOf(a.parentElement);
-            const rowB = Array.from(b.parentElement.parentElement.children).indexOf(b.parentElement);
-            if (rowA !== rowB) return rowA - rowB;
-            
-            const colA = Array.from(a.parentElement.children).indexOf(a);
-            const colB = Array.from(b.parentElement.children).indexOf(b);
-            return colA - colB;
-        });
-
-        let text = '';
-        let currentRow = Array.from(sortedCells[0].parentElement.parentElement.children).indexOf(sortedCells[0].parentElement);
-        
-        sortedCells.forEach(td => {
-            const rowIdx = Array.from(td.parentElement.parentElement.children).indexOf(td.parentElement);
-            if (rowIdx !== currentRow) {
-                text += '\n';
-                currentRow = rowIdx;
-            } else if (text !== '' && !text.endsWith('\n')) {
-                text += '\t';
-            }
-            text += td.innerText.trim();
-        });
-        
-        return text;
-    }
-    function saveCell(td) {
-        const onblurAttr = td.getAttribute('onblur');
-        if (onblurAttr && onblurAttr.includes('updateCell')) {
-            const match = onblurAttr.match(/updateCell\(this,\s*'([^']+)',\s*'([^']+)'\)/);
-            if (match) {
-                const field = match[1];
-                const id = match[2];
-                if (id !== 'temp' && typeof updateCell === 'function') {
-                    updateCell(td, field, id);
-                }
-            }
-        }
-    }
-
-    function pasteTextIntoCells(text, startCell) {
-        const rows = text.split('\n');
-        const tbody = document.getElementById('recordsBody');
-        const tableRows = Array.from(tbody.children);
-        
-        const startRowIdx = tableRows.indexOf(startCell.parentElement);
-        const startColIdx = Array.from(startCell.parentElement.children).indexOf(startCell);
-        
-        if (startRowIdx === -1 || startColIdx === -1) return;
-        
-        rows.forEach((rowData, rOffset) => {
-            const cols = rowData.split('\t');
-            const targetRow = tableRows[startRowIdx + rOffset];
-            if (targetRow) {
-                const targetCells = Array.from(targetRow.children);
-                cols.forEach((cellData, cOffset) => {
-                    const targetCell = targetCells[startColIdx + cOffset];
-                    if (targetCell && !targetCell.classList.contains('row-number')) {
-                        targetCell.innerText = cellData.trim();
-                        saveCell(targetCell);
-                    }
-                });
-            }
-        });
-    }
+    }    // --- Clipboard Integration (Moved to Global Scope) ---   }
 
     // Arrow Key Navigation
     if (activeCellElement && !activeCellElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
@@ -988,6 +837,183 @@ document.addEventListener('keydown', function(e) {
         if (targetCell && targetCell.tagName === 'TD') {
             targetCell.click();
             targetCell.focus();
+        }
+    }
+});
+
+// --- Global Clipboard Functions ---
+let pendingCutCells = null;
+
+function performCopy() {
+    if (!activeCellElements || activeCellElements.length === 0) return;
+    document.execCommand('copy');
+}
+
+function performCut() {
+    if (!activeCellElements || activeCellElements.length === 0) return;
+    document.execCommand('cut');
+}
+
+function performPaste() {
+    if (!activeCellElement) return;
+    // We cannot reliably trigger paste via button click without permission issues.
+    showToast("Paste button blocked by browser. Please use Ctrl+V.", true, "error");
+}
+
+function getSelectedCellsText() {
+    if (!activeCellElements || activeCellElements.length === 0) return '';
+    const sortedCells = [...activeCellElements].sort((a, b) => {
+        const rowA = Array.from(a.parentElement.parentElement.children).indexOf(a.parentElement);
+        const rowB = Array.from(b.parentElement.parentElement.children).indexOf(b.parentElement);
+        if (rowA !== rowB) return rowA - rowB;
+        const colA = Array.from(a.parentElement.children).indexOf(a);
+        const colB = Array.from(b.parentElement.children).indexOf(b);
+        return colA - colB;
+    });
+
+    let text = '';
+    let currentRow = Array.from(sortedCells[0].parentElement.parentElement.children).indexOf(sortedCells[0].parentElement);
+    
+    sortedCells.forEach(td => {
+        const rowIdx = Array.from(td.parentElement.parentElement.children).indexOf(td.parentElement);
+        if (rowIdx !== currentRow) {
+            text += '\n';
+            currentRow = rowIdx;
+        } else if (text !== '' && !text.endsWith('\n')) {
+            text += '\t';
+        }
+        const input = td.querySelector('input, select, textarea');
+        if (input) {
+            text += input.value;
+        } else {
+            text += td.innerText.trim();
+        }
+    });
+    
+    return text;
+}
+
+function saveCell(td) {
+    const onblurAttr = td.getAttribute('onblur');
+    if (onblurAttr && onblurAttr.includes('updateCell')) {
+        const match = onblurAttr.match(/updateCell\(this,\s*'([^']+)',\s*'([^']+)'\)/);
+        if (match) {
+            const field = match[1];
+            const id = match[2];
+            if (id !== 'temp' && typeof updateCell === 'function') {
+                updateCell(td, field, id);
+            }
+        }
+    }
+}
+
+function pasteTextIntoCells(text, startCell) {
+    const rows = text.split('\n');
+    const tbody = document.getElementById('recordsBody');
+    const tableRows = Array.from(tbody.children);
+    
+    // If a single value is copied and multiple cells are selected, fill ALL selected cells
+    if (rows.length === 1 && !rows[0].includes('\t') && activeCellElements && activeCellElements.length > 1) {
+        activeCellElements.forEach(targetCell => {
+            if (targetCell && !targetCell.classList.contains('row-number')) {
+                const input = targetCell.querySelector('input, select, textarea');
+                if (input) {
+                    input.value = text.trim();
+                    if (input.tagName === 'SELECT') {
+                        input.dispatchEvent(new Event('change'));
+                    } else {
+                        input.dispatchEvent(new Event('keyup'));
+                    }
+                } else {
+                    targetCell.innerText = text.trim();
+                }
+                saveCell(targetCell);
+            }
+        });
+        return; // Completed fill logic
+    }
+
+    const startRowIdx = tableRows.indexOf(startCell.parentElement);
+    const startColIdx = Array.from(startCell.parentElement.children).indexOf(startCell);
+    
+    if (startRowIdx === -1 || startColIdx === -1) return;
+    
+    rows.forEach((rowData, rOffset) => {
+        const cols = rowData.split('\t');
+        const targetRow = tableRows[startRowIdx + rOffset];
+        if (targetRow) {
+            const targetCells = Array.from(targetRow.children);
+            cols.forEach((cellData, cOffset) => {
+                const targetCell = targetCells[startColIdx + cOffset];
+                if (targetCell && !targetCell.classList.contains('row-number')) {
+                    const input = targetCell.querySelector('input, select, textarea');
+                    if (input) {
+                        input.value = cellData.trim();
+                        if (input.tagName === 'SELECT') {
+                            input.dispatchEvent(new Event('change'));
+                        } else {
+                            input.dispatchEvent(new Event('keyup'));
+                        }
+                    } else {
+                        targetCell.innerText = cellData.trim();
+                    }
+                    saveCell(targetCell);
+                }
+            });
+        }
+    });
+}
+
+// Global Document Clipboard Events
+document.addEventListener('copy', function(e) {
+    if (activeCellElements && activeCellElements.length > 0 && !document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+        const text = getSelectedCellsText();
+        e.clipboardData.setData('text/plain', text);
+        e.preventDefault();
+        
+        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell', 'cut-cell'));
+        activeCellElements.forEach(c => c.classList.add('copied-cell'));
+        pendingCutCells = null;
+        showToast("Copied to clipboard!", false, "success");
+    }
+});
+
+document.addEventListener('cut', function(e) {
+    if (activeCellElements && activeCellElements.length > 0 && !document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+        const text = getSelectedCellsText();
+        e.clipboardData.setData('text/plain', text);
+        e.preventDefault();
+        
+        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell', 'cut-cell'));
+        activeCellElements.forEach(c => c.classList.add('copied-cell', 'cut-cell'));
+        pendingCutCells = [...activeCellElements];
+        showToast("Cut to clipboard!", false, "success");
+    }
+});
+
+document.addEventListener('paste', function(e) {
+    if (activeCellElement && !document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        if (text) {
+            pasteTextIntoCells(text, activeCellElement);
+            showToast("Pasted from clipboard!", false, "success");
+            document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
+            
+            if (pendingCutCells) {
+                pendingCutCells.forEach(td => {
+                    const input = td.querySelector('input, select, textarea');
+                    if(input) {
+                        input.value = '';
+                    } else {
+                        td.innerText = '';
+                    }
+                    td.style.backgroundColor = '';
+                    saveCell(td);
+                });
+                pendingCutCells.forEach(c => c.classList.remove('cut-cell'));
+                pendingCutCells = null;
+            }
         }
     }
 });
@@ -2369,11 +2395,25 @@ if (typeof originalRenderTable === 'undefined') {
         
         async function cmCopy() {
             if(cmTargetCell) {
-                const text = cmTargetCell.innerText.trim();
+                const input = cmTargetCell.querySelector('input, select, textarea');
+                const text = input ? input.value : cmTargetCell.innerText.trim();
                 try {
-                    await navigator.clipboard.writeText(text);
+                    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+                        await navigator.clipboard.writeText(text);
+                    } else {
+                        throw new Error("No clipboard API");
+                    }
                 } catch(e) {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.top = "0";
+                    textArea.style.left = "0";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
                     document.execCommand('copy');
+                    document.body.removeChild(textArea);
                 }
                 document.getElementById('contextMenu').style.display = 'none';
             }
