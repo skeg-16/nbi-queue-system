@@ -327,24 +327,22 @@
                 sfxBefore.onended = null; // FIX: Prevent double firing from previous play requests
 
                 var parts = [];
-                var nameText = complainantName ? ", " + complainantName + ", " : ", ";
-                
                 var fullText = "";
 
                 if (isPriority) {
                     if (useFilipino) {
-                        fullText = "Priority number " + num + nameText + "handa na po ang counter 1 para sa inyo.";
+                        fullText = "Priority number " + num + ", handa na po ang counter 1 para sa inyo.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        fullText = "Priority number " + num + nameText + "Please proceed to the designated area.";
+                        fullText = "Priority number " + num + ", Please proceed to the designated area.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 } else {
                     if (useFilipino) {
-                        fullText = "Number " + num + nameText + "handa na po ang counter 1 para sa inyo.";
+                        fullText = "Number " + num + ", handa na po ang counter 1 para sa inyo.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        fullText = "Number " + num + nameText + "Please proceed to the designated area.";
+                        fullText = "Number " + num + ", Please proceed to the designated area.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 }

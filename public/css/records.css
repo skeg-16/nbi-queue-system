@@ -4,36 +4,36 @@
         }
         
         :root {
-            /* Sleek Modern Light Theme */
-            --bg-color: #F9FAFB;
-            --panel-bg: #FFFFFF;
-            --border-color: #E5E7EB;
-            --border-heavy: #D1D5DB;
+            /* NBI Dark Theme */
+            --bg-color: #050e1d;
+            --panel-bg: #0b1d3a;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-heavy: rgba(255, 255, 255, 0.2);
             
-            --text-main: #111827;
-            --text-muted: #6B7280;
-            --text-accent: #2563EB;
+            --text-main: #ffffff;
+            --text-muted: #a0aec0;
+            --text-accent: #f1c40f;
             
-            --header-bg: #FFFFFF;
-            --header-text: #4B5563;
+            --header-bg: #0b1d3a;
+            --header-text: #a0aec0;
             
-            --table-hover: #F3F4F6;
-            --nbi-cell-border: #E5E7EB;
-            --nbi-blue: #2563EB;
+            --table-hover: rgba(255, 255, 255, 0.05);
+            --nbi-cell-border: rgba(255, 255, 255, 0.1);
+            --nbi-blue: #f1c40f;
 
-            --btn-bg: #FFFFFF;
-            --btn-border: #E5E7EB;
-            --btn-hover: #F9FAFB;
+            --btn-bg: rgba(255, 255, 255, 0.1);
+            --btn-border: rgba(255, 255, 255, 0.1);
+            --btn-hover: rgba(255, 255, 255, 0.2);
             
-            --focus-ring: rgba(37, 99, 235, 0.2);
-            --focus-border: #2563EB;
+            --focus-ring: rgba(241, 196, 15, 0.2);
+            --focus-border: #f1c40f;
             
-            /* Status Colors */
-            --status-served-bg: #D1FAE5; --status-served-txt: #065F46;
-            --status-waiting-bg: #DBEAFE; --status-waiting-txt: #1E40AF;
-            --status-skipped-bg: #FEE2E2; --status-skipped-txt: #991B1B;
-            --status-noshow-bg: #F3F4F6; --status-noshow-txt: #374151;
-            --status-serving-bg: #FEF3C7; --status-serving-txt: #92400E;
+            /* Status Colors (Adjusted for dark mode) */
+            --status-served-bg: rgba(46, 204, 113, 0.2); --status-served-txt: #2ecc71;
+            --status-waiting-bg: rgba(52, 152, 219, 0.2); --status-waiting-txt: #3498db;
+            --status-skipped-bg: rgba(231, 76, 60, 0.2); --status-skipped-txt: #e74c3c;
+            --status-noshow-bg: rgba(149, 165, 166, 0.2); --status-noshow-txt: #95a5a6;
+            --status-serving-bg: rgba(241, 196, 15, 0.2); --status-serving-txt: #f1c40f;
         }
 
         body, html {
@@ -214,6 +214,13 @@
             overflow: hidden;
             text-overflow: ellipsis;
             text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .excel-grid td input, .excel-grid td textarea {
+            user-select: text;
+            -webkit-user-select: text;
         }
         
         .excel-grid th {
@@ -856,10 +863,11 @@
         }
 
         /* Modals and Original UI Preserved */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal { background: white; padding: 20px; border: 1px solid var(--border-heavy); min-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;}
-        .modal-header { border-bottom: 1px solid var(--border-color); margin-bottom: 15px; padding-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; color: var(--nbi-blue); text-transform: uppercase; }
-        .modal-close { cursor: pointer; background: none; border: none; font-size: 1.2rem; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: var(--panel-bg); color: var(--text-main); padding: 20px; border: 1px solid var(--border-heavy); min-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;}
+        .modal-header { border-bottom: 1px solid var(--border-color); margin-bottom: 15px; padding-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; color: var(--text-accent); text-transform: uppercase; }
+        .modal-close { cursor: pointer; background: none; border: none; font-size: 1.2rem; color: var(--text-muted); }
+        .modal-close:hover { color: var(--text-main); }
         
         .toast-container { position: fixed; bottom: 40px; right: 20px; z-index: 2000; }
         .toast { background: #2ecc71; color: white; padding: 10px 20px; margin-top: 10px; display: none; }
@@ -888,9 +896,9 @@
             position: fixed;
             z-index: 10000;
             width: 260px;
-            background: #ffffff;
+            background: var(--panel-bg);
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             border: 1px solid var(--border-color);
             display: none;
             flex-direction: column;
@@ -909,7 +917,7 @@
             font-weight: 500;
         }
         .context-menu-item:hover {
-            background: #F3F4F6;
+            background: rgba(255, 255, 255, 0.1);
         }
         .context-menu-icon {
             position: absolute;
@@ -975,8 +983,8 @@ select.status-badge {
     -moz-appearance: none;
 }
 select.status-badge option {
-    background-color: white;
-    color: black;
+    background-color: var(--panel-bg);
+    color: var(--text-main);
 }
 
 
