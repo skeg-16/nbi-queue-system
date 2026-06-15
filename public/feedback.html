@@ -272,7 +272,7 @@
         <div class="step" id="step-2">
             <div class="step-indicator">Step 2 of 4 — Citizen's Charter (CC)</div>
             <p class="helper-text" style="margin-bottom: 1.5rem; color: var(--text-main);">
-                INSTRUCTIONS: Check mark your answer to the Citizen's Charter (CC) questions. The Citizen's Charter is an official document that reflects the services of a government agency/office including its requirements, fees, and processing times among others.
+                INSTRUCTIONS: Select your answer to the Citizen's Charter (CC) questions. The Citizen's Charter is an official document that reflects the services of a government agency/office including its requirements, fees, and processing times among others.
             </p>
 
             <div class="form-group" id="group-cc1">
@@ -442,6 +442,7 @@
             <div class="form-group">
                 <label for="email">E-mail address (optional):</label>
                 <input type="email" id="email" placeholder="your.email@example.com">
+                <div class="error-text">⚠ Please enter a valid email address.</div>
             </div>
 
             <div class="nav-buttons">
@@ -608,6 +609,12 @@
         }
 
         async function submitForm() {
+            const emailValue = document.getElementById('email').value;
+            if (emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+                document.getElementById('email').closest('.form-group').classList.add('has-error');
+                return;
+            }
+
             if (!navigator.onLine) {
                 alert("You appear to be offline. Please connect to WiFi/Data and try again.");
                 return;
