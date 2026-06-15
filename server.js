@@ -667,6 +667,7 @@ io.on('connection', async (socket) => {
         if (settings.lang !== undefined) state.voiceSettings.lang = settings.lang;
         if (settings.rate !== undefined) state.voiceSettings.rate = settings.rate;
         if (settings.voiceURI !== undefined) state.voiceSettings.voiceURI = settings.voiceURI;
+        
         io.emit('voice_settings_update', state.voiceSettings);
     });
 
