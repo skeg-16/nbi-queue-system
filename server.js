@@ -130,7 +130,7 @@ app.get('/staff', (req, res) => res.sendFile(path.join(__dirname, 'public', 'sta
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
 app.get('/records', (req, res) => res.sendFile(path.join(__dirname, 'public', 'records.html')));
 app.get('/feedback/en', (req, res) => res.sendFile(path.join(__dirname, 'public', 'feedback.html')));
-app.get('/feedback/tl', (req, res) => res.send('Coming Soon'));
+app.get('/feedback/tl', (req, res) => res.sendFile(path.join(__dirname, 'public', 'feedback-tl.html')));
 app.get('/', (req, res) => res.redirect('/register'));
 
 // API Endpoint for Feedback Submission
