@@ -2362,8 +2362,105 @@ if (typeof originalRenderTable === 'undefined') {
             renderTable(); // Re-render to show it correctly
         }
 
-        // --- Custom Context Menu Logic ---
+        // --- Custom Context Menu & Keyboard Shortcuts Logic ---
         let cmTargetCell = null;
+
+        // Handle Ctrl+Z, Ctrl+Y, and Delete/Backspace
+        document.addEventListener('keydown', async function(e) {
+            // Undo and Redo
+            if (e.ctrlKey || e.metaKey) {
+                const key = e.key.toLowerCase();
+                const activeTag = document.activeElement.tagName;
+                const isTyping = ['INPUT', 'TEXTAREA'].includes(activeTag) || 
+                                 document.activeElement.isContentEditable;
+                
+                if (key === 'z' && !e.shiftKey) {
+                    if (!isTyping) {
+                        e.preventDefault();
+                        await performUndo();
+                        return;
+                    }
+                } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
+                    if (!isTyping) {
+                        e.preventDefault();
+                        await performRedo();
+                        return;
+                    }
+                }
+            } 
+            
+            // Delete and Backspace for active cell
+            if ((e.key === 'Delete' || e.key === 'Backspace') && activeCellElement) {
+                const isTyping = document.activeElement === activeCellElement || 
+                                 ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+                if (!isTyping) {
+                    e.preventDefault();
+                    const originalCmTarget = cmTargetCell;
+                    cmTargetCell = activeCellElement;
+                    cmClearCell();
+                    cmTargetCell = originalCmTarget;
+                }
+            }
+        });
+
+        // Global Copy, Cut, Paste using native clipboard events for spreadsheet behavior
+        document.addEventListener('copy', function(e) {
+            if (activeCellElement && window.getSelection().toString().length === 0) {
+                const activeTag = document.activeElement.tagName;
+                if (['INPUT', 'TEXTAREA'].includes(activeTag) && document.activeElement.id !== 'formulaInput') return;
+                
+                e.preventDefault();
+                const input = activeCellElement.querySelector('input, select');
+                const text = input ? input.value : activeCellElement.innerText.trim();
+                e.clipboardData.setData('text/plain', text);
+            }
+        });
+
+        document.addEventListener('cut', function(e) {
+            if (activeCellElement && window.getSelection().toString().length === 0) {
+                const activeTag = document.activeElement.tagName;
+                if (['INPUT', 'TEXTAREA'].includes(activeTag) && document.activeElement.id !== 'formulaInput') return;
+                
+                e.preventDefault();
+                const input = activeCellElement.querySelector('input, select');
+                const text = input ? input.value : activeCellElement.innerText.trim();
+                e.clipboardData.setData('text/plain', text);
+                
+                const originalCmTarget = cmTargetCell;
+                cmTargetCell = activeCellElement;
+                cmClearCell();
+                cmTargetCell = originalCmTarget;
+            }
+        });
+
+        document.addEventListener('paste', function(e) {
+            if (activeCellElement) {
+                const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+                if (isInput) return; // Let native paste work normally inside inputs
+                
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                
+                const originalCmTarget = cmTargetCell;
+                cmTargetCell = activeCellElement;
+                
+                const input = cmTargetCell.querySelector('input, select');
+                if(input) {
+                    input.value = text;
+                    input.dispatchEvent(new Event('keyup'));
+                    input.dispatchEvent(new Event('change'));
+                } else {
+                    cmTargetCell.innerText = text;
+                    cmTargetCell.focus();
+                    cmTargetCell.blur(); // trigger onblur to save
+                    
+                    // Re-focus to keep the cell active natively without cursor
+                    cmTargetCell.focus();
+                }
+                document.getElementById('formulaInput').value = text;
+                cmTargetCell = originalCmTarget;
+            }
+        });
 
         document.addEventListener('contextmenu', function(e) {
             if(e.target.closest('#recordsTable td:not(.row-number):not(.corner-header)')) {
