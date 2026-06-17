@@ -591,12 +591,101 @@ function applyFormat(styleProp, value, defaultValue) {
     }
 }
 
+// --- Undo / Redo Logic ---
+let historyStack = [];
+let redoStack = [];
+
+function pushToHistory(action) {
+    historyStack.push(action);
+    if(historyStack.length > 50) historyStack.shift();
+    redoStack = [];
+}
+
+function performUndo() {
+    if(historyStack.length === 0) {
+        showToast("Nothing to undo", false, "info");
+        return;
+    }
+    const action = historyStack.pop();
+    redoStack.push(action);
+    
+    if(action.type === 'edit') {
+        action.changes.forEach(change => {
+            const {td, oldVal} = change;
+            const input = td.querySelector('input, select, textarea');
+            if(input) {
+                input.value = oldVal;
+                if(input.tagName === 'SELECT') input.dispatchEvent(new Event('change'));
+                else input.dispatchEvent(new Event('keyup'));
+            } else {
+                td.innerText = oldVal;
+            }
+            saveCell(td);
+        });
+        showToast("Undo", false, "success");
+    }
+}
+
+function performRedo() {
+    if(redoStack.length === 0) {
+        showToast("Nothing to redo", false, "info");
+        return;
+    }
+    const action = redoStack.pop();
+    historyStack.push(action);
+    
+    if(action.type === 'edit') {
+        action.changes.forEach(change => {
+            const {td, newVal} = change;
+            const input = td.querySelector('input, select, textarea');
+            if(input) {
+                input.value = newVal;
+                if(input.tagName === 'SELECT') input.dispatchEvent(new Event('change'));
+                else input.dispatchEvent(new Event('keyup'));
+            } else {
+                td.innerText = newVal;
+            }
+            saveCell(td);
+        });
+        showToast("Redo", false, "success");
+    }
+}
+
+let cellBeforeEditValue = {};
+document.addEventListener('focusin', function(e) {
+    if(['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        const td = e.target.closest('td');
+        if(td) cellBeforeEditValue = { td: td, val: e.target.value };
+    } else if(e.target.isContentEditable) {
+        const td = e.target.closest('td');
+        if(td) cellBeforeEditValue = { td: td, val: td.innerText };
+    }
+});
+document.addEventListener('focusout', function(e) {
+    if(cellBeforeEditValue.td) {
+        let newVal = "";
+        if(['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+            newVal = e.target.value;
+        } else if(e.target.isContentEditable) {
+            newVal = cellBeforeEditValue.td.innerText;
+        }
+        if(newVal !== cellBeforeEditValue.val) {
+            pushToHistory({
+                type: 'edit',
+                changes: [{td: cellBeforeEditValue.td, oldVal: cellBeforeEditValue.val, newVal: newVal}]
+            });
+        }
+        cellBeforeEditValue = {};
+    }
+});
+
 // --- Mouse Drag Selection Logic ---
 let isDraggingCells = false;
 let dragStartCell = null;
 let isMultiAddMode = false; // For holding Ctrl
+let baseActiveCellElements = [];
 
-function highlightRectangle(startTd, endTd, append) {
+function highlightRectangle(startTd, endTd, mode) {
     const tbody = document.getElementById('recordsBody');
     const rows = Array.from(tbody.children);
     
@@ -612,7 +701,14 @@ function highlightRectangle(startTd, endTd, append) {
     const minCol = Math.min(startCol, endCol);
     const maxCol = Math.max(startCol, endCol);
     
-    if (!append) {
+    if (mode === 'add') {
+        document.querySelectorAll('.excel-grid td').forEach(c => {
+            if (!baseActiveCellElements.includes(c)) {
+                c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
+            }
+        });
+        activeCellElements = [...baseActiveCellElements];
+    } else {
         document.querySelectorAll('.excel-grid td').forEach(c => {
             c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
         });
@@ -654,14 +750,11 @@ function highlightRectangle(startTd, endTd, append) {
 document.addEventListener('mousedown', function(e) {
     const td = e.target.closest('#recordsBody td:not(.row-number):not(select)');
     if (td && e.button === 0) { // left click
-        // Only start drag if we aren't clicking inside an already focused input
         if (document.activeElement !== td && !td.querySelector('input:focus, select:focus')) {
-            // Force blur the currently active element to prevent phantom cursors and native paste bugs
             if (document.activeElement && document.activeElement.blur && typeof document.activeElement.blur === 'function') {
                 document.activeElement.blur();
             }
 
-            // Prevent default text selection so dragging works cleanly
             if (!td.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
                 e.preventDefault();
             }
@@ -671,18 +764,30 @@ document.addEventListener('mousedown', function(e) {
             isMultiAddMode = e.ctrlKey || e.metaKey;
             
             if (e.shiftKey && activeCellElement) {
-                // Shift click: draw rectangle from last active to current
-                highlightRectangle(activeCellElement, td, isMultiAddMode);
+                baseActiveCellElements = isMultiAddMode ? [...activeCellElements] : [];
+                highlightRectangle(activeCellElement, td, isMultiAddMode ? 'add' : 'replace');
             } else {
-                if (!isMultiAddMode) {
+                if (isMultiAddMode) {
+                    baseActiveCellElements = [...activeCellElements];
+                    if (activeCellElements.includes(td)) {
+                        td.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
+                        activeCellElements = activeCellElements.filter(c => c !== td);
+                        baseActiveCellElements = [...activeCellElements];
+                    } else {
+                        td.classList.add('active-cell', 'primary-cell');
+                        activeCellElements.push(td);
+                        baseActiveCellElements = [...activeCellElements];
+                    }
+                    activeCellElement = td;
+                } else {
                     document.querySelectorAll('.excel-grid td').forEach(c => {
                         c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
                     });
-                    activeCellElements = [];
+                    activeCellElements = [td];
+                    td.classList.add('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
+                    activeCellElement = td;
+                    baseActiveCellElements = [];
                 }
-                td.classList.add('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
-                activeCellElement = td;
-                if (!activeCellElements.includes(td)) activeCellElements.push(td);
                 
                 const colLetter = String.fromCharCode(65 + Array.from(td.parentElement.children).indexOf(td) - 1);
                 const rowIndex = Array.from(td.parentElement.parentElement.children).indexOf(td.parentElement) + 1;
@@ -700,16 +805,7 @@ document.addEventListener('mouseover', function(e) {
         const td = e.target.closest('#recordsBody td:not(.row-number):not(select)');
         if (td && td !== dragStartCell) {
             window.getSelection().removeAllRanges(); // prevent native blue text selection
-            
-            if (isMultiAddMode) {
-                if (!activeCellElements.includes(td)) {
-                    td.classList.add('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right');
-                    activeCellElements.push(td);
-                }
-            } else {
-                // Standard bounding-box selection
-                highlightRectangle(dragStartCell, td, false);
-            }
+            highlightRectangle(dragStartCell, td, isMultiAddMode ? 'add' : 'replace');
         }
     }
 });
@@ -781,9 +877,12 @@ document.addEventListener('keydown', function(e) {
         if (!document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
             e.preventDefault();
             if (activeCellElements && activeCellElements.length > 0) {
+                let changes = [];
                 activeCellElements.forEach(td => {
+                    let oldVal = "";
                     const input = td.querySelector('input, select, textarea');
                     if (input) {
+                        oldVal = input.value;
                         input.value = '';
                         if (input.tagName === 'SELECT') {
                             input.dispatchEvent(new Event('change'));
@@ -791,10 +890,17 @@ document.addEventListener('keydown', function(e) {
                             input.dispatchEvent(new Event('keyup'));
                         }
                     } else {
+                        oldVal = td.innerText;
                         td.innerText = '';
+                    }
+                    if(oldVal !== '') {
+                        changes.push({td: td, oldVal: oldVal, newVal: ''});
                     }
                     saveCell(td);
                 });
+                if(changes.length > 0) {
+                    pushToHistory({type: 'edit', changes: changes});
+                }
                 showToast("Cleared selected cells", false, "success");
             }
         }
@@ -909,59 +1015,80 @@ function saveCell(td) {
 
 function pasteTextIntoCells(text, startCell) {
     const rows = text.split('\n');
+    const sourceData = rows.map(r => r.split('\t'));
+    const sourceRows = sourceData.length;
+    const sourceCols = sourceData[0].length;
+    
     const tbody = document.getElementById('recordsBody');
     const tableRows = Array.from(tbody.children);
     
-    // If a single value is copied and multiple cells are selected, fill ALL selected cells
-    if (rows.length === 1 && !rows[0].includes('\t') && activeCellElements && activeCellElements.length > 1) {
-        activeCellElements.forEach(targetCell => {
-            if (targetCell && !targetCell.classList.contains('row-number')) {
-                const input = targetCell.querySelector('input, select, textarea');
-                if (input) {
-                    input.value = text.trim();
-                    if (input.tagName === 'SELECT') {
-                        input.dispatchEvent(new Event('change'));
-                    } else {
-                        input.dispatchEvent(new Event('keyup'));
+    let changes = [];
+    let targetCells = [];
+    
+    if (activeCellElements && activeCellElements.length > 1) {
+        let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
+        activeCellElements.forEach(c => {
+            const rIdx = tableRows.indexOf(c.parentElement);
+            const cIdx = Array.from(c.parentElement.children).indexOf(c);
+            if(rIdx < minR) minR = rIdx;
+            if(rIdx > maxR) maxR = rIdx;
+            if(cIdx < minC) minC = cIdx;
+            if(cIdx > maxC) maxC = cIdx;
+        });
+        
+        for(let r = minR; r <= maxR; r++) {
+            for(let c = minC; c <= maxC; c++) {
+                const targetCell = tableRows[r] && tableRows[r].children[c];
+                if(targetCell && activeCellElements.includes(targetCell)) {
+                    const srcRow = (r - minR) % sourceRows;
+                    const srcCol = (c - minC) % sourceCols;
+                    if(sourceData[srcRow] && sourceData[srcRow][srcCol] !== undefined) {
+                        targetCells.push({td: targetCell, val: sourceData[srcRow][srcCol]});
                     }
-                } else {
-                    targetCell.innerText = text.trim();
                 }
-                saveCell(targetCell);
+            }
+        }
+    } else {
+        const startRowIdx = tableRows.indexOf(startCell.parentElement);
+        const startColIdx = Array.from(startCell.parentElement.children).indexOf(startCell);
+        if(startRowIdx === -1 || startColIdx === -1) return;
+        
+        sourceData.forEach((rowCols, rOffset) => {
+            const targetRow = tableRows[startRowIdx + rOffset];
+            if(targetRow) {
+                rowCols.forEach((val, cOffset) => {
+                    const targetCell = targetRow.children[startColIdx + cOffset];
+                    if(targetCell && !targetCell.classList.contains('row-number')) {
+                        targetCells.push({td: targetCell, val: val});
+                    }
+                });
             }
         });
-        return; // Completed fill logic
     }
-
-    const startRowIdx = tableRows.indexOf(startCell.parentElement);
-    const startColIdx = Array.from(startCell.parentElement.children).indexOf(startCell);
     
-    if (startRowIdx === -1 || startColIdx === -1) return;
-    
-    rows.forEach((rowData, rOffset) => {
-        const cols = rowData.split('\t');
-        const targetRow = tableRows[startRowIdx + rOffset];
-        if (targetRow) {
-            const targetCells = Array.from(targetRow.children);
-            cols.forEach((cellData, cOffset) => {
-                const targetCell = targetCells[startColIdx + cOffset];
-                if (targetCell && !targetCell.classList.contains('row-number')) {
-                    const input = targetCell.querySelector('input, select, textarea');
-                    if (input) {
-                        input.value = cellData.trim();
-                        if (input.tagName === 'SELECT') {
-                            input.dispatchEvent(new Event('change'));
-                        } else {
-                            input.dispatchEvent(new Event('keyup'));
-                        }
-                    } else {
-                        targetCell.innerText = cellData.trim();
-                    }
-                    saveCell(targetCell);
-                }
-            });
+    targetCells.forEach(item => {
+        const targetCell = item.td;
+        let oldVal = "";
+        const input = targetCell.querySelector('input, select, textarea');
+        if (input) {
+            oldVal = input.value;
+            input.value = item.val.trim();
+            if (input.tagName === 'SELECT') {
+                input.dispatchEvent(new Event('change'));
+            } else {
+                input.dispatchEvent(new Event('keyup'));
+            }
+        } else {
+            oldVal = targetCell.innerText;
+            targetCell.innerText = item.val.trim();
         }
+        changes.push({td: targetCell, oldVal: oldVal, newVal: item.val.trim()});
+        saveCell(targetCell);
     });
+    
+    if(changes.length > 0) {
+        pushToHistory({type: 'edit', changes: changes});
+    }
 }
 
 // Global Document Clipboard Events
