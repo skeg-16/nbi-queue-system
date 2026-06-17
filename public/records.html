@@ -1908,38 +1908,7 @@ if (typeof originalRenderTable === 'undefined') {
         }
 
         // --- GLOBAL HISTORY STACK ---
-        let undoStack = [];
-        let redoStack = [];
-
-        async function performUndo() {
-            if (undoStack.length === 0) return showToast("Nothing to undo.", true);
-            const action = undoStack.pop();
-            redoStack.push({ ...action, oldValue: action.newValue, newValue: action.oldValue });
-            
-            // revert UI
-            if (action.element) {
-                if (action.element.tagName === 'SELECT') action.element.value = action.oldValue;
-                else action.element.innerText = action.oldValue;
-            }
-            // push to db natively
-            await updateCell(action.element, action.field, action.id, true);
-            showToast("Undo successful.", false, "success");
-        }
-
-        async function performRedo() {
-            if (redoStack.length === 0) return showToast("Nothing to redo.", true);
-            const action = redoStack.pop();
-            undoStack.push({ ...action, oldValue: action.newValue, newValue: action.oldValue });
-            
-            // revert UI
-            if (action.element) {
-                if (action.element.tagName === 'SELECT') action.element.value = action.oldValue;
-                else action.element.innerText = action.oldValue;
-            }
-            // push to db natively
-            await updateCell(action.element, action.field, action.id, true);
-            showToast("Redo successful.", false, "success");
-        }
+        // (Removed old undoStack and redoStack to prevent SyntaxError - using new historyStack)
 
         async function updateCell(element, field, id, skipHistory = false) {
             let newValue = element.value !== undefined ? element.value : element.innerText.trim();
@@ -1957,15 +1926,7 @@ if (typeof originalRenderTable === 'undefined') {
                 payloadValue = (newValue === 'true' || newValue === true);
             }
 
-            // Capture History
             const oldRecord = allRecords.find(x => x.id === id);
-            let oldValue = oldRecord ? oldRecord[field] : '';
-            if (field === 'is_priority') oldValue = (oldValue === 'true' || oldValue === true);
-            
-            if (!skipHistory && payloadValue !== oldValue) {
-                undoStack.push({ element, field, id, oldValue, newValue: payloadValue });
-                redoStack = []; // clear redo on new action
-            }
             if (oldRecord) oldRecord[field] = payloadValue; // keep local cache fresh so next rapid undo works
 
             // Optional: add visual saving indicator here
