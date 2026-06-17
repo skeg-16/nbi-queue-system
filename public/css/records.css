@@ -230,8 +230,7 @@
             border-collapse: separate;
             border-spacing: 0;
             background: var(--panel-bg);
-            table-layout: auto;
-            width: max-content;
+            table-layout: fixed;
             min-width: 100%;
         }
         
