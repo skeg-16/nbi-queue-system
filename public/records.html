@@ -2474,17 +2474,24 @@ if (typeof originalRenderTable === 'undefined') {
                         const input = td.querySelector('input, select');
                         if (input) {
                             input.value = val;
+                            if (input.hasAttribute('onchange')) {
+                                const match = input.getAttribute('onchange').match(/updateCell\(this,\s*'([^']+)',\s*'([^']+)'\)/);
+                                if (match) updateCell(input, match[1], match[2]);
+                            }
                             input.dispatchEvent(new Event('keyup'));
                             input.dispatchEvent(new Event('change'));
                         } else if (td.hasAttribute('contenteditable')) {
                             td.innerText = val;
-                            // Trigger the onblur logic without actually stealing user cursor focus
+                            // Guarantee database update by directly executing the updateCell logic
                             if (td.hasAttribute('onblur')) {
                                 const onBlurStr = td.getAttribute('onblur');
-                                // Usually like "updateCell(this, 'field', 'id')"
-                                // We can just call blur manually by focusing and blurring
-                                td.focus();
-                                td.blur();
+                                const match = onBlurStr.match(/updateCell\(this,\s*'([^']+)',\s*'([^']+)'\)/);
+                                if (match) {
+                                    updateCell(td, match[1], match[2]);
+                                } else {
+                                    // Fallback if format is weird
+                                    td.dispatchEvent(new Event('blur'));
+                                }
                             }
                         }
                     }
