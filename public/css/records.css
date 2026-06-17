@@ -178,25 +178,28 @@ body, html {
 /* ---- Sheet Tabs ---- */
 .sheet-tabs {
     display: flex;
-    gap: 2px;
+    gap: 8px;
     flex-shrink: 0;
     overflow-x: auto;
 }
 .sheet-tab {
-    padding: 8px 16px;
+    padding: 10px 20px;
     cursor: pointer;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
+    font-weight: 500;
     color: var(--text-muted);
-    border-bottom: 2px solid transparent;
-    transition: color 0.2s, border-color 0.2s;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
     white-space: nowrap;
     user-select: none;
     display: flex;
     align-items: center;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
 }
 .sheet-tab:hover {
-    color: var(--text-main);
     background: var(--table-hover);
+    /* Removed color change to keep it fixed as requested */
 }
 .sheet-tab.active {
     color: var(--nbi-blue);
