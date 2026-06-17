@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     
-    <!-- Spreadsheet specific CSS -->
-    <link rel="stylesheet" href="css/records.css?v=4">
+    <!-- Database CSS -->
+    <link rel="stylesheet" href="css/records.css?v=5">
 
 
     <!-- SheetJS for Excel & CSV export -->
@@ -49,220 +49,77 @@
         <span id="stat-priority"></span>
     </div>
 
-    <!-- Excel-like Ribbon Header -->
-    <div class="ribbon-header">
-        <div class="ribbon-top">
-            <img src="/assets/nbi.png" alt="NBI Logo">
-            <span class="ribbon-title">NBI Cybercrime Division - Complaint Registry</span>
-            <span id="lastUpdated" style="margin-left: auto; font-size: 0.75rem; color: #cbd5e1; font-style: italic;">Connecting...</span>
+    <!-- Modern Formal Database Action Bar -->
+    <div class="action-bar" style="display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color);">
+        <div class="action-left" style="display: flex; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="/assets/nbi.png" alt="NBI Logo" style="height: 32px;">
+                <h2 style="margin: 0; font-size: 1.2rem; color: var(--text-main); font-weight: 500;">Complaint Registry</h2>
+            </div>
+            <div style="width: 1px; height: 24px; background: var(--border-color);"></div>
+            <input type="text" id="searchInput" class="form-input" placeholder="Search records..." style="width: 250px;">
+            <select id="filterStatus" class="form-select" style="width: 140px;">
+                <option value="">All Statuses</option>
+                <option value="Waiting">Waiting</option>
+                <option value="Serving">Serving</option>
+                <option value="Served">Served</option>
+                <option value="Skipped">Skipped</option>
+                <option value="No-show">No-show</option>
+            </select>
+            <label style="display: flex; align-items: center; gap: 5px; color: var(--text-muted); cursor: pointer; font-size: 0.9rem;">
+                <input type="checkbox" id="filterPriority"> Priority Only
+            </label>
         </div>
-        <div class="ribbon-tabs" style="background: var(--panel-bg); border-bottom: 1px solid var(--border-color); padding: 2px 10px;">
-            <div class="ribbon-tab active" id="tab-home" onclick="switchTab('home')" style="font-size:14px; padding:4px 8px; border:none; background:transparent;">Edit</div>
-            <div class="ribbon-tab" id="tab-insert" onclick="switchTab('insert')" style="font-size:14px; padding:4px 8px; border:none; background:transparent;">Insert</div>
-            <div class="ribbon-tab" id="tab-data" onclick="switchTab('data')" style="font-size:14px; padding:4px 8px; border:none; background:transparent;">Data</div>
-            <div class="ribbon-tab" style="margin-left:auto; border:none; padding: 2px;">
-                 <span id="recordCount" style="color: #cbd5e1; font-size: 0.8rem;">Showing 0 records</span>
-            </div>
-        </div>
-        
-        <!-- Home Toolbar -->
-        <div class="ribbon-toolbar" id="toolbar-home">
-            <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="performUndo()" title="Undo (Ctrl+Z)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></button>
-                <button class="ribbon-btn" onclick="performRedo()" title="Redo (Ctrl+Y)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.06-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg></button>
-                <div class="ribbon-divider" style="width: 1px; height: 20px; background: var(--border-color); margin: 0 4px;"></div>
-                <button class="ribbon-btn" onclick="performCopy()" title="Copy (Ctrl+C)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
-                <button class="ribbon-btn" onclick="performCut()" title="Cut (Ctrl+X)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zM6 8c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm0 12c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm6-7.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM19 3l-6 6 2 2 7-7V3h-3z"/></svg></button>
-                <button class="ribbon-btn" onclick="performPaste()" title="Paste (Ctrl+V)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></svg></button>
-                <div class="ribbon-divider" style="width: 1px; height: 20px; background: var(--border-color); margin: 0 4px;"></div>
-                <button class="ribbon-btn" onclick="applyFormat('fontWeight', 'bold', 'normal')" title="Bold"><b style="font-family: serif; font-size: 1.2em;">B</b></button>
-                <button class="ribbon-btn" onclick="applyFormat('fontStyle', 'italic', 'normal')" title="Italic"><i style="font-family: serif; font-size: 1.2em;">I</i></button>
-                <button class="ribbon-btn" onclick="applyFormat('textDecoration', 'underline', 'none')" title="Underline"><u style="font-family: serif; font-size: 1.2em;">U</u></button>
-                <div class="ribbon-divider" style="width: 1px; height: 20px; background: var(--border-color); margin: 0 4px;"></div>
-                <div class="ribbon-btn" title="Text Color" style="padding: 0 4px; display: flex; align-items: center;">
-                    <span style="font-weight:bold; color: var(--text-main); border-bottom: 3px solid var(--text-main); margin-right:4px;">A</span>
-                    <input type="color" style="width: 20px; height: 20px; border: none; padding: 0; background: transparent; cursor:pointer;" onchange="applyFormat('color', this.value, '')" value="#ffffff">
-                </div>
-                <div class="ribbon-btn" title="Fill Color" style="padding: 0 4px; display: flex; align-items: center;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right:2px;"><path d="M16.56 8.94L7.62 0 6.21 1.41l2.38 2.38-5.15 5.15c-.59.59-.59 1.54 0 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10L10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z"/><path d="M0 20h24v4H0z" fill="#000"/></svg>
-                    <input type="color" style="width: 20px; height: 20px; border: none; padding: 0; background: transparent; cursor:pointer;" onchange="applyFormat('backgroundColor', this.value, '')" value="#ffffff">
-                </div>
-            </div>
-            <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'left', 'center')" title="Align Left"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21h18v-2H3v2zm0-4h12v-2H3v2zm0-4h18v-2H3v2zm0-4h12V7H3v2zm0-6v2h18V3H3z"/></svg></button>
-                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'center', 'center')" title="Align Center"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21h18v-2H3v2zm4-4h10v-2H7v2zm-4-4h18v-2H3v2zm4-4h10V7H7v2zM3 3v2h18V3H3z"/></svg></button>
-                <button class="ribbon-btn" onclick="applyFormat('textAlign', 'right', 'center')" title="Align Right"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/></svg></button>
-            </div>
-            <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="openColorSettings()" title="Color Rules">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="margin-right: 4px;"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-                    Color Rules
-                </button>
-            </div>
-            <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="generateEODReport()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Report</button>
-                <button class="ribbon-btn" onclick="window.print()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg> Print</button>
-                <div class="group-label">Reports</div>
-            </div>
+        <div class="action-right" style="display: flex; align-items: center; gap: 10px;">
+            <span id="recordCount" style="color: var(--text-muted); font-size: 0.9rem; margin-right: 10px;">Loading...</span>
+            <span id="lastUpdated" style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-right: 10px;"></span>
             
-            <div class="toolbar-group">
-                <div class="ribbon-input-group">
-                    <input type="text" id="searchInput" placeholder="Search records..." style="width: 200px;">
-                </div>
-                <div class="group-label">Search</div>
-            </div>
-            
-            <div class="toolbar-group">
-                <select id="filterStatus" class="form-select" style="font-size: 0.8rem; padding: 4px; width: 120px;">
-                    <option value="">All Statuses</option>
-                    <option value="Waiting">Waiting</option>
-                    <option value="Serving">Serving</option>
-                    <option value="Served">Served</option>
-                    <option value="Skipped">Skipped</option>
-                    <option value="No-show">No-show</option>
-                </select>
-                <label style="font-size:0.75rem; display:block; margin-top:5px;">
-                    <input type="checkbox" id="filterPriority"> Priority Only
-                </label>
-                <div class="group-label">Filters</div>
-            </div>
-        </div>
-
-        <!-- Insert Toolbar -->
-        <div class="ribbon-toolbar" id="toolbar-insert" style="display: none;">
-            <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="insertRow()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Row</button>
-                <button class="ribbon-btn" onclick="insertColumn()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Column</button>
-
-                <button class="ribbon-btn" onclick="openColorSettings()">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="margin-right:4px;"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-                    Color Rules
-                </button>
-
-                <div class="group-label">Structure</div>
-            </div>
-        </div>
-
-        <!-- Data Toolbar -->
-        <div class="ribbon-toolbar" id="toolbar-data" style="display: none;">
-            <div class="toolbar-group">
-                <button class="ribbon-btn" onclick="document.getElementById('csvFileInput').click()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Import CSV</button>
-                <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleCSVImport(event)">
-                <button class="ribbon-btn" onclick="exportToExcel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zm-4 9v2H9v-2h6z"/></svg> Export Excel</button>
-                <button class="ribbon-btn" onclick="exportToPDF()"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zm-4 9v2H9v-2h6z"/></svg> Export PDF</button>
-
-                <button class="ribbon-btn" onclick="openModal('modalVoice')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-                    Voice Settings
-                </button>
-
-                <button class="ribbon-btn" onclick="toggleTheme()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M12 21A9 9 0 1 1 12 3a9 9 0 0 1 0 18z" opacity="0.3"/><path d="M12 3v18a9 9 0 0 0 0-18z"/></svg>
-                    Toggle Theme
-                </button>
-
-                <div class="group-label">Data Management</div>
-            </div>
+            <button class="btn-formal btn-primary" onclick="openAddModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Record
+            </button>
+            <button class="btn-formal" onclick="exportToExcel()">Excel</button>
+            <button class="btn-formal" onclick="exportToPDF()">PDF</button>
+            <button class="btn-formal" onclick="window.print()">Print</button>
+            <button class="btn-formal" onclick="toggleTheme()" title="Toggle Theme">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21A9 9 0 1 1 12 3a9 9 0 0 1 0 18z" opacity="0.3"/><path d="M12 3v18a9 9 0 0 0 0-18z"/></svg>
+            </button>
+            <button class="btn-formal" onclick="openModal('modalVoice')" title="Voice Settings">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
         </div>
     </div>
 
-    
-    <!-- Context Menu -->
-    
-    <!-- Custom Context Menu -->
-    <div id="contextMenu" class="context-menu" style="display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid var(--border-color); border-radius: 8px;">
-        <div class="context-menu-item" onclick="cmEditCell()">
-            <div class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></div>
-            Edit cell <span class="context-menu-shortcut">Enter</span>
-        </div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" onclick="cmCopy()">
-            <div class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></div>
-            Copy <span class="context-menu-shortcut">Ctrl+C</span>
-        </div>
-        <div class="context-menu-item" onclick="cmCut()">
-            <div class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zM6 8c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm0 12c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm6-7.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM19 3l-6 6 2 2 7-7V3z"/></svg></div>
-            Cut <span class="context-menu-shortcut">Ctrl+X</span>
-        </div>
-        <div class="context-menu-item" onclick="cmPaste()">
-            <div class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></svg></div>
-            Paste <span class="context-menu-shortcut">Ctrl+V</span>
-        </div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" onclick="cmConvertColumnToDropdown()">
-            <div class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg></div>
-            Toggle Dropdown (Custom Col)
-        </div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" onclick="cmInsertRowAbove()">
-            Insert row above
-        </div>
-        <div class="context-menu-item" onclick="cmInsertColLeft()">
-            Insert column left
-        </div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" onclick="cmDeleteRow()">
-            <div class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></div>
-            <span style="color: #d93025;">Delete row</span>
-        </div>
-        <div class="context-menu-item" onclick="cmDeleteColumn()">
-            <div class="context-menu-icon"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></div>
-            <span style="color: #d93025;">Delete column</span>
-        </div>
-        <div class="context-menu-item" onclick="cmClearCell()">
-            <div class="context-menu-icon"></div>
-            Delete cell
-        </div>
-    </div>
-
-
-    <!-- Formula Bar -->
-    <div class="formula-bar">
-        <div class="name-box" id="nameBox">A1</div>
-        <div class="fx-icon">fx</div>
-        <input type="text" class="formula-input" id="formulaInput" placeholder="Select a cell..." oninput="updateActiveCell(this.value)">
+    <!-- Date Navigation Tabs -->
+    <div class="sheet-tabs" id="sheetTabsContainer" style="position: relative; background: var(--bg-color); border-bottom: 1px solid var(--border-color); padding: 5px 20px 0 20px;">
+        <!-- Populated dynamically by JS -->
     </div>
 
     <!-- Main Grid Workspace -->
-    <div class="grid-workspace">
-        <table class="excel-grid" id="recordsTable">
-            <thead>
-                <tr>
-                    <th class="corner-header"></th>
-                    <th>A</th>
-                    <th>B</th>
-                    <th>C</th>
-                    <th>D</th>
-                    <th>E</th>
-                    <th>F</th>
-                    <th>G</th>
-                    <th>H</th>
-                </tr>
-                <tr class="column-titles">
-                    <td class="row-number">1</td>
-                    <td class="col-title" onclick="handleSort('created_at', 0)">Date <span id="sort-0"></span></td>
-                    <td class="col-title">Time</td>
-                    <td class="col-title" onclick="handleSort('ccd_no', 1)">CCD No. <span id="sort-1"></span></td>
-                    <td class="col-title" onclick="handleSort('full_name', 2)">Full Name <span id="sort-2"></span></td>
-                    <td class="col-title" onclick="handleSort('age', 3)">Age <span id="sort-3"></span></td>
-                    <td class="col-title" onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></td>
-                    <td class="col-title" onclick="handleSort('is_priority', 5)">Priority <span id="sort-5"></span></td>
-                    <td class="col-title" onclick="handleSort('status', 6)">Status <span id="sort-6"></span></td>
-                </tr>
-            </thead>
-            <tbody id="recordsBody">
-                <tr><td colspan="7" style="text-align: center; padding: 2rem;">Loading data...</td></tr>
-            </tbody>
-        </table>
+    <div class="grid-workspace" style="padding: 20px;">
+        <div style="background: var(--panel-bg); border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <table class="data-table" id="recordsTable" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr class="column-titles">
+                        <th class="col-title" onclick="handleSort('created_at', 0)">Date <span id="sort-0"></span></th>
+                        <th class="col-title">Time</th>
+                        <th class="col-title" onclick="handleSort('ccd_no', 1)">CCD No. <span id="sort-1"></span></th>
+                        <th class="col-title" onclick="handleSort('full_name', 2)">Full Name <span id="sort-2"></span></th>
+                        <th class="col-title" onclick="handleSort('age', 3)">Age <span id="sort-3"></span></th>
+                        <th class="col-title" onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></th>
+                        <th class="col-title" onclick="handleSort('is_priority', 5)">Priority <span id="sort-5"></span></th>
+                        <th class="col-title" onclick="handleSort('status', 6)">Status <span id="sort-6"></span></th>
+                        <th class="col-title" style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsBody">
+                    <tr><td colspan="9" style="text-align: center; padding: 2rem;">Loading data...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- Sheet Tabs -->
-    <div class="sheet-tabs" id="sheetTabsContainer" style="position: relative;">
-        <!-- Populated dynamically by JS like Excel Sheet Tabs -->
-    </div>
-    
     <!-- Calendar Popover (Hidden by default) -->
-    <div class="calendar-popover" id="calendarPopover" style="bottom: 35px; left: 10px;">
+    <div class="calendar-popover" id="calendarPopover" style="top: 120px; right: 20px; bottom: auto; left: auto;">
         <div class="cal-header">
             <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)">◀</button>
             <div class="cal-title" id="calMonthYear">June 2026</div>
@@ -473,811 +330,9 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
+
+
     <script>
-
-        // --- Persistent Dynamic Columns ---
-        let customColumns = JSON.parse(localStorage.getItem('nbi_custom_columns')) || [];
-        let customData = JSON.parse(localStorage.getItem('nbi_custom_data')) || {};
-        
-        function saveCustomSchema() {
-            // Sort columns by index so they are rendered left-to-right correctly
-            customColumns.sort((a, b) => a.index - b.index);
-            localStorage.setItem('nbi_custom_columns', JSON.stringify(customColumns));
-        }
-        function saveCustomData() {
-            localStorage.setItem('nbi_custom_data', JSON.stringify(customData));
-        }
-
-        function initCustomHeaders() {
-            const theadLetters = document.querySelector('.excel-grid thead tr:first-child');
-            const theadTitles = document.querySelector('.excel-grid .column-titles');
-            const colLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            
-            // Remove existing custom headers to rebuild
-            document.querySelectorAll('.custom-th').forEach(el => el.remove());
-            document.querySelectorAll('.custom-td-title').forEach(el => el.remove());
-
-            customColumns.forEach((col) => {
-                const newTh = document.createElement('th');
-                newTh.style.width = '150px';
-                newTh.className = 'custom-th';
-                
-                // Insert at the specified index
-                if(col.index < theadLetters.children.length) {
-                    theadLetters.insertBefore(newTh, theadLetters.children[col.index]);
-                } else {
-                    theadLetters.appendChild(newTh);
-                }
-
-                const newTdTitle = document.createElement('td');
-                newTdTitle.className = 'col-title custom-td-title';
-                newTdTitle.contentEditable = "true";
-                newTdTitle.style.cursor = "text";
-                newTdTitle.textContent = col.title;
-                newTdTitle.onblur = function() {
-                    col.title = newTdTitle.textContent.trim();
-                    saveCustomSchema();
-                };
-                
-                if(col.index < theadTitles.children.length) {
-                    theadTitles.insertBefore(newTdTitle, theadTitles.children[col.index]);
-                } else {
-                    theadTitles.appendChild(newTdTitle);
-                }
-            });
-            
-            // Recompute letters for ALL headers (to maintain A, B, C... correctly)
-            Array.from(theadLetters.children).forEach((th, idx) => {
-                if (idx > 0 && th.className !== 'corner-header' && th.style.borderRight !== 'none') {
-                    th.textContent = colLetters[idx - 1] || "X";
-                }
-            });
-        }
-
-
-// Spreadsheet Interaction Logic
-let activeCellRef = "A1";
-let activeCellElement = null;
-let activeCellElements = [];
-
-function setActiveCell(cell, colLetter, rowIndex, isMultiSelect = false) {
-    if (!isMultiSelect) {
-        document.querySelectorAll('.excel-grid td').forEach(td => td.classList.remove('active-cell'));
-        activeCellElements = [cell];
-    } else {
-        if (!activeCellElements.includes(cell)) activeCellElements.push(cell);
-    }
-    
-    // Add active class to clicked cell
-    cell.classList.add('active-cell');
-    activeCellElement = cell;
-    
-    // Update Name Box and Formula Bar
-    const cellRef = colLetter + rowIndex;
-    document.getElementById('nameBox').textContent = cellRef;
-    
-    let content = "";
-    // If it's an input or select, get its value, else text content
-    const input = cell.querySelector('input, select');
-    if (input) {
-        content = input.value;
-    } else {
-        content = cell.innerText.trim();
-    }
-    document.getElementById('formulaInput').value = content;
-}
-
-function updateActiveCell(value) {
-    if(activeCellElement) {
-        const input = activeCellElement.querySelector('input, select');
-        if (input) {
-            input.value = value;
-        } else {
-            activeCellElement.innerText = value;
-        }
-    }
-}
-
-function applyFormat(styleProp, value, defaultValue) {
-    if (activeCellElements && activeCellElements.length > 0) {
-        const toggleValue = activeCellElement.style[styleProp] === value ? defaultValue : value;
-        activeCellElements.forEach(cell => {
-            cell.style[styleProp] = toggleValue;
-        });
-    } else {
-        showToast("Select a cell first!", true);
-    }
-}
-
-// --- Undo / Redo Logic ---
-let historyStack = [];
-let redoStack = [];
-
-function pushToHistory(action) {
-    historyStack.push(action);
-    if(historyStack.length > 50) historyStack.shift();
-    redoStack = [];
-}
-
-function performUndo() {
-    if(historyStack.length === 0) {
-        showToast("Nothing to undo", false, "info");
-        return;
-    }
-    const action = historyStack.pop();
-    redoStack.push(action);
-    
-    if(action.type === 'edit') {
-        action.changes.forEach(change => {
-            const {td, oldVal} = change;
-            const input = td.querySelector('input, select, textarea');
-            if(input) {
-                input.value = oldVal;
-                if(input.tagName === 'SELECT') input.dispatchEvent(new Event('change'));
-                else input.dispatchEvent(new Event('keyup'));
-            } else {
-                td.innerText = oldVal;
-            }
-            saveCell(td);
-        });
-        showToast("Undo", false, "success");
-    }
-}
-
-function performRedo() {
-    if(redoStack.length === 0) {
-        showToast("Nothing to redo", false, "info");
-        return;
-    }
-    const action = redoStack.pop();
-    historyStack.push(action);
-    
-    if(action.type === 'edit') {
-        action.changes.forEach(change => {
-            const {td, newVal} = change;
-            const input = td.querySelector('input, select, textarea');
-            if(input) {
-                input.value = newVal;
-                if(input.tagName === 'SELECT') input.dispatchEvent(new Event('change'));
-                else input.dispatchEvent(new Event('keyup'));
-            } else {
-                td.innerText = newVal;
-            }
-            saveCell(td);
-        });
-        showToast("Redo", false, "success");
-    }
-}
-
-let cellBeforeEditValue = {};
-document.addEventListener('focusin', function(e) {
-    if(['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
-        const td = e.target.closest('td');
-        if(td) cellBeforeEditValue = { td: td, val: e.target.value };
-    } else if(e.target.isContentEditable) {
-        const td = e.target.closest('td');
-        if(td) cellBeforeEditValue = { td: td, val: td.innerText };
-    }
-});
-document.addEventListener('focusout', function(e) {
-    if(cellBeforeEditValue.td) {
-        let newVal = "";
-        if(['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
-            newVal = e.target.value;
-        } else if(e.target.isContentEditable) {
-            newVal = cellBeforeEditValue.td.innerText;
-        }
-        if(newVal !== cellBeforeEditValue.val) {
-            pushToHistory({
-                type: 'edit',
-                changes: [{td: cellBeforeEditValue.td, oldVal: cellBeforeEditValue.val, newVal: newVal}]
-            });
-        }
-        cellBeforeEditValue = {};
-    }
-});
-
-// --- Mouse Drag Selection Logic ---
-let isDraggingCells = false;
-let dragStartCell = null;
-let isMultiAddMode = false; // For holding Ctrl
-let baseActiveCellElements = [];
-
-function highlightRectangle(startTd, endTd, mode) {
-    const tbody = document.getElementById('recordsBody');
-    const rows = Array.from(tbody.children);
-    
-    const startRow = rows.indexOf(startTd.parentElement);
-    const endRow = rows.indexOf(endTd.parentElement);
-    if (startRow === -1 || endRow === -1) return;
-    
-    const startCol = Array.from(startTd.parentElement.children).indexOf(startTd);
-    const endCol = Array.from(endTd.parentElement.children).indexOf(endTd);
-    
-    const minRow = Math.min(startRow, endRow);
-    const maxRow = Math.max(startRow, endRow);
-    const minCol = Math.min(startCol, endCol);
-    const maxCol = Math.max(startCol, endCol);
-    
-    if (mode === 'add') {
-        document.querySelectorAll('.excel-grid td').forEach(c => {
-            if (!baseActiveCellElements.includes(c)) {
-                c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
-            }
-        });
-        activeCellElements = [...baseActiveCellElements];
-    } else {
-        document.querySelectorAll('.excel-grid td').forEach(c => {
-            c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
-        });
-        activeCellElements = [];
-    }
-    
-    for (let r = minRow; r <= maxRow; r++) {
-        const rowCells = Array.from(rows[r].children);
-        for (let c = minCol; c <= maxCol; c++) {
-            const cell = rowCells[c];
-            if (cell && !cell.classList.contains('row-number')) {
-                cell.classList.add('active-cell');
-                if (r === minRow) cell.classList.add('selection-top');
-                if (r === maxRow) cell.classList.add('selection-bottom');
-                if (c === minCol) cell.classList.add('selection-left');
-                if (c === maxCol) cell.classList.add('selection-right');
-                
-                if (!activeCellElements.includes(cell)) activeCellElements.push(cell);
-            }
-        }
-    }
-    
-    activeCellElement = startTd;
-    startTd.classList.add('primary-cell');
-    
-    // Update Name Box
-    const startLet = String.fromCharCode(65 + startCol - 1);
-    const endLet = String.fromCharCode(65 + endCol - 1);
-    const startNum = startRow + 1;
-    const endNum = endRow + 1;
-    
-    if (startLet === endLet && startNum === endNum) {
-        document.getElementById('nameBox').textContent = startLet + startNum;
-    } else {
-        document.getElementById('nameBox').textContent = `${startLet}${startNum}:${endLet}${endNum}`;
-    }
-}
-
-document.addEventListener('mousedown', function(e) {
-    const td = e.target.closest('#recordsBody td:not(.row-number):not(select)');
-    if (td && e.button === 0) { // left click
-        if (document.activeElement !== td && !td.querySelector('input:focus, select:focus')) {
-            if (document.activeElement && document.activeElement.blur && typeof document.activeElement.blur === 'function') {
-                document.activeElement.blur();
-            }
-
-            if (!td.isContentEditable && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-                e.preventDefault();
-            }
-            
-            isDraggingCells = true;
-            dragStartCell = td;
-            isMultiAddMode = e.ctrlKey || e.metaKey;
-            
-            if (e.shiftKey && activeCellElement) {
-                baseActiveCellElements = isMultiAddMode ? [...activeCellElements] : [];
-                highlightRectangle(activeCellElement, td, isMultiAddMode ? 'add' : 'replace');
-            } else {
-                if (isMultiAddMode) {
-                    baseActiveCellElements = [...activeCellElements];
-                    if (activeCellElements.includes(td)) {
-                        td.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
-                        activeCellElements = activeCellElements.filter(c => c !== td);
-                        baseActiveCellElements = [...activeCellElements];
-                    } else {
-                        td.classList.add('active-cell', 'primary-cell');
-                        activeCellElements.push(td);
-                        baseActiveCellElements = [...activeCellElements];
-                    }
-                    activeCellElement = td;
-                } else {
-                    document.querySelectorAll('.excel-grid td').forEach(c => {
-                        c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
-                    });
-                    activeCellElements = [td];
-                    td.classList.add('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
-                    activeCellElement = td;
-                    baseActiveCellElements = [];
-                }
-                
-                const colLetter = String.fromCharCode(65 + Array.from(td.parentElement.children).indexOf(td) - 1);
-                const rowIndex = Array.from(td.parentElement.parentElement.children).indexOf(td.parentElement) + 1;
-                document.getElementById('nameBox').textContent = colLetter + rowIndex;
-                document.getElementById('formulaInput').value = td.innerText.trim();
-            }
-        }
-    } else {
-        isDraggingCells = false;
-    }
-});
-
-document.addEventListener('mouseover', function(e) {
-    if (isDraggingCells) {
-        const td = e.target.closest('#recordsBody td:not(.row-number):not(select)');
-        if (td && td !== dragStartCell) {
-            window.getSelection().removeAllRanges(); // prevent native blue text selection
-            highlightRectangle(dragStartCell, td, isMultiAddMode ? 'add' : 'replace');
-        }
-    }
-});
-
-document.addEventListener('mouseup', function(e) {
-    isDraggingCells = false;
-});
-
-// --- Global Keyboard Shortcuts ---
-document.addEventListener('keydown', function(e) {
-    // Basic Excel Shortcuts
-    if (e.ctrlKey) {
-        if (e.key === 'a' || e.key === 'A') {
-            // Let default select-all work inside editable cells, otherwise just highlight the whole table body
-            if (!document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
-                e.preventDefault();
-                document.querySelectorAll('.excel-grid td').forEach(td => td.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell'));
-                activeCellElements = [];
-                document.querySelectorAll('#recordsBody td').forEach(td => {
-                    if(td.style.borderRight !== 'none' && !td.classList.contains('row-number')) {
-                        td.classList.add('active-cell');
-                        activeCellElements.push(td);
-                    }
-                });
-                if(activeCellElements.length > 0) activeCellElement = activeCellElements[0];
-            }
-        }
-        else if (e.key === 's' || e.key === 'S') {
-            e.preventDefault();
-            if (document.activeElement && document.activeElement.blur && document.activeElement !== document.body) {
-                document.activeElement.blur();
-            }
-            showToast("Database auto-saves on every change!", false, "success");
-        }
-        else if (e.key === 'b' || e.key === 'B') {
-            e.preventDefault();
-            applyFormat('fontWeight', 'bold', 'normal');
-        }
-        else if (e.key === 'i' || e.key === 'I') {
-            e.preventDefault();
-            applyFormat('fontStyle', 'italic', 'normal');
-        }
-        else if (e.key === 'u' || e.key === 'U') {
-            e.preventDefault();
-            applyFormat('textDecoration', 'underline', 'none');
-        }
-        else if (e.key === 'z' || e.key === 'Z') {
-            if(!document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
-                e.preventDefault();
-                performUndo();
-            }
-        }
-        else if (e.key === 'y' || e.key === 'Y') {
-            if(!document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
-                e.preventDefault();
-                performRedo();
-            }
-        }
-        else if (e.key === 'f' || e.key === 'F') {
-            e.preventDefault();
-            document.getElementById('searchInput').focus();
-            document.getElementById('searchInput').select();
-        }
-        // Removed manual c/x/v checks. Relying on native copy/cut/paste events instead.
-    }
-    
-    // Allow clearing cells with Delete or Backspace
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (!document.activeElement.isContentEditable && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
-            e.preventDefault();
-            if (activeCellElements && activeCellElements.length > 0) {
-                let changes = [];
-                activeCellElements.forEach(td => {
-                    let oldVal = "";
-                    const input = td.querySelector('input, select, textarea');
-                    if (input) {
-                        oldVal = input.value;
-                        input.value = '';
-                        if (input.tagName === 'SELECT') {
-                            input.dispatchEvent(new Event('change'));
-                        } else {
-                            input.dispatchEvent(new Event('keyup'));
-                        }
-                    } else {
-                        oldVal = td.innerText;
-                        td.innerText = '';
-                    }
-                    if(oldVal !== '') {
-                        changes.push({td: td, oldVal: oldVal, newVal: ''});
-                    }
-                    saveCell(td);
-                });
-                if(changes.length > 0) {
-                    pushToHistory({type: 'edit', changes: changes});
-                }
-                showToast("Cleared selected cells", false, "success");
-            }
-        }
-    }
-    
-    if (e.key === 'Escape') {
-        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
-        document.querySelectorAll('.excel-grid td').forEach(c => {
-            c.classList.remove('active-cell', 'selection-top', 'selection-bottom', 'selection-left', 'selection-right', 'primary-cell');
-        });
-        activeCellElements = [];
-        activeCellElement = null;
-        document.getElementById('nameBox').textContent = '';
-    }    // --- Clipboard Integration (Moved to Global Scope) ---   }
-
-    // Arrow Key Navigation
-    if (activeCellElement && !activeCellElement.isContentEditable && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
-        const tr = activeCellElement.parentElement;
-        const tds = Array.from(tr.children);
-        const colIndex = tds.indexOf(activeCellElement);
-        const tbody = tr.parentElement;
-        const trs = Array.from(tbody.children);
-        const rowIndex = trs.indexOf(tr);
-        
-        let targetCell = null;
-        if (e.key === 'ArrowUp') {
-            if (rowIndex > 0) targetCell = trs[rowIndex - 1].children[colIndex];
-            e.preventDefault();
-        } else if (e.key === 'ArrowDown') {
-            if (rowIndex < trs.length - 1) targetCell = trs[rowIndex + 1].children[colIndex];
-            e.preventDefault();
-        } else if (e.key === 'ArrowLeft') {
-            if (colIndex > 1) targetCell = trs[rowIndex].children[colIndex - 1]; // avoid row numbers
-            e.preventDefault();
-        } else if (e.key === 'ArrowRight') {
-            if (colIndex < tds.length - 1) targetCell = trs[rowIndex].children[colIndex + 1];
-            e.preventDefault();
-        }
-        
-        if (targetCell && targetCell.tagName === 'TD') {
-            targetCell.click();
-            targetCell.focus();
-        }
-    }
-});
-
-// --- Global Clipboard Functions ---
-let pendingCutCells = null;
-
-function performCopy() {
-    if (!activeCellElements || activeCellElements.length === 0) return;
-    document.execCommand('copy');
-}
-
-function performCut() {
-    if (!activeCellElements || activeCellElements.length === 0) return;
-    document.execCommand('cut');
-}
-
-function performPaste() {
-    if (!activeCellElement) return;
-    // We cannot reliably trigger paste via button click without permission issues.
-    showToast("Paste button blocked by browser. Please use Ctrl+V.", true, "error");
-}
-
-function getSelectedCellsText() {
-    if (!activeCellElements || activeCellElements.length === 0) return '';
-    const sortedCells = [...activeCellElements].sort((a, b) => {
-        const rowA = Array.from(a.parentElement.parentElement.children).indexOf(a.parentElement);
-        const rowB = Array.from(b.parentElement.parentElement.children).indexOf(b.parentElement);
-        if (rowA !== rowB) return rowA - rowB;
-        const colA = Array.from(a.parentElement.children).indexOf(a);
-        const colB = Array.from(b.parentElement.children).indexOf(b);
-        return colA - colB;
-    });
-
-    let text = '';
-    let currentRow = Array.from(sortedCells[0].parentElement.parentElement.children).indexOf(sortedCells[0].parentElement);
-    
-    sortedCells.forEach(td => {
-        const rowIdx = Array.from(td.parentElement.parentElement.children).indexOf(td.parentElement);
-        if (rowIdx !== currentRow) {
-            text += '\n';
-            currentRow = rowIdx;
-        } else if (text !== '' && !text.endsWith('\n')) {
-            text += '\t';
-        }
-        const input = td.querySelector('input, select, textarea');
-        if (input) {
-            text += input.value;
-        } else {
-            text += td.innerText.trim();
-        }
-    });
-    
-    return text;
-}
-
-function saveCell(td) {
-    const onblurAttr = td.getAttribute('onblur');
-    if (onblurAttr && onblurAttr.includes('updateCell')) {
-        const match = onblurAttr.match(/updateCell\(this,\s*'([^']+)',\s*'([^']+)'\)/);
-        if (match) {
-            const field = match[1];
-            const id = match[2];
-            if (id !== 'temp' && typeof updateCell === 'function') {
-                updateCell(td, field, id);
-            }
-        }
-    }
-}
-
-function pasteTextIntoCells(text, startCell) {
-    const rows = text.split('\n');
-    const sourceData = rows.map(r => r.split('\t'));
-    const sourceRows = sourceData.length;
-    const sourceCols = sourceData[0].length;
-    
-    const tbody = document.getElementById('recordsBody');
-    const tableRows = Array.from(tbody.children);
-    
-    let changes = [];
-    let targetCells = [];
-    
-    if (activeCellElements && activeCellElements.length > 1) {
-        let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
-        activeCellElements.forEach(c => {
-            const rIdx = tableRows.indexOf(c.parentElement);
-            const cIdx = Array.from(c.parentElement.children).indexOf(c);
-            if(rIdx < minR) minR = rIdx;
-            if(rIdx > maxR) maxR = rIdx;
-            if(cIdx < minC) minC = cIdx;
-            if(cIdx > maxC) maxC = cIdx;
-        });
-        
-        for(let r = minR; r <= maxR; r++) {
-            for(let c = minC; c <= maxC; c++) {
-                const targetCell = tableRows[r] && tableRows[r].children[c];
-                if(targetCell && activeCellElements.includes(targetCell)) {
-                    const srcRow = (r - minR) % sourceRows;
-                    const srcCol = (c - minC) % sourceCols;
-                    if(sourceData[srcRow] && sourceData[srcRow][srcCol] !== undefined) {
-                        targetCells.push({td: targetCell, val: sourceData[srcRow][srcCol]});
-                    }
-                }
-            }
-        }
-    } else {
-        const startRowIdx = tableRows.indexOf(startCell.parentElement);
-        const startColIdx = Array.from(startCell.parentElement.children).indexOf(startCell);
-        if(startRowIdx === -1 || startColIdx === -1) return;
-        
-        sourceData.forEach((rowCols, rOffset) => {
-            const targetRow = tableRows[startRowIdx + rOffset];
-            if(targetRow) {
-                rowCols.forEach((val, cOffset) => {
-                    const targetCell = targetRow.children[startColIdx + cOffset];
-                    if(targetCell && !targetCell.classList.contains('row-number')) {
-                        targetCells.push({td: targetCell, val: val});
-                    }
-                });
-            }
-        });
-    }
-    
-    targetCells.forEach(item => {
-        const targetCell = item.td;
-        let oldVal = "";
-        const input = targetCell.querySelector('input, select, textarea');
-        if (input) {
-            oldVal = input.value;
-            input.value = item.val.trim();
-            if (input.tagName === 'SELECT') {
-                input.dispatchEvent(new Event('change'));
-            } else {
-                input.dispatchEvent(new Event('keyup'));
-            }
-        } else {
-            oldVal = targetCell.innerText;
-            targetCell.innerText = item.val.trim();
-        }
-        changes.push({td: targetCell, oldVal: oldVal, newVal: item.val.trim()});
-        saveCell(targetCell);
-    });
-    
-    if(changes.length > 0) {
-        pushToHistory({type: 'edit', changes: changes});
-    }
-}
-
-// Global Document Clipboard Events
-document.addEventListener('copy', function(e) {
-    if (activeCellElements && activeCellElements.length > 0 && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-        const text = getSelectedCellsText();
-        e.clipboardData.setData('text/plain', text);
-        e.preventDefault();
-        
-        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell', 'cut-cell'));
-        activeCellElements.forEach(c => c.classList.add('copied-cell'));
-        pendingCutCells = null;
-        showToast("Copied to clipboard!", false, "success");
-    }
-});
-
-document.addEventListener('cut', function(e) {
-    if (activeCellElements && activeCellElements.length > 0 && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-        const text = getSelectedCellsText();
-        e.clipboardData.setData('text/plain', text);
-        e.preventDefault();
-        
-        document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell', 'cut-cell'));
-        activeCellElements.forEach(c => c.classList.add('copied-cell', 'cut-cell'));
-        pendingCutCells = [...activeCellElements];
-        showToast("Cut to clipboard!", false, "success");
-    }
-});
-
-document.addEventListener('paste', function(e) {
-    if (activeCellElement && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-        e.preventDefault();
-        const text = (e.clipboardData || window.clipboardData).getData('text');
-        if (text) {
-            try {
-                pasteTextIntoCells(text, activeCellElement);
-                let snippet = text.trim().substring(0, 25);
-                if (text.length > 25) snippet += '...';
-                if (snippet.length === 0) snippet = '(empty spaces)';
-                showToast("Pasted: " + snippet, false, "success");
-                
-                document.querySelectorAll('.copied-cell').forEach(c => c.classList.remove('copied-cell'));
-                
-                if (pendingCutCells) {
-                    pendingCutCells.forEach(td => {
-                        const input = td.querySelector('input, select, textarea');
-                        if(input) {
-                            input.value = '';
-                        } else {
-                            td.innerText = '';
-                        }
-                        td.style.backgroundColor = '';
-                        saveCell(td);
-                    });
-                    pendingCutCells.forEach(c => c.classList.remove('cut-cell'));
-                    pendingCutCells = null;
-                }
-            } catch (err) {
-                showToast("Paste error: " + err.message, true, "error");
-            }
-        }
-    }
-});
-
-
-// Intercept the original renderTable to add spreadsheet cell events and row numbers
-if (typeof originalRenderTable === 'undefined') {
-    var originalRenderTable = renderTable;
-    
-    renderTable = function() {
-        originalRenderTable(); // call the original to populate rows
-        
-        const tbody = document.getElementById('recordsBody');
-        const rows = tbody.querySelectorAll('tr');
-        
-        // Header columns are A, B, C, D, E, F
-        const colLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-        
-        // Calculate how many rows exist vs how many we need for a full screen (approx 30)
-        const currentDataRows = tbody.querySelectorAll('tr').length;
-        const rowsToFill = Math.max(0, 30 - currentDataRows);
-        
-        // Append empty rows
-        for(let i = 0; i < rowsToFill; i++) {
-            const emptyTr = document.createElement('tr');
-            // We have 8 data columns: A,B,C,D,E,F,G,H
-            for(let c=0; c<8; c++) {
-                const td = document.createElement('td');
-                td.textContent = "";
-                emptyTr.appendChild(td);
-            }
-            tbody.appendChild(emptyTr);
-        }
-
-        const allRows = tbody.querySelectorAll('tr');
-
-        initCustomHeaders();
-        const theadLetters = document.querySelector('.excel-grid thead tr:first-child');
-        
-        allRows.forEach((tr, index) => {
-            const rowIndex = index + 2; // Data starts at row 2
-            const r = filteredRecords[index]; // Get original record payload
-            const rowId = r ? r.id : 'temp';
-            
-            // Set dataset id for bulletproof row operations
-            if (rowId !== 'temp') {
-                tr.dataset.id = rowId;
-            }
-
-            // Add filler cell at the end
-            const fillerTd = document.createElement('td');
-            fillerTd.style.borderRight = "none";
-            fillerTd.style.cursor = "default";
-            tr.appendChild(fillerTd);
-
-            // Prepend row number cell
-            const rowNumTd = document.createElement('td');
-            rowNumTd.className = 'row-number';
-            rowNumTd.textContent = rowIndex;
-            tr.insertBefore(rowNumTd, tr.firstChild);
-            
-            // INJECT CUSTOM CELLS
-            customColumns.forEach((col) => {
-                const newTd = document.createElement('td');
-                newTd.className = 'custom-cell';
-                const val = (customData[rowId] && customData[rowId][col.id]) || "";
-                
-                if (col.type === 'dropdown') {
-                    const select = document.createElement('select');
-                    select.style.width = '100%'; select.style.border = 'none'; select.style.background = 'transparent'; select.style.outline = 'none'; select.style.fontSize = '0.85rem';
-                    select.className = 'scratchpad-select';
-                    const optEmpty = document.createElement('option'); optEmpty.value = ""; optEmpty.textContent = "";
-                    const optYes = document.createElement('option'); optYes.value = "YES"; optYes.textContent = "YES";
-                    const optNo = document.createElement('option'); optNo.value = "NO"; optNo.textContent = "NO";
-                    select.appendChild(optEmpty); select.appendChild(optYes); select.appendChild(optNo);
-                    select.value = val;
-                    
-                    select.addEventListener('change', function() {
-                        if (rowId !== 'temp') {
-                            if (!customData[rowId]) customData[rowId] = {};
-                            customData[rowId][col.id] = select.value;
-                            saveCustomData();
-                        }
-                        document.getElementById('formulaInput').value = select.value; applyGlobalColorsToGrid();
-                    });
-                    newTd.appendChild(select);
-                } else {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.style.width = '100%'; input.style.border = 'none'; input.style.background = 'transparent'; input.style.outline = 'none'; input.style.fontSize = '0.85rem';
-                    input.className = 'scratchpad-input';
-                    input.value = val;
-                    
-                    input.addEventListener('keyup', function() {
-                        if (rowId !== 'temp') {
-                            if (!customData[rowId]) customData[rowId] = {};
-                            customData[rowId][col.id] = input.value;
-                            saveCustomData();
-                        }
-                        document.getElementById('formulaInput').value = input.value;
-                    });
-                    newTd.appendChild(input);
-                }
-                
-                // Insert custom cell at the specified index
-                if(col.index < tr.children.length) {
-                    tr.insertBefore(newTd, tr.children[col.index]);
-                } else {
-                    tr.appendChild(newTd);
-                }
-            });
-            
-            // Add click events to data cells (re-calculated after all insertions)
-            const dataCells = tr.querySelectorAll('td:not(.row-number)');
-            dataCells.forEach((td, colIndex) => {
-                const letter = theadLetters.children[colIndex + 1] ? theadLetters.children[colIndex + 1].textContent : "X";
-                td.addEventListener('click', function(e) {
-                    setActiveCell(td, letter, rowIndex);
-                });
-                td.addEventListener('keyup', function(e) {
-                    if (document.activeElement === td) {
-                        const innerInput = td.querySelector('input, select');
-                        document.getElementById('formulaInput').value = innerInput ? innerInput.value : td.innerText.trim();
-                    }
-                });
-            });
-        });
-    };
-}
-
-
         // --- State ---
         let allRecords = [];
         let filteredRecords = [];
@@ -1819,41 +874,34 @@ if (typeof originalRenderTable === 'undefined') {
             tbody.innerHTML = '';
 
             if (filteredRecords.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">No records found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">No records found.</td></tr>`;
                 document.getElementById('recordCount').textContent = "Showing 0 records";
                 return;
             }
 
             filteredRecords.forEach(r => {
-                const isPrio = r.is_priority ? '<span class="badge badge-priority" style="margin-left: 5px;">PRIORITY</span>' : '';
                 const dateObj = new Date(r.created_at);
                 const dateStr = dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
                 const timeStr = dateObj.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
-
-                let statusClass = 'status-waiting';
-                if (r.status === 'Serving') statusClass = 'status-serving';
-                if (r.status === 'Served') statusClass = 'status-served';
-                if (r.status === 'Skipped') statusClass = 'status-skipped';
-                if (r.status === 'No-show') statusClass = 'status-noshow';
 
                 const tr = document.createElement('tr');
                 if (r.is_priority) tr.className = 'priority-row';
 
                 tr.innerHTML = `
-                    <td tabindex="0">${dateStr}</td>
-                    <td tabindex="0">${timeStr}</td>
-                    <td tabindex="0" class="ccd-cell" contenteditable="true" onblur="updateCell(this, 'ccd_no', '${r.id}')">${r.ccd_no}</td>
-                    <td tabindex="0" class="name-cell" contenteditable="true" onblur="updateCell(this, 'full_name', '${r.id}')">${r.full_name}</td>
-                    <td tabindex="0" contenteditable="true" onkeypress="return event.charCode >= 48 && event.charCode <= 57" onblur="updateCell(this, 'age', '${r.id}')">${r.age}</td>
-                    <td tabindex="0" contenteditable="true" onkeypress="return event.charCode >= 48 && event.charCode <= 57" onblur="updateCell(this, 'contact', '${r.id}')">${r.contact}</td>
-                    <td tabindex="0">
-                        <select onchange="updateCell(this, 'is_priority', '${r.id}')" class="status-badge ${r.is_priority ? 'badge-priority' : ''}" >
+                    <td>${dateStr}</td>
+                    <td>${timeStr}</td>
+                    <td style="font-weight: 500;">${r.ccd_no || ''}</td>
+                    <td>${r.full_name || ''}</td>
+                    <td>${r.age || ''}</td>
+                    <td>${r.contact || ''}</td>
+                    <td>
+                        <select onchange="updateCell(this, 'is_priority', '${r.id}')" class="status-badge ${r.is_priority ? 'badge-priority' : ''}" style="cursor: pointer; border: none; background: transparent; font-weight: bold; padding: 2px;">
                             <option value="false" ${!r.is_priority ? 'selected' : ''}>NO</option>
                             <option value="true" ${r.is_priority ? 'selected' : ''}>YES</option>
                         </select>
                     </td>
-                    <td tabindex="0">
-                        <select onchange="updateCell(this, 'status', '${r.id}')" class="status-badge" >
+                    <td>
+                        <select onchange="updateCell(this, 'status', '${r.id}')" class="status-badge" style="cursor: pointer; border: none; background: transparent; font-weight: bold; padding: 2px;">
                             <option value="Waiting" ${r.status === 'Waiting' ? 'selected' : ''}>Waiting</option>
                             <option value="Serving" ${r.status === 'Serving' ? 'selected' : ''}>Serving</option>
                             <option value="Served" ${r.status === 'Served' ? 'selected' : ''}>Served</option>
@@ -1861,73 +909,27 @@ if (typeof originalRenderTable === 'undefined') {
                             <option value="No-show" ${r.status === 'No-show' ? 'selected' : ''}>No-show</option>
                         </select>
                     </td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <button class="btn-formal" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 4px;" onclick="openEditModal('${r.id}')" title="Edit Record">Edit</button>
+                        <button class="btn-formal" style="padding: 4px 8px; font-size: 0.8rem; color: #ef4444;" onclick="cmDeleteRow('${r.id}')" title="Delete Record">Del</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
 
             document.getElementById('recordCount').textContent = `Showing ${filteredRecords.length} records`;
-            applyGlobalColorsToGrid();
         }
 
-        
-        // --- SPREADSHEET FORMULA PARSER ---
-        function evaluateFormula(formulaStr) {
-            if (!formulaStr.startsWith('=')) return formulaStr;
-            
-            try {
-                let expression = formulaStr.substring(1).toUpperCase();
-                
-                // Handle basic SUM(A1:A5) like structures but locally scoped for now
-                if (expression.startsWith('SUM(') && expression.endsWith(')')) {
-                    const inner = expression.substring(4, expression.length - 1);
-                    const parts = inner.split(',').map(p => parseFloat(p.trim())).filter(n => !isNaN(n));
-                    if (parts.length > 0) return parts.reduce((a, b) => a + b, 0).toString();
-                }
-                
-                if (expression.startsWith('AVERAGE(') && expression.endsWith(')')) {
-                    const inner = expression.substring(8, expression.length - 1);
-                    const parts = inner.split(',').map(p => parseFloat(p.trim())).filter(n => !isNaN(n));
-                    if (parts.length > 0) return (parts.reduce((a, b) => a + b, 0) / parts.length).toString();
-                }
-
-                // Super basic math eval (Warning: eval is dangerous, but we heavily sanitize)
-                // Only allow numbers, basic math operators, and decimals
-                const sanitized = expression.replace(/[^0-9+\-*/().]/g, '');
-                if (sanitized) {
-                    // eslint-disable-next-line no-eval
-                    const result = eval(sanitized);
-                    return Number.isFinite(result) ? result.toString() : formulaStr;
-                }
-                return formulaStr;
-            } catch (e) {
-                console.warn("Formula parsing failed:", e);
-                return "#ERROR!";
-            }
-        }
-
-        // --- GLOBAL HISTORY STACK ---
-        // (Removed old undoStack and redoStack to prevent SyntaxError - using new historyStack)
-
-        async function updateCell(element, field, id, skipHistory = false) {
+        async function updateCell(element, field, id) {
             let newValue = element.value !== undefined ? element.value : element.innerText.trim();
-            
-            // Check for formula
-            if (newValue.startsWith('=')) {
-                const calculated = evaluateFormula(newValue);
-                if (element.tagName === 'TD') element.innerText = calculated;
-                else element.value = calculated;
-                newValue = calculated;
-            }
-
             let payloadValue = newValue;
             if (field === 'is_priority') {
                 payloadValue = (newValue === 'true' || newValue === true);
             }
 
             const oldRecord = allRecords.find(x => x.id === id);
-            if (oldRecord) oldRecord[field] = payloadValue; // keep local cache fresh so next rapid undo works
+            if (oldRecord) oldRecord[field] = payloadValue; // keep local cache fresh
 
-            // Optional: add visual saving indicator here
             element.style.opacity = '0.5';
             
             try {
@@ -1939,13 +941,16 @@ if (typeof originalRenderTable === 'undefined') {
                 
                 if (!response.ok) {
                     showToast('Failed to save update.', true);
+                } else {
+                    if (field === 'is_priority' || field === 'status') {
+                        renderTable(); // Re-render to update badge classes instantly
+                    }
                 }
             } catch (err) {
                 console.error(err);
                 showToast('Error saving data.', true);
             } finally {
                 element.style.opacity = '1';
-                applyGlobalColorsToGrid();
             }
         }
 
@@ -1989,56 +994,7 @@ if (typeof originalRenderTable === 'undefined') {
             openModal('modalView');
         }
 
-        function openEdit(id) {
-            const r = allRecords.find(x => x.id === id);
-            if (!r) return;
-            document.getElementById('editId').value = r.id;
-            document.getElementById('editName').value = r.full_name;
-            document.getElementById('editAge').value = r.age;
-            document.getElementById('editContact').value = r.contact;
-            document.getElementById('editEmail').value = r.email || '';
-            document.getElementById('editGender').value = r.gender;
-            document.getElementById('editCivil').value = r.civil_status;
-            document.getElementById('editAddress').value = r.address;
-            document.getElementById('editPurpose').value = r.purpose;
-            document.getElementById('editReferred').value = r.referred_by || '';
-            document.getElementById('editPriority').checked = r.is_priority;
-            openModal('modalEdit');
-        }
-
-        async function submitEdit(e) {
-            e.preventDefault();
-            const id = document.getElementById('editId').value;
-            const updates = {
-                full_name: document.getElementById('editName').value.trim(),
-                age: document.getElementById('editAge').value,
-                contact: document.getElementById('editContact').value.trim(),
-                email: document.getElementById('editEmail').value.trim(),
-                gender: document.getElementById('editGender').value,
-                civil_status: document.getElementById('editCivil').value,
-                address: document.getElementById('editAddress').value.trim(),
-                purpose: document.getElementById('editPurpose').value,
-                referred_by: document.getElementById('editReferred').value.trim(),
-                is_priority: document.getElementById('editPriority').checked
-            };
-
-            try {
-                const response = await fetch(`/api/records/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updates)
-                });
-                if ((await response.json()).success) {
-                    showToast('Record updated successfully');
-                    closeModal('modalEdit');
-
-                    // Instantly update local cache
-                    const idx = allRecords.findIndex(x => x.id === id);
-                    if (idx !== -1) allRecords[idx] = { ...allRecords[idx], ...updates };
-                    applyFiltersAndSort();
-                } else { showToast('Failed to update record. Please try again.', true); }
-            } catch (err) { showToast('Server error. Failed to save.', true); }
-        }
+        // Old openEdit and submitEdit removed — replaced by openEditModal and new submitEdit below
 
         function openStatus(id, currentStatus) {
             document.getElementById('statusId').value = id;
@@ -2296,7 +1252,8 @@ if (typeof originalRenderTable === 'undefined') {
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const text = e.target.result;
-                const rows = text.split('\n');
+                const rows = text.split('
+');
                 if (rows.length < 2) {
                     showToast("CSV file is empty or missing headers", true);
                     return;
@@ -2395,414 +1352,104 @@ if (typeof originalRenderTable === 'undefined') {
             document.getElementById('toolbar-' + tabName).style.display = 'flex';
         }
 
-        // --- Insert Functions ---
-        async function insertRow() {
-            showToast("Inserting new row...");
+        // --- Removed spreadsheet clipboard and keyboard handlers ---
+
+        // --- Global Add/Edit Modal Logic ---
+        function openAddModal() {
+            document.getElementById('editId').value = ''; 
+            document.getElementById('editForm').reset();
+            document.getElementById('modalEdit').querySelector('.modal-title').textContent = 'Add New Record';
+            openModal('modalEdit');
+        }
+
+        function openEditModal(id) {
+            const record = allRecords.find(r => r.id === id);
+            if (!record) return;
+            
+            document.getElementById('editId').value = record.id;
+            document.getElementById('editName').value = record.full_name || '';
+            document.getElementById('editAge').value = record.age || '';
+            document.getElementById('editContact').value = record.contact || '';
+            document.getElementById('editEmail').value = record.email || '';
+            document.getElementById('editGender').value = record.gender || 'Prefer not to say';
+            document.getElementById('editCivil').value = record.civil_status || 'Single';
+            document.getElementById('editAddress').value = record.address || '';
+            document.getElementById('editPurpose').value = record.purpose || 'File a Complaint';
+            document.getElementById('editReferred').value = record.referred_by || '';
+            document.getElementById('editPriority').checked = record.is_priority || false;
+            
+            document.getElementById('modalEdit').querySelector('.modal-title').textContent = 'Edit Record';
+            openModal('modalEdit');
+        }
+
+        async function submitEdit(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const payload = {
+                full_name: document.getElementById('editName').value,
+                age: document.getElementById('editAge').value,
+                contact: document.getElementById('editContact').value,
+                email: document.getElementById('editEmail').value,
+                gender: document.getElementById('editGender').value,
+                civil_status: document.getElementById('editCivil').value,
+                address: document.getElementById('editAddress').value,
+                purpose: document.getElementById('editPurpose').value,
+                referred_by: document.getElementById('editReferred').value,
+                is_priority: document.getElementById('editPriority').checked
+            };
+
             try {
-                // Use the currently viewed date for the new row so it appears in the active tab
-                const viewD = new Date(currentViewDate);
-                const now = new Date();
-                viewD.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
-                
-                // Post to /api/import since it handles arrays of records
-                const newRecord = [{
-                    created_at: viewD.toISOString(),
-                    ccd_no: 'CCD-MANUAL-' + Date.now(),
-                    full_name: 'New Unknown Record',
-                    age: 0,
-                    status: 'Waiting',
-                    contact: '',
-                    is_priority: false,
-                    civil_status: 'Single',
-                    gender: 'Other',
-                    address: 'N/A',
-                    purpose: 'File a Complaint'
-                }];
-                const res = await fetch('/api/import', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ records: newRecord })
-                });
-                const result = await res.json();
-                if(result.success) {
-                    showToast("Row added successfully!");
-                    fetchRecords(); // refresh grid
-                } else {
-                    showToast("Failed to add row: " + result.error, true);
-                }
-            } catch(e) {
-                showToast("Error adding row", true);
-            }
-        }
-
-                function insertColumn(targetIndex) {
-            if (targetIndex === undefined) {
-                const theadLetters = document.querySelector('.excel-grid thead tr:first-child');
-                targetIndex = theadLetters ? theadLetters.children.length - 1 : 8;
-            }
-            showToast("Adding custom column...", false);
-            
-            // Shift indices of existing custom columns if they are >= targetIndex
-            customColumns.forEach(col => {
-                if (col.index >= targetIndex) col.index++;
-            });
-            
-            customColumns.push({
-                id: 'col_' + Date.now(),
-                title: 'New Col',
-                type: 'text',
-                index: targetIndex
-            });
-            
-            saveCustomSchema();
-            renderTable(); // Re-render to show it correctly
-        }
-
-        // --- Custom Context Menu & Keyboard Shortcuts Logic ---
-        let cmTargetCell = null;
-
-        // Handle Ctrl+Z, Ctrl+Y, and Delete/Backspace
-        document.addEventListener('keydown', async function(e) {
-            // Undo and Redo
-            if (e.ctrlKey || e.metaKey) {
-                const key = e.key.toLowerCase();
-                const activeTag = document.activeElement.tagName;
-                const isTyping = ['INPUT', 'TEXTAREA'].includes(activeTag) || 
-                                 document.activeElement.isContentEditable;
-                
-                if (key === 'z' && !e.shiftKey) {
-                    if (!isTyping) {
-                        e.preventDefault();
-                        await performUndo();
-                        return;
-                    }
-                } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
-                    if (!isTyping) {
-                        e.preventDefault();
-                        await performRedo();
-                        return;
-                    }
-                }
-            } 
-            
-            // Delete and Backspace for active cell
-            if ((e.key === 'Delete' || e.key === 'Backspace') && activeCellElement) {
-                const isTyping = document.activeElement === activeCellElement || 
-                                 ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
-                if (!isTyping) {
-                    e.preventDefault();
-                    const originalCmTarget = cmTargetCell;
-                    cmTargetCell = activeCellElement;
-                    cmClearCell();
-                    cmTargetCell = originalCmTarget;
-                }
-            }
-        });
-
-        // Global Copy, Cut, Paste using native clipboard events for spreadsheet behavior
-        document.addEventListener('copy', function(e) {
-            if (activeCellElement && window.getSelection().toString().length === 0) {
-                const activeTag = document.activeElement.tagName;
-                if (['INPUT', 'TEXTAREA'].includes(activeTag) && document.activeElement.id !== 'formulaInput') return;
-                
-                e.preventDefault();
-                const input = activeCellElement.querySelector('input, select');
-                const text = input ? input.value : activeCellElement.innerText.trim();
-                e.clipboardData.setData('text/plain', text);
-            }
-        });
-
-        document.addEventListener('cut', function(e) {
-            if (activeCellElement && window.getSelection().toString().length === 0) {
-                const activeTag = document.activeElement.tagName;
-                if (['INPUT', 'TEXTAREA'].includes(activeTag) && document.activeElement.id !== 'formulaInput') return;
-                
-                e.preventDefault();
-                const input = activeCellElement.querySelector('input, select');
-                const text = input ? input.value : activeCellElement.innerText.trim();
-                e.clipboardData.setData('text/plain', text);
-                
-                const originalCmTarget = cmTargetCell;
-                cmTargetCell = activeCellElement;
-                cmClearCell();
-                cmTargetCell = originalCmTarget;
-            }
-        });
-
-        document.addEventListener('paste', function(e) {
-            if (activeCellElement) {
-                const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
-                if (isInput) return; // Let native paste work normally inside inputs
-                
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text');
-                if (!text) return;
-
-                // Parse TSV (Tab-Separated Values) from clipboard
-                const rows = text.split(/\r?\n/).map(row => row.split('\t'));
-                if (rows.length === 0 || (rows.length === 1 && rows[0].length === 1 && rows[0][0] === "")) return;
-
-                const startCell = activeCellElement;
-                const startTr = startCell.closest('tr');
-                const tbody = startTr.closest('tbody');
-                
-                const allTrs = Array.from(tbody.querySelectorAll('tr'));
-                const startRowIndex = allTrs.indexOf(startTr);
-                
-                const startTds = Array.from(startTr.querySelectorAll('td:not(.row-number)'));
-                const startColIndex = startTds.indexOf(startCell);
-
-                for (let r = 0; r < rows.length; r++) {
-                    const tr = allTrs[startRowIndex + r];
-                    if (!tr) break;
-
-                    const tds = Array.from(tr.querySelectorAll('td:not(.row-number)'));
-                    
-                    for (let c = 0; c < rows[r].length; c++) {
-                        const td = tds[startColIndex + c];
-                        if (!td) break;
-
-                        // Skip non-editable or corner headers
-                        if (td.style.cursor === 'default' || td.classList.contains('corner-header')) continue;
-
-                        const val = rows[r][c].trim();
-                        
-                        const input = td.querySelector('input, select');
-                        if (input) {
-                            input.value = val;
-                            if (input.hasAttribute('onchange')) {
-                                const match = input.getAttribute('onchange').match(/updateCell\(this,\s*'([^']+)',\s*'([^']+)'\)/);
-                                if (match) updateCell(input, match[1], match[2]);
-                            }
-                            input.dispatchEvent(new Event('keyup'));
-                            input.dispatchEvent(new Event('change'));
-                        } else if (td.hasAttribute('contenteditable')) {
-                            td.innerText = val;
-                            // Guarantee database update by directly executing the updateCell logic
-                            if (td.hasAttribute('onblur')) {
-                                const onBlurStr = td.getAttribute('onblur');
-                                const match = onBlurStr.match(/updateCell\(this,\s*'([^']+)',\s*'([^']+)'\)/);
-                                if (match) {
-                                    updateCell(td, match[1], match[2]);
-                                } else {
-                                    // Fallback if format is weird
-                                    td.dispatchEvent(new Event('blur'));
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                startCell.focus();
-                document.getElementById('formulaInput').value = rows[0][0].trim();
-            }
-        });
-
-        document.addEventListener('contextmenu', function(e) {
-            if(e.target.closest('#recordsTable td:not(.row-number):not(.corner-header)')) {
-                e.preventDefault();
-                cmTargetCell = e.target.closest('td');
-                cmTargetCell.click(); // make active
-                
-                const menu = document.getElementById('contextMenu');
-                menu.style.display = 'flex';
-                
-                // Adjust position
-                let x = e.clientX;
-                let y = e.clientY;
-                
-                if (x + 200 > window.innerWidth) x = window.innerWidth - 200;
-                if (y + 150 > window.innerHeight) y = window.innerHeight - 150;
-                
-                menu.style.left = x + 'px';
-                menu.style.top = y + 'px';
-            }
-        });
-
-        document.addEventListener('click', function(e) {
-            if(!e.target.closest('#contextMenu')) {
-                const menu = document.getElementById('contextMenu');
-                if(menu) menu.style.display = 'none';
-            }
-        });
-
-        function cmEditCell() {
-            if(cmTargetCell) {
-                cmTargetCell.focus();
-                document.getElementById('contextMenu').style.display = 'none';
-            }
-        }
-
-        
-        async function cmCopy() {
-            if(cmTargetCell) {
-                const input = cmTargetCell.querySelector('input, select, textarea');
-                const text = input ? input.value : cmTargetCell.innerText.trim();
-                try {
-                    if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
-                        await navigator.clipboard.writeText(text);
-                    } else {
-                        throw new Error("No clipboard API");
-                    }
-                } catch(e) {
-                    const textArea = document.createElement("textarea");
-                    textArea.value = text;
-                    textArea.style.position = "fixed";
-                    textArea.style.top = "0";
-                    textArea.style.left = "0";
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                }
-                document.getElementById('contextMenu').style.display = 'none';
-            }
-        }
-        async function cmCut() {
-            if(cmTargetCell) {
-                cmCopy();
-                cmClearCell();
-            }
-        }
-        async function cmPaste() {
-            if(cmTargetCell) {
-                try {
-                    const text = await navigator.clipboard.readText();
-                    const input = cmTargetCell.querySelector('input, select');
-                    if(input) {
-                        input.value = text;
-                        input.blur();
-                    } else {
-                        cmTargetCell.innerText = text;
-                        cmTargetCell.blur();
-                    }
-                } catch(e) {
-                    showToast('Please use Ctrl+V to paste', true);
-                    cmTargetCell.focus();
-                }
-                document.getElementById('contextMenu').style.display = 'none';
-            }
-        }
-        
-        function cmConvertColumnToDropdown() {
-            if(cmTargetCell) {
-                const cellIndex = Array.from(cmTargetCell.parentElement.children).indexOf(cmTargetCell);
-                const col = customColumns.find(c => c.index === cellIndex);
-                if (col) {
-                    col.type = col.type === 'dropdown' ? 'text' : 'dropdown';
-                    saveCustomSchema();
-                    showToast("Column type changed!", false, "success");
-                    renderTable();
-                } else {
-                    showToast("Can only convert custom columns.", true);
-                }
-            }
-            document.getElementById('contextMenu').style.display = 'none';
-        }
-
-        function cmInsertRowAbove() {
-            insertRow();
-            document.getElementById('contextMenu').style.display = 'none';
-        }
-        function cmInsertColLeft() {
-            if(cmTargetCell) {
-                const cellIndex = Array.from(cmTargetCell.parentElement.children).indexOf(cmTargetCell);
-                // Prevent inserting at index 0 (row numbers)
-                insertColumn(Math.max(1, cellIndex));
-            }
-            document.getElementById('contextMenu').style.display = 'none';
-        }
-        
-        function cmDeleteColumn() {
-            if(cmTargetCell) {
-                const cellIndex = Array.from(cmTargetCell.parentElement.children).indexOf(cmTargetCell);
-                // Check if it's a custom column
-                const colToRemove = customColumns.find(c => c.index === cellIndex);
-                if (colToRemove) {
-                    customColumns = customColumns.filter(c => c.id !== colToRemove.id);
-                    // Shift indices back
-                    customColumns.forEach(col => {
-                        if (col.index > cellIndex) col.index--;
+                let res;
+                if (id) {
+                    res = await fetch('/api/records/' + id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
                     });
-                    saveCustomSchema();
-                    showToast("Column deleted.", false, "success");
-                    renderTable();
                 } else {
-                    showToast("Cannot delete default columns.", true);
+                    // Add new record via the import endpoint
+                    payload.ccd_no = 'CCD-' + Date.now();
+                    payload.status = 'Waiting';
+                    payload.created_at = new Date().toISOString();
+                    res = await fetch('/api/import', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ records: [payload] })
+                    });
                 }
-            }
-            document.getElementById('contextMenu').style.display = 'none';
-        }
 
-        function cmClearCell() {
-            if(cmTargetCell) {
-                const input = cmTargetCell.querySelector('input, select');
-                if (input) {
-                    if (input.tagName !== 'SELECT') {
-                        input.value = "";
-                        input.blur(); // trigger save
-                    }
+                if(res.ok) {
+                    showToast(id ? 'Record updated!' : 'Record added!', false, "success");
+                    closeModal('modalEdit');
+                    fetchRecords();
                 } else {
-                    cmTargetCell.innerText = "";
-                    cmTargetCell.blur(); // trigger save
+                    showToast('Failed to save record.', true);
                 }
-                document.getElementById('contextMenu').style.display = 'none';
+            } catch(err) {
+                console.error(err);
+                showToast('Network error.', true);
             }
         }
 
-        async function cmTogglePriority() {
-            if(cmTargetCell) {
-                const tr = cmTargetCell.closest('tr');
-                const prioSelect = tr.querySelector('select[onchange*="is_priority"]');
-                if(prioSelect) {
-                    prioSelect.value = prioSelect.value === 'true' ? 'false' : 'true';
-                    // trigger change manually
-                    const event = new Event('change');
-                    prioSelect.dispatchEvent(event);
-                }
-                document.getElementById('contextMenu').style.display = 'none';
-            }
-        }
-
-        async function cmDeleteRow() {
-            if(cmTargetCell) {
-                const tr = cmTargetCell.closest('tr');
-                const firstEditable = tr.querySelector('[onblur], [onchange]');
-                if(firstEditable) {
-                    const funcStr = firstEditable.getAttribute('onblur') || firstEditable.getAttribute('onchange');
-                    const match = funcStr.match(/'([^']+)'\)$/);
-                    if(match && match[1]) {
-                        const rowId = match[1];
-                        document.getElementById('confirmMessage').innerText = "Are you sure you want to completely delete this record? This cannot be undone.";
-                        openModal('modalConfirm');
-                        
-                        document.getElementById('confirmYesBtn').onclick = async function() {
-                            closeModal('modalConfirm');
-                            try {
-                                const res = await fetch('/api/records/' + rowId, { method: 'DELETE' });
-                                const result = await res.json();
-                                if(result.success) {
-                                    showToast("Row deleted successfully!", false, "success");
-                                    // Also remove customData if it exists
-                                    if (customData[rowId]) {
-                                        delete customData[rowId];
-                                        saveCustomData();
-                                    }
-                                    fetchRecords();
-                                } else {
-                                    showToast("Failed to delete row.", true);
-                                }
-                            } catch(err) {
-                                showToast("Server error deleting row.", true);
-                            }
-                        };
+        async function cmDeleteRow(rowId) {
+            document.getElementById('confirmMessage').innerText = "Are you sure you want to completely delete this record? This cannot be undone.";
+            openModal('modalConfirm');
+            
+            document.getElementById('confirmYesBtn').onclick = async function() {
+                closeModal('modalConfirm');
+                try {
+                    const res = await fetch('/api/records/' + rowId, { method: 'DELETE' });
+                    const result = await res.json();
+                    if(result.success) {
+                        showToast("Row deleted successfully!", false, "success");
+                        fetchRecords();
                     } else {
-                        showToast("Error: Could not identify row ID.", true);
+                        showToast("Failed to delete row.", true);
                     }
+                } catch(err) {
+                    showToast("Server error deleting row.", true);
                 }
-                document.getElementById('contextMenu').style.display = 'none';
-            }
+            };
         }
 
 

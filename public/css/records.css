@@ -1,662 +1,452 @@
+/* =========================================
+   NBI QMS — Formal Database Records CSS
+   ========================================= */
+
 * {
-            box-sizing: border-box;
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        :root[data-theme="light"], :root {
-            /* NBI Light Theme */
-            --bg-color: #f8f9fa;
-            --panel-bg: #ffffff;
-            --border-color: #e2e8f0;
-            --border-heavy: #cbd5e1;
-            
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --text-accent: #0b1d3a;
-            
-            --header-bg: #0b1d3a;
-            --header-text: #ffffff;
-            
-            --table-hover: #f1f5f9;
-            --nbi-cell-border: #e2e8f0;
-            --nbi-blue: #0b1d3a;
-
-            --btn-bg: #ffffff;
-            --btn-border: #cbd5e1;
-            --btn-hover: #f8f9fa;
-            
-            --focus-ring: rgba(11, 29, 58, 0.2);
-            --focus-border: #0b1d3a;
-            
-            /* Status Colors (Light mode) */
-            --status-served-bg: #D1FAE5; --status-served-txt: #065F46;
-            --status-waiting-bg: #DBEAFE; --status-waiting-txt: #1E40AF;
-            --status-skipped-bg: #FEE2E2; --status-skipped-txt: #991B1B;
-            --status-noshow-bg: #F3F4F6; --status-noshow-txt: #374151;
-            --status-serving-bg: #FEF3C7; --status-serving-txt: #92400E;
-        }
-
-        :root[data-theme="dark"] {
-            /* NBI Dark Theme */
-            --bg-color: #050e1d;
-            --panel-bg: #0b1d3a;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --border-heavy: rgba(255, 255, 255, 0.2);
-            
-            --text-main: #ffffff;
-            --text-muted: #a0aec0;
-            --text-accent: #f1c40f;
-            
-            --header-bg: #0b1d3a;
-            --header-text: #a0aec0;
-            
-            --table-hover: rgba(255, 255, 255, 0.05);
-            --nbi-cell-border: rgba(255, 255, 255, 0.1);
-            --nbi-blue: #f1c40f;
-
-            --btn-bg: rgba(255, 255, 255, 0.1);
-            --btn-border: rgba(255, 255, 255, 0.1);
-            --btn-hover: rgba(255, 255, 255, 0.2);
-            
-            --focus-ring: rgba(241, 196, 15, 0.2);
-            --focus-border: #f1c40f;
-            
-            /* Status Colors (Adjusted for dark mode) */
-            --status-served-bg: rgba(46, 204, 113, 0.2); --status-served-txt: #2ecc71;
-            --status-waiting-bg: rgba(52, 152, 219, 0.2); --status-waiting-txt: #3498db;
-            --status-skipped-bg: rgba(231, 76, 60, 0.2); --status-skipped-txt: #e74c3c;
-            --status-noshow-bg: rgba(149, 165, 166, 0.2); --status-noshow-txt: #95a5a6;
-            --status-serving-bg: rgba(241, 196, 15, 0.2); --status-serving-txt: #f1c40f;
-        }
-
-        body, html {
-            margin: 0; padding: 0;
-            height: 100vh;
-            overflow: hidden;
-            background: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            color: var(--text-main);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Modernized Ribbon/Header */
-        .ribbon-header {
-            background: var(--panel-bg);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-            z-index: 50;
-        }
-
-        .ribbon-top {
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.85rem;
-            background: var(--bg-color);
-            border-bottom: 1px solid var(--border-color);
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-        
-        .ribbon-top img { height: 20px; border-radius: 4px; }
-
-        .ribbon-tabs {
-            display: flex;
-            padding: 0 16px;
-            margin-top: 8px;
-            gap: 24px;
-        }
-        
-        .ribbon-tab {
-            padding: 8px 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-        
-        .ribbon-tab:hover {
-            color: var(--text-main);
-        }
-        
-        .ribbon-tab.active {
-            color: var(--text-accent);
-            border-bottom: 2px solid var(--text-accent);
-        }
-
-        .ribbon-toolbar {
-            background: var(--panel-bg);
-            padding: 8px 16px;
-            display: flex;
-            gap: 24px;
-            align-items: center;
-        }
-
-        .toolbar-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-right: 1px solid var(--border-color);
-            padding-right: 24px;
-        }
-
-        .toolbar-group:last-child { border-right: none; }
-
-        .group-label { display: none; /* Hide old ugly group labels */ }
-
-        .ribbon-btn {
-            background: var(--btn-bg);
-            border-radius: 6px;
-            border: 1px solid var(--btn-border);
-            padding: 6px 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-main);
-            transition: all 0.15s;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-        }
-        
-        .ribbon-btn:hover {
-            background: var(--btn-hover);
-            border-color: var(--border-heavy);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-        }
-
-        /* Formula Bar - Modernized */
-        .formula-bar {
-            display: flex;
-            background: var(--panel-bg);
-            padding: 8px 16px;
-            border-bottom: 1px solid var(--border-color);
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .name-box {
-            width: 80px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background: var(--bg-color);
-            padding: 4px 8px;
-            font-size: 0.8rem;
-            text-align: center;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-        
-        .fx-icon {
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        
-        .formula-input {
-            flex: 1;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 0.85rem;
-            outline: none;
-            transition: all 0.2s;
-            background: var(--bg-color);
-        }
-        
-        .formula-input:focus {
-            border-color: var(--focus-border);
-            box-shadow: 0 0 0 3px var(--focus-ring);
-            background: var(--panel-bg);
-        }
-
-        /* Main Grid Workspace - Airtable/Notion Style */
-        .grid-workspace {
-            flex: 1;
-            overflow: auto;
-            background: var(--panel-bg);
-        }
-        
-        .excel-grid {
-            border-collapse: separate;
-            border-spacing: 0;
-            background: var(--panel-bg);
-            table-layout: fixed;
-            min-width: 100%;
-        }
-        
-        .excel-grid tr { height: 36px; }
-        
-        .excel-grid th, .excel-grid td {
-            border-bottom: 1px solid var(--nbi-cell-border);
-            border-right: 1px solid var(--nbi-cell-border);
-            padding: 0 12px;
-            font-size: 0.85rem;
-            vertical-align: middle;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            text-align: center;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        
-        .excel-grid td input, .excel-grid td textarea {
-            user-select: text;
-            -webkit-user-select: text;
-        }
-        
-        .excel-grid th {
-            background: var(--header-bg);
-            color: var(--header-text);
-            font-weight: 500;
-            text-align: left;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            border-bottom: 2px solid var(--border-heavy);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 8px 12px;
-        }
-        
-        .corner-header {
-            width: 50px;
-            background: var(--bg-color) !important;
-            position: sticky;
-            left: 0;
-            z-index: 11;
-            border-right: 2px solid var(--border-heavy);
-        }
-        
-        .row-number {
-            background: var(--bg-color);
-            color: var(--text-muted);
-            text-align: center;
-            position: sticky;
-            left: 0;
-            z-index: 9;
-            width: 50px;
-            font-size: 0.75rem;
-            border-right: 2px solid var(--border-heavy);
-        }
-        
-        .excel-grid td {
-            color: var(--text-main);
-        }
-        
-        /* Cell Styles */
-        .ccd-cell {
-            font-family: 'JetBrains Mono', 'SF Mono', monospace;
-            font-weight: 500;
-            color: var(--text-accent) !important;
-        }
-        
-        .name-cell {
-            font-weight: 500;
-            color: var(--text-main) !important;
-        }
-        
-        .excel-grid td:not(.row-number):not(.corner-header) {
-            cursor: cell;
-            position: relative;
-            outline: none;
-        }
-        
-        .active-cell {
-            --t: 0px; --b: 0px; --l: 0px; --r: 0px;
-            background: rgba(37, 99, 235, 0.1) !important;
-            box-shadow: 
-                inset 0 var(--t) 0 0 #1a73e8,
-                inset 0 calc(var(--b) * -1) 0 0 #1a73e8,
-                inset var(--l) 0 0 0 #1a73e8,
-                inset calc(var(--r) * -1) 0 0 0 #1a73e8 !important;
-            z-index: 5;
-        }
-        
-        .active-cell.selection-top { --t: 2px; }
-        .active-cell.selection-bottom { --b: 2px; }
-        .active-cell.selection-left { --l: 2px; }
-        .active-cell.selection-right { --r: 2px; }
-
-        .active-cell.primary-cell {
-            background: transparent !important;
-        }
-
-        @keyframes borderBlink {
-            50% { outline-color: transparent; }
-        }
-        
-        .copied-cell {
-            outline: 2px dashed #1a73e8 !important;
-            outline-offset: -2px;
-            z-index: 6;
-            animation: borderBlink 1s step-end infinite;
-        }
-
-        .cut-cell {
-            opacity: 0.5;
-        }
-        
-        .active-cell::after { display: none; }
-        .active-cell.selection-bottom.selection-right::after {
-            content: '';
-            display: block;
-            position: absolute;
-            bottom: -4px;
-            right: -4px;
-            width: 8px;
-            height: 8px;
-            background: #1a73e8;
-            border-radius: 50%;
-            cursor: crosshair;
-            z-index: 10;
-        }
-
-        /* Modern Badges */
-        .status-badge {
-            padding: 4px 10px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border-radius: 9999px;
-            border: none;
-            text-align: center;
-            display: inline-block;
-            width: auto;
-            min-width: 90px;
-            appearance: none;
-            outline: none;
-        }
-
-
-        /* Sheet Tabs Bottom */
-        .sheet-tabs {
-            display: flex;
-            background: var(--bg-color);
-            border-top: 1px solid var(--border-heavy);
-            padding: 2px 10px 0;
-            gap: 2px;
-        }
-        .sheet-tab {
-            padding: 4px 15px;
-            background: var(--bg-color);
-            border: 1px solid var(--border-heavy);
-            border-bottom: none;
-            font-size: 0.8rem;
-            cursor: pointer;
-            color: var(--text-muted);
-        }
-        .sheet-tab.active {
-            background: var(--panel-bg);
-            font-weight: bold;
-            color: var(--text-accent);
-        }
-        .sheet-tab.add-sheet {
-            font-weight: bold;
-            padding: 4px 10px;
-        }
-        .sheet-tab:hover:not(.active) {
-            background: var(--table-hover);
-        }
-
-        /* Modals and Original UI Preserved */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal { background: var(--panel-bg); color: var(--text-main); padding: 20px; border: 1px solid var(--border-heavy); min-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;}
-        .modal-header { border-bottom: 1px solid var(--border-color); margin-bottom: 15px; padding-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; color: var(--text-accent); text-transform: uppercase; }
-        .modal-close { cursor: pointer; background: none; border: none; font-size: 1.2rem; color: var(--text-muted); }
-        .modal-close:hover { color: var(--text-main); }
-        
-        .toast-container { position: fixed; bottom: 40px; right: 20px; z-index: 2000; }
-        .toast { background: #2ecc71; color: white; padding: 10px 20px; margin-top: 10px; display: none; }
-        .toast.show { display: block; }
-        .toast.error { background: #e74c3c; }
-        
-        .form-group { margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
-        .form-input, .form-select, .form-textarea { padding: 6px; border: 1px solid var(--border-color); width: 100%; background: var(--bg-color); color: var(--text-main); }
-        .form-textarea { min-height: 100px; resize: vertical; }
-        .btn-formal { padding: 6px 12px; background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border-heavy); cursor: pointer; }
-        .btn-primary { background: var(--text-accent); color: var(--bg-color); }
-        .btn-danger { background: var(--red); color: white; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .full-width { grid-column: 1 / -1; }
-        .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;}
-        .detail-row { display: flex; border-bottom: 1px solid var(--border-color); padding: 5px 0;}
-        .detail-label { width: 30%; font-weight: bold;}
-        .detail-value { width: 70%;}
-        
-        /* Calendar Specific Overrides for compatibility */
-        .calendar-popover {
-            display: none;
-            position: absolute;
-            bottom: 35px;
-            background: var(--panel-bg);
-            border: 1px solid var(--border-heavy);
-            border-radius: 8px;
-            padding: 15px;
-            z-index: 100;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            width: 280px;
-        }
-        .calendar-popover.active { display: block; }
-        .cal-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; color: var(--text-main);
-        }
-        .cal-nav-btn {
-            background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1rem;
-        }
-        .cal-nav-btn:hover { color: var(--text-main); }
-        .cal-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            text-align: center;
-        }
-        .cal-day-label { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; margin-bottom: 5px;}
-        .cal-day {
-            padding: 8px 0; border-radius: 4px; font-size: 0.85rem; cursor: pointer; color: var(--text-main);
-        }
-        .cal-day:hover:not(.empty):not(.disabled) { background: rgba(255,255,255,0.1); }
-        .cal-day.has-records { font-weight: bold; color: var(--text-accent); background: rgba(241, 196, 15, 0.1); }
-        .cal-day.selected { background: var(--text-accent); color: var(--panel-bg); font-weight: bold; }
-        .cal-day.today { border: 1px solid var(--text-accent); }
-        .cal-day.disabled { color: var(--border-heavy); cursor: default; }
-        .cal-day.empty { cursor: default; background: transparent; }
-    
-        
-        .context-menu {
-            position: fixed;
-            z-index: 10000;
-            width: 260px;
-            background: var(--panel-bg);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            border: 1px solid var(--border-color);
-            display: none;
-            flex-direction: column;
-            padding: 6px 0;
-            font-family: 'Inter', sans-serif;
-            color: var(--text-main);
-        }
-        .context-menu-item {
-            padding: 8px 16px 8px 40px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            position: relative;
-            color: var(--text-main) !important;
-            font-weight: 500;
-        }
-        .context-menu-item:hover {
-            background: var(--table-hover);
-        }
-        .context-menu-icon {
-            position: absolute;
-            left: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 18px;
-            height: 18px;
-            color: var(--text-muted);
-        }
-        .context-menu-icon svg {
-            width: 16px;
-            height: 16px;
-            fill: currentColor;
-        }
-        .context-menu-shortcut {
-            margin-left: auto;
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-        .context-menu-divider {
-            height: 1px;
-            background: var(--border-color);
-            margin: 6px 0;
-        }
-
-
-    
-        /* Utilities for spreadsheet text */
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .font-bold { font-weight: 600; }
-        .font-semibold { font-weight: 500; }
-        .text-accent { color: var(--accent-color); }
-        .text-primary { color: var(--text-primary); }
-
-    
-
-        /* React-Toastify Clone */
-        .toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10001;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        }
-        .toast {
-            background: #fff;
-            color: #333;
-            min-width: 250px;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            transform: translateX(120%);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-            pointer-events: auto;
-        }
-        .toast.show {
-            transform: translateX(0);
-        }
-        .toast-icon {
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-        }
-        .toast-icon svg { width: 20px; height: 20px; }
-        .toast-content { flex-grow: 1; }
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 4px;
-            width: 100%;
-            background: #3498db;
-            transform-origin: left;
-            animation: toastProgress 3s linear forwards;
-        }
-        .toast.error .toast-progress { background: #e74c3c; }
-        .toast.success .toast-progress { background: #2ecc71; }
-        
-        @keyframes toastProgress {
-            0% { transform: scaleX(1); }
-            100% { transform: scaleX(0); }
-        }
-
-        /* Modal Overlay */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.4);
-            display: none; align-items: center; justify-content: center;
-            z-index: 9999; backdrop-filter: blur(2px);
-        }
-        .modal-box {
-            background: #fff; border-radius: 8px; padding: 20px;
-            width: 90%; max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .modal-box h3 { margin-top: 0; color: #1e293b; }
-        .modal-box .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; }
-        .modal-box .btn-primary { background: #ea4335; color: white; }
-        .modal-box .btn-secondary { background: #e2e8f0; color: #333; margin-left: 10px; }
-    
-        /* Utilities for spreadsheet text */
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .font-bold { font-weight: 600; }
-        .font-semibold { font-weight: 500; }
-        * {
-            box-sizing: border-box;
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-.excel-grid td, 
-.excel-grid td input, 
-.excel-grid td select,
-.name-box,
-.formula-input,
-.ccd-cell {
-    font-family: 'Google Sans Code', monospace !important;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Status Badge Classes */
-.status-served { background-color: var(--status-served-bg) !important; color: var(--status-served-txt) !important; }
-.status-waiting { background-color: var(--status-waiting-bg) !important; color: var(--status-waiting-txt) !important; }
-.status-skipped { background-color: var(--status-skipped-bg) !important; color: var(--status-skipped-txt) !important; }
-.status-noshow { background-color: var(--status-noshow-bg) !important; color: var(--status-noshow-txt) !important; }
-.status-serving { background-color: var(--status-serving-bg) !important; color: var(--status-serving-txt) !important; }
+/* ---- Light Theme (Default) ---- */
+:root[data-theme="light"], :root {
+    --bg-color: #f8f9fa;
+    --panel-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --border-heavy: #cbd5e1;
 
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --text-accent: #0b1d3a;
+
+    --header-bg: #0b1d3a;
+    --header-text: #ffffff;
+
+    --table-hover: #f1f5f9;
+    --nbi-cell-border: #e2e8f0;
+    --nbi-blue: #0b1d3a;
+
+    --btn-bg: #ffffff;
+    --btn-border: #cbd5e1;
+    --btn-hover: #f8f9fa;
+
+    --focus-ring: rgba(11, 29, 58, 0.2);
+    --focus-border: #0b1d3a;
+
+    --red: #dc2626;
+
+    --status-served-bg: #D1FAE5; --status-served-txt: #065F46;
+    --status-waiting-bg: #DBEAFE; --status-waiting-txt: #1E40AF;
+    --status-skipped-bg: #FEE2E2; --status-skipped-txt: #991B1B;
+    --status-noshow-bg: #F3F4F6; --status-noshow-txt: #374151;
+    --status-serving-bg: #FEF3C7; --status-serving-txt: #92400E;
+}
+
+/* ---- Dark Theme ---- */
+:root[data-theme="dark"] {
+    --bg-color: #050e1d;
+    --panel-bg: #0b1d3a;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-heavy: rgba(255, 255, 255, 0.2);
+
+    --text-main: #ffffff;
+    --text-muted: #a0aec0;
+    --text-accent: #f1c40f;
+
+    --header-bg: #0b1d3a;
+    --header-text: #a0aec0;
+
+    --table-hover: rgba(255, 255, 255, 0.05);
+    --nbi-cell-border: rgba(255, 255, 255, 0.1);
+    --nbi-blue: #f1c40f;
+
+    --btn-bg: rgba(255, 255, 255, 0.1);
+    --btn-border: rgba(255, 255, 255, 0.1);
+    --btn-hover: rgba(255, 255, 255, 0.2);
+
+    --focus-ring: rgba(241, 196, 15, 0.2);
+    --focus-border: #f1c40f;
+
+    --red: #ef4444;
+
+    --status-served-bg: rgba(46, 204, 113, 0.2); --status-served-txt: #2ecc71;
+    --status-waiting-bg: rgba(52, 152, 219, 0.2); --status-waiting-txt: #3498db;
+    --status-skipped-bg: rgba(231, 76, 60, 0.2); --status-skipped-txt: #e74c3c;
+    --status-noshow-bg: rgba(149, 165, 166, 0.2); --status-noshow-txt: #95a5a6;
+    --status-serving-bg: rgba(241, 196, 15, 0.2); --status-serving-txt: #f1c40f;
+}
+
+/* ---- Base ---- */
+body, html {
+    margin: 0; padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Action Bar ---- */
+.action-bar {
+    flex-shrink: 0;
+}
+
+/* ---- Form Inputs ---- */
+.form-input, .form-select, .form-textarea {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--panel-bg);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--focus-border);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.form-textarea {
+    width: 100%;
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* ---- Buttons ---- */
+.btn-formal {
+    padding: 7px 14px;
+    border: 1px solid var(--btn-border);
+    border-radius: 6px;
+    background: var(--btn-bg);
+    color: var(--text-main);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.btn-formal:hover {
+    background: var(--btn-hover);
+    border-color: var(--border-heavy);
+}
+.btn-formal:active {
+    transform: scale(0.97);
+}
+.btn-primary {
+    background: var(--nbi-blue) !important;
+    color: #fff !important;
+    border-color: var(--nbi-blue) !important;
+}
+.btn-primary:hover {
+    opacity: 0.9;
+}
+.btn-danger {
+    background: var(--red) !important;
+    color: #fff !important;
+    border-color: var(--red) !important;
+}
+.btn-danger:hover {
+    opacity: 0.9;
+}
+
+/* ---- Sheet Tabs ---- */
+.sheet-tabs {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+    overflow-x: auto;
+}
+.sheet-tab {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+    user-select: none;
+    display: flex;
+    align-items: center;
+}
+.sheet-tab:hover {
+    color: var(--text-main);
+    background: var(--table-hover);
+}
+.sheet-tab.active {
+    color: var(--nbi-blue);
+    border-bottom-color: var(--nbi-blue);
+    font-weight: 600;
+}
+
+/* ---- Grid Workspace ---- */
+.grid-workspace {
+    flex: 1;
+    overflow: auto;
+}
+
+/* ---- Data Table ---- */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+.data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.data-table th {
+    background: var(--header-bg);
+    color: var(--header-text);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    border-bottom: 2px solid var(--border-heavy);
+}
+.data-table th:hover {
+    background: rgba(255,255,255,0.05);
+}
+.data-table th span {
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+.data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--nbi-cell-border);
+    color: var(--text-main);
+    vertical-align: middle;
+    white-space: nowrap;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.data-table tbody tr {
+    transition: background-color 0.12s;
+}
+.data-table tbody tr:hover {
+    background: var(--table-hover);
+}
+.data-table tbody tr.priority-row {
+    background: rgba(239, 68, 68, 0.06);
+    border-left: 3px solid var(--red);
+}
+.data-table tbody tr.priority-row:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ---- Status Badge Select ---- */
 select.status-badge {
-    /* Ensure select tags inherit the color properly */
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 3px 8px;
 }
 select.status-badge option {
     background-color: var(--panel-bg);
     color: var(--text-main);
 }
-
-
-/* Multi-Cell Selection */
-.selected-cell {
-    background-color: rgba(37, 99, 235, 0.1) !important;
-    outline: 1px solid rgba(37, 99, 235, 0.5);
-}
-.selected-cell.active-cell {
-    background-color: rgba(37, 99, 235, 0.2) !important;
-    outline: 2px solid var(--focus-border) !important;
+.badge-priority {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #dc2626 !important;
 }
 
+/* ---- Calendar Popover ---- */
+.calendar-popover {
+    position: fixed;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    padding: 16px;
+    z-index: 1000;
+    display: none;
+    width: 280px;
+}
+.calendar-popover.active { display: block; }
+.cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.cal-title { font-weight: 600; font-size: 0.95rem; color: var(--text-main); }
+.cal-nav-btn {
+    background: none; border: none;
+    cursor: pointer; font-size: 1rem;
+    color: var(--text-muted); padding: 4px 8px;
+    border-radius: 4px;
+}
+.cal-nav-btn:hover { background: var(--table-hover); }
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+    font-size: 0.8rem;
+}
+.cal-day-label {
+    font-weight: 600; font-size: 0.7rem;
+    color: var(--text-muted); padding: 4px;
+}
+.cal-day {
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background 0.15s;
+}
+.cal-day:hover:not(.disabled) { background: var(--table-hover); }
+.cal-day.disabled { color: var(--border-color); cursor: default; }
+.cal-day.selected { background: var(--nbi-blue); color: #fff; font-weight: 600; }
+.cal-day.today { border: 1px solid var(--nbi-blue); }
+.cal-day.has-records { font-weight: 700; }
+.cal-day.empty { color: var(--text-muted); }
+
+/* ---- Modals ---- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(3px);
+}
+.modal-overlay.active { display: flex; }
+.modal {
+    background: var(--panel-bg);
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    animation: modalSlideIn 0.2s ease-out;
+}
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+.modal-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+.modal-close {
+    background: none; border: none;
+    font-size: 1.5rem; cursor: pointer;
+    color: var(--text-muted);
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+.modal-close:hover { background: var(--table-hover); color: var(--text-main); }
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 16px;
+    margin-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* ---- Form Grid (Edit Modal) ---- */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.form-group { display: flex; flex-direction: column; }
+.form-group.full-width { grid-column: span 2; }
+.form-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+.form-grid .form-input,
+.form-grid .form-select {
+    width: 100%;
+}
+
+/* ---- Toasts ---- */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.toast {
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    animation: toastIn 0.3s ease-out;
+    max-width: 380px;
+}
+.toast.info { background: #334155; }
+.toast.success { background: #059669; }
+.toast.error { background: #dc2626; }
+@keyframes toastIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---- Confirm Modal (simple box) ---- */
+.modal-box {
+    background: var(--panel-bg);
+    border-radius: 10px;
+    padding: 24px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.modal-box h3 { margin-top: 0; color: var(--text-main); }
+.modal-box .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+.modal-box .btn-primary { background: #ea4335; color: white; }
+.modal-box .btn-primary:hover { opacity: 0.9; }
+.modal-box .btn-secondary { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--btn-border); margin-left: 10px; }
+
+/* ---- Voice Modal ---- */
+#modalVoice .modal { max-width: 500px; }
+
+/* ---- Print Styles ---- */
 @media print {
     body, html {
         display: block !important;
@@ -667,51 +457,66 @@ select.status-badge option {
         padding: 0 !important;
         margin: 0 !important;
     }
-    
-    /* Hide UI Elements */
-    .ribbon-header,
-    .formula-bar,
+
+    .action-bar,
     .sheet-tabs,
     .toast-container,
     .modal-overlay,
-    .context-menu,
     .calendar-popover {
         display: none !important;
     }
-    
+
     .grid-workspace {
         overflow: visible !important;
         height: auto !important;
         background: white !important;
         position: static !important;
+        padding: 0 !important;
     }
-    
-    .excel-grid {
-        width: max-content !important;
-        max-width: 100% !important;
-        page-break-inside: auto;
+
+    .grid-workspace > div {
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .data-table {
+        width: 100% !important;
         table-layout: auto !important;
     }
-    
-    .excel-grid tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
+
+    .data-table th {
+        background: #1e293b !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
-    
-    /* Remove sticky behaviors for printing */
-    .excel-grid th,
-    .corner-header,
-    .row-number {
-        position: static !important;
-    }
-    
-    .excel-grid th, .excel-grid td {
-        border-color: #000 !important;
+
+    .data-table th,
+    .data-table td {
+        border: 1px solid #ccc !important;
         color: #000 !important;
         white-space: normal !important;
-        word-break: normal !important;
         overflow-wrap: break-word !important;
         overflow: visible !important;
         text-overflow: clip !important;
+        padding: 6px 10px !important;
+        font-size: 10px !important;
+    }
+
+    .data-table tr {
+        page-break-inside: avoid;
+    }
+
+    /* Hide actions column in print */
+    .data-table th:last-child,
+    .data-table td:last-child {
+        display: none !important;
+    }
+
+    select.status-badge {
+        appearance: none;
+        border: none !important;
+        background: transparent !important;
+        color: #000 !important;
     }
 }
