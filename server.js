@@ -335,15 +335,23 @@ app.post('/api/feedback', async (req, res) => {
         const payload = req.body;
         // Default to English if language not provided
         if (!payload.language) payload.language = 'en';
+        // Cast age to integer (form sends string)
+        if (payload.age) payload.age = parseInt(payload.age, 10);
         
-        const { data, error } = await supabase.from('feedbacks').insert([payload]);
-        if (error) throw error;
+        console.log('Feedback payload received:', JSON.stringify(payload, null, 2));
         
+        const { data, error, count } = await supabase.from('feedbacks').insert([payload], { count: 'exact' });
+        if (error) {
+            console.error('Supabase Feedback Insert Error:', JSON.stringify(error, null, 2));
+            throw error;
+        }
+        
+        console.log('Feedback insert success, count:', count);
         auditLog('Feedback Submit', `Received ${payload.language} feedback`);
         res.json({ success: true });
     } catch (err) {
         console.error("Feedback Post Error:", err);
-        res.status(500).json({ success: false, error: err.message });
+        res.status(500).json({ success: false, error: err.message || JSON.stringify(err) });
     }
 });
 

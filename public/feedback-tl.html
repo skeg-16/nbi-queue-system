@@ -667,10 +667,7 @@
             } catch (err) {
                 overlay.style.display = 'none';
                 console.error(err);
-                
-                // Fallback for demo/dev without a backend since we changed the payload
-                document.getElementById('form-container').style.display = 'none';
-                document.getElementById('success-screen').classList.add('active');
+                alert('Submission failed: ' + (err.message || 'Unknown error. Please try again.'));
             }
         }
     </script>
