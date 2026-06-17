@@ -687,8 +687,10 @@ select.status-badge option {
     }
     
     .excel-grid {
-        width: 100% !important;
+        width: max-content !important;
+        max-width: 100% !important;
         page-break-inside: auto;
+        table-layout: auto !important;
     }
     
     .excel-grid tr {
@@ -707,7 +709,8 @@ select.status-badge option {
         border-color: #000 !important;
         color: #000 !important;
         white-space: normal !important;
-        word-break: break-word !important;
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
         overflow: visible !important;
         text-overflow: clip !important;
     }
