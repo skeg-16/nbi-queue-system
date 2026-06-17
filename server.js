@@ -329,6 +329,40 @@ app.post('/api/import', async (req, res) => {
     }
 });
 
+// Feedback Endpoints
+app.post('/api/feedback', async (req, res) => {
+    try {
+        const payload = req.body;
+        // Default to English if language not provided
+        if (!payload.language) payload.language = 'en';
+        
+        const { data, error } = await supabase.from('feedbacks').insert([payload]);
+        if (error) throw error;
+        
+        auditLog('Feedback Submit', `Received ${payload.language} feedback`);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Feedback Post Error:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/feedbacks', async (req, res) => {
+    try {
+        const language = req.query.language;
+        let query = supabase.from('feedbacks').select('*').order('created_at', { ascending: false });
+        if (language) query = query.eq('language', language);
+        
+        const { data, error } = await query;
+        if (error) throw error;
+        
+        res.json(data);
+    } catch (err) {
+        console.error("Feedback Fetch Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Deployment Verification Endpoint
 app.get('/api/ping', (req, res) => {
     res.json({ 

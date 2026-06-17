@@ -29,12 +29,106 @@
     <!-- Socket.IO for real-time notifications -->
     <script src="/socket.io/socket.io.js"></script>
 
-    
-
+    <style>
+        /* Sidebar Styles */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0; left: -300px; width: 300px; height: 100%;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            z-index: 1000;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        }
+        .sidebar.open {
+            left: 0;
+        }
+        .sidebar-overlay.open {
+            display: block;
+            opacity: 1;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+        .sidebar-nav {
+            padding: 20px 0;
+            flex: 1;
+        }
+        .sidebar-nav a {
+            display: block;
+            padding: 15px 20px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: var(--table-hover);
+            border-left-color: var(--nbi-blue);
+            color: var(--nbi-blue);
+        }
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 10px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .menu-btn:hover {
+            background: var(--table-hover);
+        }
+    </style>
 </head>
 
 
 <body class="staff-body">
+
+    <!-- Sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>NBI Modules</h2>
+            <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <div class="sidebar-nav">
+            <a href="#" class="active" id="nav-complaints" onclick="switchView('complaints')">Complaint Registry</a>
+            <a href="#" id="nav-feedback-en" onclick="switchView('feedback_en')">English Feedback Database</a>
+            <a href="#" id="nav-feedback-tl" onclick="switchView('feedback_tl')">Tagalog Feedback Database</a>
+        </div>
+    </div>
 
     <!-- Hidden elements to preserve JS compatibility -->
     <div style="display: none;">
@@ -54,8 +148,11 @@
         <!-- Top Row -->
         <div style="display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="menu-btn" onclick="toggleSidebar()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                </button>
                 <img src="/assets/nbi.png" alt="NBI Logo" style="height: 36px;">
-                <h2 style="margin: 0; font-size: 1.4rem; color: var(--text-main); font-weight: 600; letter-spacing: 0.02em;">Complaint Registry</h2>
+                <h2 id="pageTitle" style="margin: 0; font-size: 1.4rem; color: var(--text-main); font-weight: 600; letter-spacing: 0.02em;">Complaint Registry</h2>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
                 <span id="recordCount" style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">Loading...</span>
@@ -1602,6 +1699,176 @@
         </div>
     </div>
 
+    <script>
+        // --- Sidebar Logic ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        let currentView = 'complaints'; // complaints, feedback_en, feedback_tl
+
+        async function switchView(viewName) {
+            currentView = viewName;
+            
+            // Update Active Link
+            document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+            if(viewName === 'complaints') {
+                document.getElementById('nav-complaints').classList.add('active');
+                document.getElementById('pageTitle').textContent = 'Complaint Registry';
+                document.getElementById('sheetTabsContainer').style.display = 'flex';
+                // Restore standard table headers
+                document.querySelector('.column-titles').innerHTML = `
+                    <th class="col-title" onclick="handleSort('created_at', 0)">Date <span id="sort-0"></span></th>
+                    <th class="col-title">Time</th>
+                    <th class="col-title" onclick="handleSort('ccd_no', 1)">CCD No. <span id="sort-1"></span></th>
+                    <th class="col-title" onclick="handleSort('full_name', 2)">Full Name <span id="sort-2"></span></th>
+                    <th class="col-title" onclick="handleSort('age', 3)">Age <span id="sort-3"></span></th>
+                    <th class="col-title" onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></th>
+                    <th class="col-title" onclick="handleSort('is_priority', 5)">Priority <span id="sort-5"></span></th>
+                    <th class="col-title" onclick="handleSort('status', 6)">Status <span id="sort-6"></span></th>
+                    <th class="col-title" style="text-align: center;">Actions</th>
+                `;
+            } else {
+                document.getElementById('sheetTabsContainer').style.display = 'none';
+                if(viewName === 'feedback_en') {
+                    document.getElementById('nav-feedback-en').classList.add('active');
+                    document.getElementById('pageTitle').textContent = 'English Feedback Database';
+                } else if(viewName === 'feedback_tl') {
+                    document.getElementById('nav-feedback-tl').classList.add('active');
+                    document.getElementById('pageTitle').textContent = 'Tagalog Feedback Database';
+                }
+                
+                // Feedback headers
+                document.querySelector('.column-titles').innerHTML = `
+                    <th class="col-title">Date</th>
+                    <th class="col-title">Client Type</th>
+                    <th class="col-title">Age / Sex</th>
+                    <th class="col-title">Region</th>
+                    <th class="col-title">Service</th>
+                    <th class="col-title">CC1-3</th>
+                    <th class="col-title">SQD Avg</th>
+                    <th class="col-title">Suggestions</th>
+                    <th class="col-title">Email</th>
+                `;
+            }
+            
+            toggleSidebar();
+            await fetchRecords(false); // Fetch based on new view
+        }
+
+        // --- Intercept Fetch Records ---
+        const originalFetchRecords = fetchRecords;
+        fetchRecords = async function(silent = false) {
+            if (currentView === 'complaints') {
+                return await originalFetchRecords(silent);
+            }
+            
+            try {
+                const lang = currentView === 'feedback_en' ? 'en' : 'tl';
+                const response = await fetch(`/api/feedbacks?language=${lang}&t=${Date.now()}`);
+                if (!response.ok) throw new Error("Network response was not ok");
+                const data = await response.json();
+                
+                allRecords = data;
+                lastFetchTime = new Date();
+                isConnected = true;
+                
+                updateSummaryBar();
+                renderSheetTabsUI();
+                applyFiltersAndSort();
+                updateCacheWarning();
+            } catch (err) {
+                console.error(err);
+                isConnected = false;
+                updateCacheWarning();
+            }
+        };
+
+        const originalApplyFiltersAndSort = applyFiltersAndSort;
+        applyFiltersAndSort = function() {
+            if (currentView === 'complaints') {
+                return originalApplyFiltersAndSort();
+            }
+            
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const viewStr = getViewDateString();
+            
+            filteredRecords = allRecords.filter(r => {
+                if (!r.created_at || !r.created_at.startsWith(viewStr)) return false;
+                
+                if (term) {
+                    const clientType = r.client_type || '';
+                    const service = r.service_availed || '';
+                    const email = r.email || '';
+                    const suggestions = r.suggestions || '';
+                    
+                    return clientType.toLowerCase().includes(term) ||
+                           service.toLowerCase().includes(term) ||
+                           email.toLowerCase().includes(term) ||
+                           suggestions.toLowerCase().includes(term);
+                }
+                return true;
+            });
+            
+            updateSummaryBar();
+            renderTable();
+        };
+
+        const originalRenderTable = renderTable;
+        renderTable = function() {
+            if (currentView === 'complaints') {
+                return originalRenderTable();
+            }
+            
+            const tbody = document.getElementById('recordsBody');
+            tbody.innerHTML = '';
+            
+            if (filteredRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">No feedbacks found.</td></tr>`;
+                document.getElementById('recordCount').textContent = "Showing 0 feedbacks";
+                return;
+            }
+            
+            filteredRecords.forEach(r => {
+                const dateObj = new Date(r.created_at);
+                const dateStr = dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+                const timeStr = dateObj.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
+                
+                // Calculate SQD Avg
+                let sqdSum = 0;
+                let sqdCount = 0;
+                const sqdMap = {
+                    "Strongly Agree": 5, "Agree": 4, "Neither Agree nor Disagree": 3, "Disagree": 2, "Strongly Disagree": 1
+                };
+                for(let i=0; i<=8; i++) {
+                    const val = r['sqd'+i];
+                    if(val && sqdMap[val]) { sqdSum += sqdMap[val]; sqdCount++; }
+                }
+                const sqdAvg = sqdCount > 0 ? (sqdSum / sqdCount).toFixed(2) : 'N/A';
+                
+                const ccVals = `${r.cc1 || '-'} / ${r.cc2 || '-'} / ${r.cc3 || '-'}`;
+                
+                const tr = document.createElement('tr');
+                
+                tr.innerHTML = `
+                    <td>${dateStr} <br><span style="font-size:0.8em;color:gray">${timeStr}</span></td>
+                    <td>${r.client_type || ''}</td>
+                    <td>${r.age || '-'} / ${r.sex || '-'}</td>
+                    <td>${r.region || ''}</td>
+                    <td>${r.service_availed || ''}</td>
+                    <td>${ccVals}</td>
+                    <td><strong style="color:var(--text-accent)">${sqdAvg}</strong></td>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.suggestions || ''}">${r.suggestions || '-'}</td>
+                    <td>${r.email || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('recordCount').textContent = `Showing ${filteredRecords.length} feedback(s)`;
+        };
+    </script>
 </body>
 
 </html>
