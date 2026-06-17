@@ -333,25 +333,69 @@ app.post('/api/import', async (req, res) => {
 app.post('/api/feedback', async (req, res) => {
     try {
         const payload = req.body;
-        // Default to English if language not provided
         if (!payload.language) payload.language = 'en';
-        // Cast age to integer (form sends string)
         if (payload.age) payload.age = parseInt(payload.age, 10);
         
-        console.log('Feedback payload received:', JSON.stringify(payload, null, 2));
+        // Strip any fields that might not exist in the table
+        const cleanPayload = {
+            language: payload.language || null,
+            client_type: payload.client_type || null,
+            date: payload.date || null,
+            sex: payload.sex || null,
+            age: payload.age || null,
+            region: payload.region || null,
+            service_availed: payload.service_availed || null,
+            cc1: payload.cc1 || null,
+            cc2: payload.cc2 || null,
+            cc3: payload.cc3 || null,
+            sqd0: payload.sqd0 || null,
+            sqd1: payload.sqd1 || null,
+            sqd2: payload.sqd2 || null,
+            sqd3: payload.sqd3 || null,
+            sqd4: payload.sqd4 || null,
+            sqd5: payload.sqd5 || null,
+            sqd6: payload.sqd6 || null,
+            sqd7: payload.sqd7 || null,
+            sqd8: payload.sqd8 || null,
+            suggestions: payload.suggestions || null,
+            email: payload.email || null
+        };
         
-        const { data, error, count } = await supabase.from('feedbacks').insert([payload], { count: 'exact' });
+        console.log('[Feedback] Inserting:', JSON.stringify(cleanPayload));
+        
+        const { data, error } = await supabase.from('feedbacks').insert([cleanPayload]).select();
+        
         if (error) {
-            console.error('Supabase Feedback Insert Error:', JSON.stringify(error, null, 2));
-            throw error;
+            console.error('[Feedback] Supabase error:', JSON.stringify(error));
+            return res.status(500).json({ 
+                success: false, 
+                error: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+            });
         }
         
-        console.log('Feedback insert success, count:', count);
-        auditLog('Feedback Submit', `Received ${payload.language} feedback`);
-        res.json({ success: true });
+        // RLS can silently block inserts (data comes back empty)
+        if (!data || data.length === 0) {
+            console.error('[Feedback] Insert returned no data - likely RLS blocking');
+            return res.status(500).json({
+                success: false,
+                error: 'Insert was blocked. Please disable RLS on the feedbacks table or add an insert policy.',
+                hint: 'Run in Supabase SQL: ALTER TABLE feedbacks DISABLE ROW LEVEL SECURITY;'
+            });
+        }
+        
+        console.log('[Feedback] Success, inserted ID:', data[0].id);
+        auditLog('Feedback Submit', `Received ${cleanPayload.language} feedback`);
+        res.json({ success: true, id: data[0].id });
     } catch (err) {
-        console.error("Feedback Post Error:", err);
-        res.status(500).json({ success: false, error: err.message || JSON.stringify(err) });
+        console.error('[Feedback] Exception:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: String(err.message || err),
+            stack: String(err.stack || '').split('\n').slice(0, 3)
+        });
     }
 });
 
