@@ -1276,8 +1276,7 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const text = e.target.result;
-                const rows = text.split('
-');
+                const rows = text.split('\\n');
                 if (rows.length < 2) {
                     showToast("CSV file is empty or missing headers", true);
                     return;
