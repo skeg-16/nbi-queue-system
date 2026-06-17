@@ -754,6 +754,7 @@
                     }
 
                     updateSummaryBar();
+                    renderSheetTabsUI(); // Make sure previous dates show up after data loads!
                     applyFiltersAndSort();
                     updateCacheWarning();
                 }
@@ -766,6 +767,7 @@
 
         function updateCacheWarning() {
             const el = document.getElementById('lastUpdated');
+            if (!el) return;
             if (!isConnected) {
                 el.textContent = "Connection lost — retrying...";
                 el.style.color = "var(--red)";
@@ -790,11 +792,16 @@
             const viewStr = getViewDateString();
             const viewRecords = allRecords.filter(r => r.created_at.startsWith(viewStr));
 
-            document.getElementById('stat-registered').textContent = viewRecords.length;
-            document.getElementById('stat-served').textContent = viewRecords.filter(r => r.status === 'Served').length;
-            document.getElementById('stat-waiting').textContent = viewRecords.filter(r => r.status === 'Waiting').length;
-            document.getElementById('stat-skipped').textContent = viewRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length;
-            document.getElementById('stat-priority').textContent = viewRecords.filter(r => r.is_priority).length;
+            const safeSetText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text;
+            };
+
+            safeSetText('stat-registered', viewRecords.length);
+            safeSetText('stat-served', viewRecords.filter(r => r.status === 'Served').length);
+            safeSetText('stat-waiting', viewRecords.filter(r => r.status === 'Waiting').length);
+            safeSetText('stat-skipped', viewRecords.filter(r => r.status === 'Skipped' || r.status === 'No-show').length);
+            safeSetText('stat-priority', viewRecords.filter(r => r.is_priority).length);
         }
 
         function clearFilters() {
@@ -815,13 +822,22 @@
 
             const badge = document.getElementById('filterBadge');
             const clearBtn = document.getElementById('clearFiltersBtn');
-            if (activeFilters > 0) {
-                badge.style.display = 'inline-block';
-                badge.textContent = activeFilters;
-                clearBtn.style.display = 'inline';
-            } else {
-                badge.style.display = 'none';
-                clearBtn.style.display = term ? 'inline' : 'none';
+            
+            if (badge) {
+                if (activeFilters > 0) {
+                    badge.style.display = 'inline-block';
+                    badge.textContent = activeFilters;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+            
+            if (clearBtn) {
+                if (activeFilters > 0 || term) {
+                    clearBtn.style.display = 'inline';
+                } else {
+                    clearBtn.style.display = 'none';
+                }
             }
 
             const viewStr = getViewDateString();
