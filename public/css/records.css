@@ -706,5 +706,9 @@ select.status-badge option {
     .excel-grid th, .excel-grid td {
         border-color: #000 !important;
         color: #000 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
     }
 }
