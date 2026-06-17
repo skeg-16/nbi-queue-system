@@ -241,18 +241,21 @@
 
         function loadAndSelectVoices() {
             loadVoicesAsync().then(function (v) {
-                voices = v;
-                // We add our own Custom Cloud Voice at the very top!
-                const cloudVoice = {
-                    name: 'Google Cloud Voice (Highly Recommended)',
-                    lang: 'tl-PH',
-                    voiceURI: 'cloud_tts',
-                    isCloud: true
-                };
+                // Filter to ONLY include Rosa and James as requested
+                var customVoicesList = Array.from(v).filter(function(voice) {
+                    var lower = voice.name.toLowerCase();
+                    return lower.includes('rosa') || lower.includes('james');
+                });
                 
-                var customVoicesList = [cloudVoice].concat(Array.from(voices));
+                // Fallback just in case Edge isn't used
+                if (customVoicesList.length === 0) {
+                    customVoicesList = Array.from(v).slice(0, 2); 
+                }
+                
                 voices = customVoicesList;
-                selectedVoice = cloudVoice; // default to cloud voice
+                
+                // Set Rosa as the absolute default
+                selectedVoice = voices.find(function(v) { return v.name.toLowerCase().includes('rosa'); }) || voices[0];
 
                 // Send voices to server so staff can see them!
                 const simpleVoices = customVoicesList.map(voice => ({ name: voice.name, lang: voice.lang, voiceURI: voice.voiceURI }));
@@ -297,10 +300,11 @@
         }
 
         // Voice Announcement Logic
-        function playVoiceAnnouncement(numberStr, isPriority, skipDelay, complainantName) {
+        function playVoiceAnnouncement(numberStr, isPriority, skipDelay, complainantName, isRepeat) {
             if (isPriority === undefined) isPriority = false;
             if (skipDelay === undefined) skipDelay = false;
             if (complainantName === undefined) complainantName = "";
+            if (isRepeat === undefined) isRepeat = false;
 
             if (!audioUnlocked || !('speechSynthesis' in window) || !selectedVoice) {
                 if (!audioUnlocked) console.warn('Voice announcement skipped: Audio not unlocked.');
@@ -332,18 +336,18 @@
 
                 if (isPriority) {
                     if (useFilipino) {
-                        fullText = "Priority number " + num + ", handa na po ang counter 1 para sa inyo.";
+                        fullText = (isRepeat ? "Inuulit po namin. " : "") + "Priority number " + num + ", handa na po ang counter 1 para sa inyo.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        fullText = "Priority number " + num + ", Please proceed to the designated area.";
+                        fullText = (isRepeat ? "We repeat. Calling " : "") + "Priority number " + num + ", Please proceed to the designated area.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 } else {
                     if (useFilipino) {
-                        fullText = "Number " + num + ", handa na po ang counter 1 para sa inyo.";
+                        fullText = (isRepeat ? "Inuulit po namin. " : "") + "Number " + num + ", handa na po ang counter 1 para sa inyo.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        fullText = "Number " + num + ", Please proceed to the designated area.";
+                        fullText = (isRepeat ? "We repeat. Calling " : "") + "Number " + num + ", Please proceed to the designated area.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 }
@@ -395,7 +399,7 @@
 
         socket.on('trigger_repeat', function () {
             if (lastAnnouncement) {
-                playVoiceAnnouncement(lastAnnouncement.number, lastAnnouncement.isPriority, true, lastAnnouncement.name);
+                playVoiceAnnouncement(lastAnnouncement.number, lastAnnouncement.isPriority, true, lastAnnouncement.name, true);
             }
         });
 
