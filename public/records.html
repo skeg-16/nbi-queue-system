@@ -2408,7 +2408,11 @@ if (typeof originalRenderTable === 'undefined') {
                     age: 0,
                     status: 'Waiting',
                     contact: '',
-                    is_priority: false
+                    is_priority: false,
+                    civil_status: 'Single',
+                    gender: 'Other',
+                    address: 'N/A',
+                    purpose: 'File a Complaint'
                 }];
                 const res = await fetch('/api/import', {
                     method: 'POST',

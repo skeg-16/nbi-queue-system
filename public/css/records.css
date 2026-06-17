@@ -656,3 +656,54 @@ select.status-badge option {
     background-color: rgba(37, 99, 235, 0.2) !important;
     outline: 2px solid var(--focus-border) !important;
 }
+
+@media print {
+    body, html {
+        height: auto !important;
+        overflow: visible !important;
+        background: white !important;
+        color: black !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Hide UI Elements */
+    .ribbon-header,
+    .formula-bar,
+    .sheet-tabs,
+    .toast-container,
+    .modal-overlay,
+    .context-menu,
+    .calendar-popover {
+        display: none !important;
+    }
+    
+    .grid-workspace {
+        overflow: visible !important;
+        height: auto !important;
+        background: white !important;
+        position: static !important;
+    }
+    
+    .excel-grid {
+        width: 100% !important;
+        page-break-inside: auto;
+    }
+    
+    .excel-grid tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    /* Remove sticky behaviors for printing */
+    .excel-grid th,
+    .corner-header,
+    .row-number {
+        position: static !important;
+    }
+    
+    .excel-grid th, .excel-grid td {
+        border-color: #000 !important;
+        color: #000 !important;
+    }
+}
