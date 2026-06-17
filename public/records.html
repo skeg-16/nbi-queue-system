@@ -919,13 +919,13 @@
                     <td>${r.age || ''}</td>
                     <td>${r.contact || ''}</td>
                     <td>
-                        <select onchange="updateCell(this, 'is_priority', '${r.id}')" class="status-badge ${r.is_priority ? 'badge-priority' : ''}" style="cursor: pointer; border: none; background: transparent; font-weight: bold; padding: 2px;">
+                        <select onchange="updateCell(this, 'is_priority', '${r.id}')" class="status-badge" data-priority="${r.is_priority}" style="cursor: pointer; border: none; font-weight: bold; padding: 4px 8px; border-radius: 4px;">
                             <option value="false" ${!r.is_priority ? 'selected' : ''}>NO</option>
                             <option value="true" ${r.is_priority ? 'selected' : ''}>YES</option>
                         </select>
                     </td>
                     <td>
-                        <select onchange="updateCell(this, 'status', '${r.id}')" class="status-badge" style="cursor: pointer; border: none; background: transparent; font-weight: bold; padding: 2px;">
+                        <select onchange="updateCell(this, 'status', '${r.id}')" class="status-badge" data-status="${r.status}" style="cursor: pointer; border: none; font-weight: bold; padding: 4px 8px; border-radius: 4px;">
                             <option value="Waiting" ${r.status === 'Waiting' ? 'selected' : ''}>Waiting</option>
                             <option value="Serving" ${r.status === 'Serving' ? 'selected' : ''}>Serving</option>
                             <option value="Served" ${r.status === 'Served' ? 'selected' : ''}>Served</option>

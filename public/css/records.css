@@ -120,6 +120,10 @@ body, html {
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
+.form-input::placeholder, .form-select::placeholder, .form-textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.8;
+}
 .form-input:focus, .form-select:focus, .form-textarea:focus {
     border-color: var(--focus-border);
     box-shadow: 0 0 0 3px var(--focus-ring);
@@ -155,9 +159,10 @@ body, html {
 }
 .btn-primary {
     background: var(--nbi-blue) !important;
-    color: #fff !important;
     border-color: var(--nbi-blue) !important;
 }
+:root[data-theme="light"] .btn-primary { color: #ffffff !important; }
+:root[data-theme="dark"] .btn-primary { color: #000000 !important; font-weight: bold; }
 .btn-primary:hover {
     opacity: 0.9;
 }
@@ -275,10 +280,24 @@ select.status-badge option {
     background-color: var(--panel-bg);
     color: var(--text-main);
 }
-.badge-priority {
-    background: rgba(239, 68, 68, 0.15) !important;
-    color: #dc2626 !important;
-}
+
+/* Light Theme Badge Colors */
+:root[data-theme="light"] select.status-badge[data-status="Served"] { background: #d1fae5; color: #065f46; }
+:root[data-theme="light"] select.status-badge[data-status="Waiting"] { background: #dbeafe; color: #1e40af; }
+:root[data-theme="light"] select.status-badge[data-status="Skipped"] { background: #fee2e2; color: #991b1b; }
+:root[data-theme="light"] select.status-badge[data-status="Serving"] { background: #fef3c7; color: #92400e; }
+:root[data-theme="light"] select.status-badge[data-status="No-show"] { background: #f3f4f6; color: #374151; }
+:root[data-theme="light"] select.status-badge[data-priority="true"] { background: #fee2e2; color: #dc2626; }
+:root[data-theme="light"] select.status-badge[data-priority="false"] { background: transparent; color: var(--text-muted); }
+
+/* Dark Theme Badge Colors (High Contrast) */
+:root[data-theme="dark"] select.status-badge[data-status="Served"] { background: rgba(46, 204, 113, 0.2); color: #4ade80; }
+:root[data-theme="dark"] select.status-badge[data-status="Waiting"] { background: rgba(52, 152, 219, 0.2); color: #60a5fa; }
+:root[data-theme="dark"] select.status-badge[data-status="Skipped"] { background: rgba(231, 76, 60, 0.2); color: #f87171; }
+:root[data-theme="dark"] select.status-badge[data-status="Serving"] { background: rgba(241, 196, 15, 0.2); color: #fde047; }
+:root[data-theme="dark"] select.status-badge[data-status="No-show"] { background: rgba(149, 165, 166, 0.2); color: #9ca3af; }
+:root[data-theme="dark"] select.status-badge[data-priority="true"] { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+:root[data-theme="dark"] select.status-badge[data-priority="false"] { background: transparent; color: var(--text-muted); }
 
 /* ---- Calendar Popover ---- */
 .calendar-popover {
