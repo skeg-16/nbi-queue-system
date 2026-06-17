@@ -352,8 +352,8 @@
                 sfxBefore.onended = function () {
                     setTimeout(function() { 
                         if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-                            // Use Google Translate free TTS API
-                            const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(fullText)}&tl=${useFilipino ? 'tl' : 'en'}&client=tw-ob`;
+                            // Use backend proxy for TTS
+                            const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
                             const cloudAudio = new Audio(audioUrl);
                             cloudAudio.play().catch(e => console.error("Cloud TTS Play Error:", e));
                         } else {
@@ -369,7 +369,7 @@
                         console.log('SFX before error:', e);
                         setTimeout(function() { 
                             if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-                                const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(fullText)}&tl=${useFilipino ? 'tl' : 'en'}&client=tw-ob`;
+                                const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
                                 new Audio(audioUrl).play().catch(e=>console.log(e));
                             } else {
                                 speakParts(parts, 0); 
@@ -381,7 +381,7 @@
                     sfxBefore.onended = function () {
                         setTimeout(function() { 
                             if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-                                const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(fullText)}&tl=${useFilipino ? 'tl' : 'en'}&client=tw-ob`;
+                                const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
                                 new Audio(audioUrl).play().catch(e=>console.log(e));
                             } else {
                                 speakParts(parts, 0); 
