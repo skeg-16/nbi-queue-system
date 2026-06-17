@@ -659,6 +659,7 @@ select.status-badge option {
 
 @media print {
     body, html {
+        display: block !important;
         height: auto !important;
         overflow: visible !important;
         background: white !important;
