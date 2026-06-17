@@ -336,62 +336,51 @@
 
                 if (isPriority) {
                     if (useFilipino) {
-                        fullText = (isRepeat ? "Inuulit po namin. " : "") + "Priority number " + num + ", handa na po ang counter 1 para sa inyo.";
+                        fullText = (isRepeat ? "Tinatawag muli ang priority number " : "Priority number ") + num + ", handa na po ang counter 1 para sa inyo.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        fullText = (isRepeat ? "We repeat. Calling " : "") + "Priority number " + num + ", Please proceed to the designated area.";
+                        fullText = (isRepeat ? "Calling again. Priority number " : "Priority number ") + num + ", Please proceed to the designated area.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 } else {
                     if (useFilipino) {
-                        fullText = (isRepeat ? "Inuulit po namin. " : "") + "Number " + num + ", handa na po ang counter 1 para sa inyo.";
+                        fullText = (isRepeat ? "Tinatawag muli ang number " : "Number ") + num + ", handa na po ang counter 1 para sa inyo.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     } else {
-                        fullText = (isRepeat ? "We repeat. Calling " : "") + "Number " + num + ", Please proceed to the designated area.";
+                        fullText = (isRepeat ? "Calling again. Number " : "Number ") + num + ", Please proceed to the designated area.";
                         parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                     }
                 }
 
-                // Play SFX Before, then speak
-                sfxBefore.onended = function () {
-                    setTimeout(function() { 
-                        if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-                            // Use backend proxy for TTS
-                            const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
-                            const cloudAudio = new Audio(audioUrl);
-                            cloudAudio.play().catch(e => console.error("Cloud TTS Play Error:", e));
-                        } else {
-                            // Use Local Speech Synthesis
-                            speakParts(parts, 0); 
-                        }
-                    }, 50);
-                };
+                // Function to actually trigger speech
+                function triggerSpeech() {
+                    if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
+                        // Use backend proxy for TTS
+                        const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
+                        const cloudAudio = new Audio(audioUrl);
+                        cloudAudio.play().catch(e => console.error("Cloud TTS Play Error:", e));
+                    } else {
+                        // Use Local Speech Synthesis
+                        speakParts(parts, 0); 
+                    }
+                }
 
                 var playPromise = sfxBefore.play();
                 if (playPromise !== undefined) {
-                    playPromise.catch(e => {
+                    playPromise.then(() => {
+                        // Audio started playing successfully.
+                        // The sound file likely has trailing silence causing "dead air".
+                        // Instead of waiting for it to finish completely (onended), we overlap the speech
+                        // by starting it after exactly 1.2 seconds.
+                        setTimeout(triggerSpeech, 1200);
+                    }).catch(e => {
                         console.log('SFX before error:', e);
-                        setTimeout(function() { 
-                            if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-                                const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
-                                new Audio(audioUrl).play().catch(e=>console.log(e));
-                            } else {
-                                speakParts(parts, 0); 
-                            }
-                        }, 50);
+                        // If it fails to play, trigger speech immediately
+                        setTimeout(triggerSpeech, 50);
                     });
                 } else {
                     // For very old browsers
-                    sfxBefore.onended = function () {
-                        setTimeout(function() { 
-                            if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-                                const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=${useFilipino ? 'tl' : 'en'}`;
-                                new Audio(audioUrl).play().catch(e=>console.log(e));
-                            } else {
-                                speakParts(parts, 0); 
-                            }
-                        }, 50);
-                    };
+                    setTimeout(triggerSpeech, 1200);
                 }
 
             }, delay);
