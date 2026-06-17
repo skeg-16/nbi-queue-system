@@ -88,6 +88,22 @@ body, html {
     -webkit-font-smoothing: antialiased;
 }
 
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+::-webkit-scrollbar-thumb {
+    background: #facc15;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #eab308;
+}
+
 /* ---- Action Bar ---- */
 .action-bar {
     flex-shrink: 0;
