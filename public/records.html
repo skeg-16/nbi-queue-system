@@ -570,7 +570,7 @@
             
             // Initialize open tabs on first load with up to 5 recent dates
             if (openTabs.length === 0) {
-                const recordDates = Array.from(new Set(allRecords.map(r => r.created_at.split('T')[0]))).sort((a,b)=>b.localeCompare(a));
+                const recordDates = Array.from(new Set(allRecords.filter(r => r.created_at).map(r => r.created_at.split('T')[0]))).sort((a,b)=>b.localeCompare(a));
                 openTabs = recordDates.slice(0, 5);
             }
             
@@ -790,7 +790,7 @@
 
         function updateSummaryBar() {
             const viewStr = getViewDateString();
-            const viewRecords = allRecords.filter(r => r.created_at.startsWith(viewStr));
+            const viewRecords = allRecords.filter(r => r.created_at && r.created_at.startsWith(viewStr));
 
             const safeSetText = (id, text) => {
                 const el = document.getElementById(id);
@@ -843,18 +843,26 @@
             const viewStr = getViewDateString();
 
             filteredRecords = allRecords.filter(r => {
-                if (!r.created_at.startsWith(viewStr)) return false;
+                if (!r.created_at || !r.created_at.startsWith(viewStr)) return false;
                 if (status && r.status !== status) return false;
                 if (prio && !r.is_priority) return false;
 
                 if (term) {
-                    return r.full_name.toLowerCase().includes(term) ||
-                        r.ccd_no.toLowerCase().includes(term) ||
-                        (r.contact && r.contact.includes(term)) ||
-                        (r.email && r.email.toLowerCase().includes(term)) ||
-                        (r.address && r.address.toLowerCase().includes(term)) ||
-                        r.status.toLowerCase().includes(term) ||
-                        r.age.toString().includes(term);
+                    const fname = r.full_name || '';
+                    const ccd = r.ccd_no || '';
+                    const contact = r.contact || '';
+                    const email = r.email || '';
+                    const address = r.address || '';
+                    const stat = r.status || '';
+                    const ageStr = r.age ? r.age.toString() : '';
+
+                    return fname.toLowerCase().includes(term) ||
+                        ccd.toLowerCase().includes(term) ||
+                        contact.toLowerCase().includes(term) ||
+                        email.toLowerCase().includes(term) ||
+                        address.toLowerCase().includes(term) ||
+                        stat.toLowerCase().includes(term) ||
+                        ageStr.includes(term);
                 }
                 return true;
             });
