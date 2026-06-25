@@ -301,7 +301,7 @@ app.put('/api/records/:id', async (req, res) => {
         }
 
         auditLog('Edit Record', `Edited record ID ${id}`);
-        res.json({ success: true });
+        res.json({ success: true, data: data[0] });
         broadcastStaffUpdate();
     } catch (err) {
         console.error("Server exception in PUT /api/records/:id:", err);

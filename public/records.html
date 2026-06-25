@@ -1088,9 +1088,14 @@
                     body: JSON.stringify({ [field]: payloadValue })
                 });
                 
-                if (!response.ok) {
+                const result = await response.json();
+                
+                if (!response.ok || !result.success) {
                     showToast('Failed to save update.', true);
                 } else {
+                    if (result.data) {
+                        Object.assign(oldRecord, result.data); // Update local cache with exact server data (timestamps, durations)
+                    }
                     if (field === 'is_priority' || field === 'status') {
                         renderTable(); // Re-render to update badge classes instantly
                     }
