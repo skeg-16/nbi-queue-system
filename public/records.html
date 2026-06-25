@@ -1049,10 +1049,7 @@
                             <option value="No-show" ${r.status === 'No-show' ? 'selected' : ''}>No-show</option>
                         </select>
                     <td style="text-align: center;">
-                        ${r.status === 'Serving' 
-                            ? `<input type="text" class="live-admin-timer" data-start="${r.serving_start_timestamp || ''}" value="00:00" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: #28a745; font-family: monospace; font-weight: bold;" readonly title="Timer is running live (visual only)">`
-                            : `<input type="text" value="${r.serving_duration || ''}" onchange="updateCell(this, 'serving_duration', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="-">`
-                        }
+                        <input type="text" value="${r.serving_duration || ''}" onchange="updateCell(this, 'serving_duration', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="-">
                     </td>
                     <td style="text-align: center; white-space: nowrap;">
                         <button class="btn-formal" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 4px;" onclick="viewDetails('${r.id}')" title="View Dossier">View</button>
@@ -1891,20 +1888,6 @@
             });
             document.getElementById('recordCount').textContent = `Showing ${filteredRecords.length} feedback(s)`;
         };
-
-        // Live Timer Logic for Admin Table (Visual Only)
-        setInterval(() => {
-            document.querySelectorAll('.live-admin-timer').forEach(el => {
-                const startStr = el.getAttribute('data-start');
-                if (startStr && startStr !== 'undefined' && startStr !== 'null') {
-                    const start = new Date(startStr);
-                    const diffMs = Math.max(0, new Date() - start);
-                    const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
-                    const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
-                    el.value = `${mins}:${secs}`;
-                }
-            });
-        }, 1000);
     </script>
 </body>
 
