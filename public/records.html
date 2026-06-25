@@ -220,6 +220,7 @@
                         <th class="col-title" onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></th>
                         <th class="col-title" onclick="handleSort('is_priority', 5)">Priority <span id="sort-5"></span></th>
                         <th class="col-title" onclick="handleSort('status', 6)">Status <span id="sort-6"></span></th>
+                        <th class="col-title" style="text-align: center;" title="Serving Duration in Minutes">Duration</th>
                         <th class="col-title" style="text-align: center;">Actions</th>
                     </tr>
                 </thead>
@@ -1048,6 +1049,9 @@
                             <option value="No-show" ${r.status === 'No-show' ? 'selected' : ''}>No-show</option>
                         </select>
                     </td>
+                    <td style="text-align: center;">
+                        <input type="number" value="${r.serving_duration_minutes !== null && r.serving_duration_minutes !== undefined ? r.serving_duration_minutes : ''}" onchange="updateCell(this, 'serving_duration_minutes', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main);" min="0" placeholder="-">
+                    </td>
                     <td style="text-align: center; white-space: nowrap;">
                         <button class="btn-formal" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 4px;" onclick="viewDetails('${r.id}')" title="View Dossier">View</button>
                         <button class="btn-formal" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 4px;" onclick="openEditModal('${r.id}')" title="Edit Record">Edit</button>
@@ -1065,6 +1069,8 @@
             let payloadValue = newValue;
             if (field === 'is_priority') {
                 payloadValue = (newValue === 'true' || newValue === true);
+            } else if (field === 'serving_duration_minutes') {
+                payloadValue = newValue === '' ? null : parseInt(newValue, 10);
             }
 
             const oldRecord = allRecords.find(x => x.id === id);
@@ -1737,6 +1743,7 @@
                     <th class="col-title" onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></th>
                     <th class="col-title" onclick="handleSort('is_priority', 5)">Priority <span id="sort-5"></span></th>
                     <th class="col-title" onclick="handleSort('status', 6)">Status <span id="sort-6"></span></th>
+                    <th class="col-title" style="text-align: center;">Duration</th>
                     <th class="col-title" style="text-align: center;">Actions</th>
                 `;
             } else {
