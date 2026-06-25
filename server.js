@@ -255,6 +255,21 @@ app.put('/api/records/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
+        
+        // Handle automatic timestamps for status changes
+        if (updates.status === 'Serving') {
+            updates.serving_start_timestamp = new Date().toISOString();
+        } else if (updates.status === 'Served' && updates.serving_duration === undefined) {
+            // Only calculate if the user isn't manually overriding the duration
+            const { data: record, error: fetchErr } = await supabase.from('registrations').select('serving_start_timestamp').eq('id', id).single();
+            if (!fetchErr && record && record.serving_start_timestamp) {
+                const diffMs = Math.max(0, new Date() - new Date(record.serving_start_timestamp));
+                const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
+                const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                updates.serving_duration = `${mins}:${secs}`;
+            }
+        }
+
         // MUST append .select() to get the row back to check ccd_no for the display!
         const { data, error, count } = await supabase.from('registrations').update(updates, { count: 'exact' }).eq('id', id).select();
         
@@ -276,7 +291,8 @@ app.put('/api/records/:id', async (req, res) => {
                 ccdNo: person.ccd_no,
                 fullName: person.full_name,
                 isPriority: person.is_priority,
-                status: 'Serving'
+                status: 'Serving',
+                startTimestamp: person.serving_start_timestamp || new Date().toISOString()
             };
             broadcastDisplayUpdate(true);
         } else if (updates.status === 'Skipped' && state.currentlyServing && state.currentlyServing.id === id && data && data.length > 0) {
