@@ -1090,10 +1090,12 @@
                     showToast('Failed to save update.', true);
                 } else {
                     if (result.data) {
-                        Object.assign(oldRecord, result.data); // Update local cache with exact server data (timestamps, durations)
+                        Object.assign(oldRecord, result.data); // Update local cache with exact server data
                     }
-                    if (field === 'is_priority' || field === 'status') {
-                        renderTable(); // Re-render to update badge classes instantly
+                    if (field === 'status') {
+                        await fetchRecords(true); // Hard refresh all data silently to guarantee exact sync
+                    } else if (field === 'is_priority') {
+                        renderTable();
                     }
                 }
             } catch (err) {
@@ -1171,10 +1173,7 @@
                 if ((await response.json()).success) {
                     showToast('Status updated successfully');
                     closeModal('modalStatus');
-
-                    const idx = allRecords.findIndex(x => x.id === id);
-                    if (idx !== -1) allRecords[idx].status = newStatus;
-                    applyFiltersAndSort();
+                    await fetchRecords(true); // Hard refresh all data silently to guarantee exact sync
                 } else { showToast('Failed to update status.', true); }
             } catch (err) { showToast('Server error.', true); }
         }
