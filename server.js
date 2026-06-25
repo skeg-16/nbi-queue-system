@@ -550,7 +550,8 @@ io.on('connection', async (socket) => {
                     purpose: formData.purpose || 'File a Complaint',
                     referred_by: formData.referredBy || null,
                     is_priority: isPriority,
-                    status: 'Waiting'
+                    status: 'Waiting',
+                    e_signature: formData.signature || null
                 }
             ])
             .select();

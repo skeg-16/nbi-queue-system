@@ -732,6 +732,64 @@
                 padding: 1rem 1.5rem;
             }
         }
+
+        /* Signature Pad */
+        .signature-wrapper {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            animation: fadeUp 0.5s ease backwards;
+            animation-delay: 0.42s;
+            margin-top: 0.5rem;
+        }
+
+        .signature-pad-container {
+            position: relative;
+            background: #0A1628;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .signature-pad-container.has-error {
+            border-color: #e74c3c;
+            animation: shake 0.3s ease;
+        }
+
+        #signature-pad {
+            width: 100%;
+            height: 150px;
+            display: block;
+            cursor: crosshair;
+        }
+
+        .signature-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-signature {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.7rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-signature:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
     </style>
 </head>
 
@@ -847,6 +905,19 @@
                     <div class="error-msg" id="err-referredBy"></div>
                 </div>
 
+                <!-- Signature Section -->
+                <div class="signature-wrapper" id="wrap-signature">
+                    <label class="static-label">E-Signature <span class="req">*</span></label>
+                    <div class="signature-pad-container" id="group-signature">
+                        <canvas id="signature-pad"></canvas>
+                    </div>
+                    <div class="signature-controls">
+                        <button type="button" class="btn-signature" id="btn-undo-signature">Undo</button>
+                        <button type="button" class="btn-signature" id="btn-clear-signature">Clear</button>
+                    </div>
+                    <div class="error-msg" id="err-signature">⚠ Please provide your signature</div>
+                </div>
+
                 <!-- Section Divider -->
                 <div class="section-divider" style="animation-delay: 0.45s;"></div>
 
@@ -907,8 +978,60 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script>
         const socket = io();
+
+        // Initialize Signature Pad
+        const canvas = document.getElementById('signature-pad');
+        const signatureGroup = document.getElementById('group-signature');
+        const signatureErr = document.getElementById('err-signature');
+        
+        function resizeCanvas() {
+            const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+            // This part causes the canvas to be cleared
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+        }
+        
+        window.onresize = resizeCanvas;
+        resizeCanvas();
+
+        const signaturePad = new SignaturePad(canvas, {
+            penColor: 'rgb(240, 165, 0)',
+            backgroundColor: 'rgba(10, 22, 40, 0)' // transparent to show container background
+        });
+
+        document.getElementById('btn-clear-signature').addEventListener('click', () => {
+            signaturePad.clear();
+            validateSignature();
+        });
+
+        document.getElementById('btn-undo-signature').addEventListener('click', () => {
+            const data = signaturePad.toData();
+            if (data) {
+                data.pop(); // remove the last dot or line
+                signaturePad.fromData(data);
+                validateSignature();
+            }
+        });
+        
+        signaturePad.addEventListener("endStroke", () => {
+            validateSignature();
+        });
+        
+        function validateSignature() {
+            if (signaturePad.isEmpty()) {
+                signatureGroup.classList.add('has-error');
+                signatureErr.classList.add('active');
+                return false;
+            } else {
+                signatureGroup.classList.remove('has-error');
+                signatureErr.classList.remove('active');
+                return true;
+            }
+        }
 
         // Priority Row Toggle Style Logic
         const priorityCheckbox = document.getElementById('isPriority');
@@ -1017,6 +1140,13 @@
                     if (!firstInvalidEl) firstInvalidEl = document.getElementById(fieldId);
                 }
             });
+            
+            // Validate Signature
+            const isSignatureValid = validateSignature();
+            if (!isSignatureValid) {
+                isFormValid = false;
+                if (!firstInvalidEl) firstInvalidEl = document.getElementById('signature-pad');
+            }
 
             if (!isFormValid) {
                 // Scroll to first error
@@ -1046,7 +1176,8 @@
                 address: document.getElementById('address').value.trim(),
                 purpose: document.getElementById('purpose').value,
                 referredBy: document.getElementById('referredBy').value.trim(),
-                isPriority: document.getElementById('isPriority').checked
+                isPriority: document.getElementById('isPriority').checked,
+                signature: signaturePad.toDataURL('image/png')
             };
 
             // Timeout safety

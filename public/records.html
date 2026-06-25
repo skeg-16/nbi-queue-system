@@ -1125,6 +1125,7 @@
                 <div class="detail-row"><div class="detail-label">Purpose</div><div class="detail-value">${r.purpose}</div></div>
                 <div class="detail-row"><div class="detail-label">Referred By</div><div class="detail-value">${r.referred_by || 'N/A'}</div></div>
                 <div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem;">Agent Remarks</div><div class="detail-value" style="width: 100%; background: var(--panel-bg); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); white-space: pre-wrap;">${remarksText}</div></div>
+                ${r.e_signature ? `<div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem;">E-Signature</div><div class="detail-value" style="width: 100%; background: white; padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;"><img src="${r.e_signature}" style="max-height: 150px; max-width: 100%;" alt="E-Signature"/></div></div>` : ''}
             `;
             document.getElementById('viewDetailsContent').innerHTML = html;
             openModal('modalView');
