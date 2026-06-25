@@ -297,7 +297,21 @@ app.put('/api/records/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const { error } = await supabase.from('registrations').update({ status }).eq('id', id);
+        
+        let updateData = { status };
+        
+        if (status === 'Serving') {
+            updateData.serving_start_timestamp = new Date().toISOString();
+        } else if (status === 'Served') {
+            // calculate duration
+            const { data: record, error: fetchErr } = await supabase.from('registrations').select('serving_start_timestamp').eq('id', id).single();
+            if (!fetchErr && record && record.serving_start_timestamp) {
+                const diffMs = new Date() - new Date(record.serving_start_timestamp);
+                updateData.serving_duration_minutes = Math.max(0, Math.floor(diffMs / 60000));
+            }
+        }
+        
+        const { error } = await supabase.from('registrations').update(updateData).eq('id', id);
         if (error) throw error;
         auditLog('Change Status', `Changed status to ${status} for ID ${id}`);
         res.json({ success: true });
@@ -505,6 +519,7 @@ function broadcastDisplayUpdate(triggerChime = false, skipMessage = null) {
         currentlyServing: state.currentlyServing ? state.currentlyServing.ccdNo : '---',
         currentlyServingName: state.currentlyServing ? state.currentlyServing.fullName : '',
         isPriority: state.currentlyServing ? state.currentlyServing.isPriority : false,
+        startTimestamp: state.currentlyServing ? state.currentlyServing.startTimestamp : null,
         recentNumbers: state.recentServed.map(r => r.ccdNo),
         triggerChime: triggerChime,
         skipMessage: skipMessage
@@ -620,9 +635,10 @@ io.on('connection', async (socket) => {
                 state.priorityServedCount = 0;
             }
 
+            const nowIso = new Date().toISOString();
             const { error: updateErr2 } = await supabase
                 .from('registrations')
-                .update({ status: 'Serving' })
+                .update({ status: 'Serving', serving_start_timestamp: nowIso })
                 .eq('id', nextPerson.id);
             if (updateErr2) throw updateErr2;
 
@@ -631,7 +647,8 @@ io.on('connection', async (socket) => {
                 ccdNo: nextPerson.ccd_no,
                 fullName: nextPerson.full_name,
                 isPriority: nextPerson.is_priority,
-                status: 'Serving'
+                status: 'Serving',
+                startTimestamp: nowIso
             };
 
             await broadcastStaffUpdate();
@@ -679,9 +696,10 @@ io.on('connection', async (socket) => {
                     state.priorityServedCount = 0;
                 }
 
+                const nowIso = new Date().toISOString();
                 const { error: updateErr2 } = await supabase
                     .from('registrations')
-                    .update({ status: 'Serving' })
+                    .update({ status: 'Serving', serving_start_timestamp: nowIso })
                     .eq('id', nextPerson.id);
                 if (updateErr2) throw updateErr2;
 
@@ -690,7 +708,8 @@ io.on('connection', async (socket) => {
                     ccdNo: nextPerson.ccd_no,
                     fullName: nextPerson.full_name,
                     isPriority: nextPerson.is_priority,
-                    status: 'Serving'
+                    status: 'Serving',
+                    startTimestamp: nowIso
                 };
 
                 await broadcastStaffUpdate();
@@ -726,9 +745,10 @@ io.on('connection', async (socket) => {
             if (fetchErr) throw fetchErr;
 
             if (data) {
+                const nowIso = new Date().toISOString();
                 const { error: updateErr2 } = await supabase
                     .from('registrations')
-                    .update({ status: 'Serving' })
+                    .update({ status: 'Serving', serving_start_timestamp: nowIso })
                     .eq('id', data.id);
                 if (updateErr2) throw updateErr2;
 
@@ -737,7 +757,8 @@ io.on('connection', async (socket) => {
                     ccdNo: data.ccd_no,
                     fullName: data.full_name,
                     isPriority: data.is_priority,
-                    status: 'Serving'
+                    status: 'Serving',
+                    startTimestamp: nowIso
                 };
 
                 await broadcastStaffUpdate();

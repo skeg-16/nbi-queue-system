@@ -318,17 +318,20 @@
                             <option value="File a Complaint">File a Complaint</option>
                             <option value="Inquire">Inquire</option>
                             <option value="Follow-Up">Follow-Up</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group full-width">
                         <label class="form-label">Referred By</label>
                         <input type="text" id="editReferred" class="form-input">
                     </div>
-                    <div class="form-group full-width">
-                        <label
-                            style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-main); font-weight: 500;">
-                            <input type="checkbox" id="editPriority"> PWD / Senior Citizen Priority
-                        </label>
+                    <div class="form-group">
+                        <label class="form-label">Serving Duration (mins)</label>
+                        <input type="number" id="editDuration" class="form-input" min="0">
+                    </div>
+                    <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="editPriority" style="width:16px; height:16px;">
+                        <label class="form-label" style="margin-bottom:0;">PWD / Senior Citizen Priority</label>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1125,6 +1128,7 @@
                 <div class="detail-row"><div class="detail-label">Address</div><div class="detail-value">${r.address}</div></div>
                 <div class="detail-row"><div class="detail-label">Purpose</div><div class="detail-value">${r.purpose}</div></div>
                 <div class="detail-row"><div class="detail-label">Referred By</div><div class="detail-value">${r.referred_by || 'N/A'}</div></div>
+                <div class="detail-row"><div class="detail-label">Serving Duration</div><div class="detail-value">${r.serving_duration_minutes !== null && r.serving_duration_minutes !== undefined ? r.serving_duration_minutes + ' min(s)' : 'N/A'}</div></div>
                 <div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem;">Agent Remarks</div><div class="detail-value" style="width: 100%; background: var(--panel-bg); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); white-space: pre-wrap; text-align: left;">${remarksText}</div></div>
                 ${r.e_signature ? `<div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;"><span>E-Signature</span> <a href="${r.e_signature}" download="Signature_${r.ccd_no}.png" style="text-decoration: none; background: var(--btn-bg); color: var(--text-main); padding: 4px 12px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 0.75rem;">Download</a></div><div class="detail-value" style="width: 100%; background: white; padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;"><img src="${r.e_signature}" style="max-height: 150px; max-width: 100%;" alt="E-Signature"/></div></div>` : ''}
             `;
@@ -1513,6 +1517,7 @@
             document.getElementById('editAddress').value = record.address || '';
             document.getElementById('editPurpose').value = record.purpose || 'File a Complaint';
             document.getElementById('editReferred').value = record.referred_by || '';
+            document.getElementById('editDuration').value = record.serving_duration_minutes !== null ? record.serving_duration_minutes : '';
             document.getElementById('editPriority').checked = record.is_priority || false;
             
             document.getElementById('modalEdit').querySelector('.modal-title').textContent = 'Edit Record';
@@ -1532,6 +1537,7 @@
                 address: document.getElementById('editAddress').value,
                 purpose: document.getElementById('editPurpose').value,
                 referred_by: document.getElementById('editReferred').value,
+                serving_duration_minutes: document.getElementById('editDuration').value ? parseInt(document.getElementById('editDuration').value) : null,
                 is_priority: document.getElementById('editPriority').checked
             };
 

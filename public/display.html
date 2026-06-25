@@ -42,6 +42,17 @@
             <div class="queue-number-box" id="queue-box">
                 <div class="queue-number" id="queue-number">---</div>
             </div>
+            <div id="serving-timer-container" style="display: none; margin-top: 25px; font-size: 1.8rem; color: var(--text-muted); font-family: 'Google Sans Code', monospace; background: rgba(0,0,0,0.2); padding: 12px 35px; border-radius: 50px; border: 1px solid var(--border-color); align-items: center; gap: 15px;">
+                <span style="display: inline-block; width: 14px; height: 14px; background: #28a745; border-radius: 50%; box-shadow: 0 0 10px #28a745; animation: pulse 1.5s infinite;"></span>
+                Time Inside: <span id="serving-timer" style="font-weight: 700; color: var(--text-main);">00:00</span>
+            </div>
+            <style>
+                @keyframes pulse {
+                    0% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.4; transform: scale(0.8); }
+                    100% { opacity: 1; transform: scale(1); }
+                }
+            </style>
         </main>
 
         <!-- Footer / Recently Served -->
@@ -70,6 +81,10 @@
         const dateEl = document.getElementById('date');
         const recentListEl = document.getElementById('recent-list');
         const btnFullscreen = document.getElementById('btn-fullscreen');
+        
+        const servingTimerContainer = document.getElementById('serving-timer-container');
+        const servingTimerEl = document.getElementById('serving-timer');
+        let servingTimerInterval;
 
         // Clock Update
         function updateDateTime() {
@@ -445,6 +460,26 @@
                         queueBoxEl.style.transform = 'scale(1)';
                         queueBoxEl.style.boxShadow = '';
                     }, 500);
+                }
+
+                if (data.startTimestamp) {
+                    servingTimerContainer.style.display = 'inline-flex';
+                    clearInterval(servingTimerInterval);
+                    
+                    const updateTimer = () => {
+                        const start = new Date(data.startTimestamp);
+                        const diffMs = new Date() - start;
+                        if (diffMs >= 0) {
+                            const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
+                            const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                            servingTimerEl.textContent = `${mins}:${secs}`;
+                        }
+                    };
+                    updateTimer(); // immediate update
+                    servingTimerInterval = setInterval(updateTimer, 1000);
+                } else {
+                    servingTimerContainer.style.display = 'none';
+                    clearInterval(servingTimerInterval);
                 }
             }
 
