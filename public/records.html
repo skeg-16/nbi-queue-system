@@ -1252,7 +1252,8 @@
                 "Address": r.address,
                 "Purpose": r.purpose,
                 "Priority": r.is_priority ? "YES" : "NO",
-                "Queue Status": r.status
+                "Queue Status": r.status,
+                "Duration": r.serving_duration || ""
             }));
         }
 
@@ -1285,11 +1286,11 @@
             doc.text(`Generated: ${new Date().toLocaleString('en-PH')}`, 14, 22);
 
             const tableData = filteredRecords.map(r => [
-                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no, r.full_name, r.age, r.contact, r.status
+                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no, r.full_name, r.age, r.contact, r.status, r.serving_duration || ''
             ]);
 
             doc.autoTable({
-                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Contact', 'Status']],
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Contact', 'Status', 'Duration']],
                 body: tableData,
                 startY: 28,
                 styles: { fontSize: 8 }
@@ -1328,7 +1329,7 @@
                 <table>
                     <tr>
                         <th>Date & Time</th><th>CCD No.</th><th>Full Name</th>
-                        <th>Age</th><th>Contact</th><th>Status</th><th>Priority</th>
+                        <th>Age</th><th>Contact</th><th>Status</th><th>Priority</th><th>Duration</th>
                     </tr>`;
 
             filteredRecords.forEach(r => {
@@ -1340,6 +1341,7 @@
                     <td>${r.contact}</td>
                     <td>${r.status}</td>
                     <td>${r.is_priority ? 'YES' : 'NO'}</td>
+                    <td>${r.serving_duration || ''}</td>
                 </tr>`;
             });
             html += `</table></body></html>`;
