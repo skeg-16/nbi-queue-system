@@ -327,8 +327,8 @@
                         <input type="text" id="editReferred" class="form-input">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Serving Duration (mins)</label>
-                        <input type="number" id="editDuration" class="form-input" min="0">
+                        <label class="form-label">Serving Duration (MM:SS)</label>
+                        <input type="text" id="editDuration" class="form-input" placeholder="00:00" pattern="[0-9]{2}:[0-9]{2}">
                     </div>
                     <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px;">
                         <input type="checkbox" id="editPriority" style="width:16px; height:16px;">
@@ -1050,7 +1050,10 @@
                         </select>
                     </td>
                     <td style="text-align: center;">
-                        <input type="number" value="${r.serving_duration_minutes !== null && r.serving_duration_minutes !== undefined ? r.serving_duration_minutes : ''}" onchange="updateCell(this, 'serving_duration_minutes', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main);" min="0" placeholder="-">
+                        ${r.status === 'Serving' 
+                            ? `<span class="live-admin-timer" data-start="${r.serving_start_timestamp || ''}" style="font-family: monospace; font-size: 0.95rem; font-weight: bold; color: #28a745;">00:00</span>` 
+                            : `<input type="text" value="${r.serving_duration || ''}" onchange="updateCell(this, 'serving_duration', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="-">`
+                        }
                     </td>
                     <td style="text-align: center; white-space: nowrap;">
                         <button class="btn-formal" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 4px;" onclick="viewDetails('${r.id}')" title="View Dossier">View</button>
@@ -1069,8 +1072,8 @@
             let payloadValue = newValue;
             if (field === 'is_priority') {
                 payloadValue = (newValue === 'true' || newValue === true);
-            } else if (field === 'serving_duration_minutes') {
-                payloadValue = newValue === '' ? null : parseInt(newValue, 10);
+            } else if (field === 'serving_duration') {
+                payloadValue = newValue === '' ? null : newValue;
             }
 
             const oldRecord = allRecords.find(x => x.id === id);
@@ -1134,7 +1137,7 @@
                 <div class="detail-row"><div class="detail-label">Address</div><div class="detail-value">${r.address}</div></div>
                 <div class="detail-row"><div class="detail-label">Purpose</div><div class="detail-value">${r.purpose}</div></div>
                 <div class="detail-row"><div class="detail-label">Referred By</div><div class="detail-value">${r.referred_by || 'N/A'}</div></div>
-                <div class="detail-row"><div class="detail-label">Serving Duration</div><div class="detail-value">${r.serving_duration_minutes !== null && r.serving_duration_minutes !== undefined ? r.serving_duration_minutes + ' min(s)' : 'N/A'}</div></div>
+                <div class="detail-row"><div class="detail-label">Serving Duration</div><div class="detail-value">${r.serving_duration ? r.serving_duration : 'N/A'}</div></div>
                 <div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem;">Agent Remarks</div><div class="detail-value" style="width: 100%; background: var(--panel-bg); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); white-space: pre-wrap; text-align: left;">${remarksText}</div></div>
                 ${r.e_signature ? `<div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;"><span>E-Signature</span> <a href="${r.e_signature}" download="Signature_${r.ccd_no}.png" style="text-decoration: none; background: var(--btn-bg); color: var(--text-main); padding: 4px 12px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 0.75rem;">Download</a></div><div class="detail-value" style="width: 100%; background: white; padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;"><img src="${r.e_signature}" style="max-height: 150px; max-width: 100%;" alt="E-Signature"/></div></div>` : ''}
             `;
@@ -1523,7 +1526,7 @@
             document.getElementById('editAddress').value = record.address || '';
             document.getElementById('editPurpose').value = record.purpose || 'File a Complaint';
             document.getElementById('editReferred').value = record.referred_by || '';
-            document.getElementById('editDuration').value = record.serving_duration_minutes !== null ? record.serving_duration_minutes : '';
+            document.getElementById('editDuration').value = record.serving_duration || '';
             document.getElementById('editPriority').checked = record.is_priority || false;
             
             document.getElementById('modalEdit').querySelector('.modal-title').textContent = 'Edit Record';
@@ -1543,7 +1546,7 @@
                 address: document.getElementById('editAddress').value,
                 purpose: document.getElementById('editPurpose').value,
                 referred_by: document.getElementById('editReferred').value,
-                serving_duration_minutes: document.getElementById('editDuration').value ? parseInt(document.getElementById('editDuration').value) : null,
+                serving_duration: document.getElementById('editDuration').value || null,
                 is_priority: document.getElementById('editPriority').checked
             };
 
@@ -1883,6 +1886,20 @@
             });
             document.getElementById('recordCount').textContent = `Showing ${filteredRecords.length} feedback(s)`;
         };
+        // Live Timer Logic for Admin Table
+        setInterval(() => {
+            document.querySelectorAll('.live-admin-timer').forEach(el => {
+                const startStr = el.getAttribute('data-start');
+                if (startStr && startStr !== 'undefined' && startStr !== 'null') {
+                    const start = new Date(startStr);
+                    const diffMs = Math.max(0, new Date() - start);
+                    const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
+                    const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                    el.textContent = `${mins}:${secs}`;
+                }
+            });
+        }, 1000);
+
     </script>
 </body>
 

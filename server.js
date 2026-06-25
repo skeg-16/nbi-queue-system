@@ -306,8 +306,10 @@ app.put('/api/records/:id/status', async (req, res) => {
             // calculate duration
             const { data: record, error: fetchErr } = await supabase.from('registrations').select('serving_start_timestamp').eq('id', id).single();
             if (!fetchErr && record && record.serving_start_timestamp) {
-                const diffMs = new Date() - new Date(record.serving_start_timestamp);
-                updateData.serving_duration_minutes = Math.max(0, Math.floor(diffMs / 60000));
+                const diffMs = Math.max(0, new Date() - new Date(record.serving_start_timestamp));
+                const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
+                const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                updateData.serving_duration = `${mins}:${secs}`;
             }
         }
         
