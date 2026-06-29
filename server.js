@@ -143,8 +143,21 @@ async function initServer() {
 initServer();
 
 // Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, path) => {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+}));
 app.use(express.json());
+
+app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+});
 
 app.get('/display', (req, res) => res.sendFile(path.join(__dirname, 'public', 'display.html')));
 app.get('/staff', (req, res) => res.sendFile(path.join(__dirname, 'public', 'staff.html')));
