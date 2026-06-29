@@ -1614,8 +1614,11 @@
             socket.on('staff_update', (data) => {
                 if (previousTotal !== null && data.stats && data.stats.total > previousTotal) {
                     showToast("New registration added!", false, "success");
-                    fetchRecords(); // auto refresh grid
                 }
+                
+                // Always fetch records on any queue action (Next, Skip, etc.) to keep the grid in sync in real time
+                fetchRecords(true);
+
                 if (data.stats) previousTotal = data.stats.total;
             });
 

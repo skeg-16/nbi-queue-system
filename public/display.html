@@ -256,21 +256,44 @@
 
         function loadAndSelectVoices() {
             loadVoicesAsync().then(function (v) {
-                // Filter to ONLY include Rosa and James as requested
+                // Preferred lively/natural voices
+                var preferredNames = [
+                    'aria', 'jenny', 'ana', 'michelle', 'guy', 'samantha', 'victoria', 
+                    'karen', 'rosa', 'james', 'google us english', 'google uk english female',
+                    'online', 'natural'
+                ];
+                
+                // Filter voices that match our preferred list
                 var customVoicesList = Array.from(v).filter(function(voice) {
                     var lower = voice.name.toLowerCase();
-                    return lower.includes('rosa') || lower.includes('james');
+                    return preferredNames.some(p => lower.includes(p));
                 });
                 
-                // Fallback just in case Edge isn't used
+                // If we have fewer than 10 voices, fill up the rest with any English voices
+                if (customVoicesList.length < 10) {
+                    var englishVoices = Array.from(v).filter(voice => voice.lang.startsWith('en'));
+                    for (let i = 0; i < englishVoices.length && customVoicesList.length < 15; i++) {
+                        if (!customVoicesList.includes(englishVoices[i])) {
+                            customVoicesList.push(englishVoices[i]);
+                        }
+                    }
+                }
+                
+                // Fallback if somehow still empty
                 if (customVoicesList.length === 0) {
-                    customVoicesList = Array.from(v).slice(0, 2); 
+                    customVoicesList = Array.from(v).slice(0, 15); 
+                } else {
+                    // Limit to 15 voices to keep the dropdown clean
+                    customVoicesList = customVoicesList.slice(0, 15);
                 }
                 
                 voices = customVoicesList;
                 
-                // Set Rosa as the absolute default
-                selectedVoice = voices.find(function(v) { return v.name.toLowerCase().includes('rosa'); }) || voices[0];
+                // Set Aria or Jenny as absolute default for a lively voice, fallback to first
+                selectedVoice = voices.find(function(v) { 
+                    var lower = v.name.toLowerCase();
+                    return lower.includes('aria') || lower.includes('jenny') || lower.includes('samantha'); 
+                }) || voices[0];
 
                 // Send voices to server so staff can see them!
                 const simpleVoices = customVoicesList.map(voice => ({ name: voice.name, lang: voice.lang, voiceURI: voice.voiceURI }));
