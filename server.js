@@ -494,11 +494,12 @@ async function broadcastStaffUpdate() {
         .like('ccd_no', `CCD-${todayStr}-%`);
 
     const waitingList = (allRegistrations || []).filter(r => r.status === 'Waiting');
+    const skippedListRaw = (allRegistrations || []).filter(r => r.status === 'Skipped');
     const stats = {
         total: allRegistrations ? allRegistrations.length : 0,
         waiting: waitingList.length,
         served: (allRegistrations || []).filter(r => r.status === 'Served').length,
-        skipped: (allRegistrations || []).filter(r => r.status === 'Skipped').length
+        skipped: skippedListRaw.length
     };
 
     const sortedList = getSortedList(waitingList);
@@ -523,9 +524,17 @@ async function broadcastStaffUpdate() {
         }
     }
 
+    const formattedSkippedList = skippedListRaw.map(r => ({
+        id: r.id,
+        ccdNo: r.ccd_no,
+        fullName: r.full_name,
+        isPriority: r.is_priority
+    }));
+
     io.emit('staff_update', {
         currentlyServing: state.currentlyServing,
         waitingList: formattedList,
+        skippedList: formattedSkippedList,
         recentServed: state.recentServed,
         stats: stats,
         cycleLabel: cycleLabel

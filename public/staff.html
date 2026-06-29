@@ -431,6 +431,17 @@
                     </ul>
                 </div>
 
+                <!-- Skipped Complainants List -->
+                <div class="dashboard-card skipped-card" id="skipped-card-container" style="display: none; margin-top: 1.5rem; background: rgba(231, 76, 60, 0.1); border: 1px solid rgba(231, 76, 60, 0.3);">
+                    <div class="card-label" style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                        <span style="color: #ffb8b8;">Skipped Complainants</span>
+                        <span style="color: white; font-weight: bold; background: rgba(231, 76, 60, 0.5); padding: 0.2rem 0.8rem; border-radius: 50px;" id="skipped-count">0</span>
+                    </div>
+                    
+                    <ul class="waiting-list" id="skipped-list">
+                        <!-- Populated via JS -->
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -590,6 +601,44 @@
                     `;
                     waitingListEl.appendChild(li);
                 });
+            }
+
+            // Update Skipped List
+            const skippedCard = document.getElementById('skipped-card-container');
+            const skippedListEl = document.getElementById('skipped-list');
+            const skippedCountEl = document.getElementById('skipped-count');
+            
+            if (skippedCard && skippedListEl) {
+                skippedListEl.innerHTML = '';
+                if (!data.skippedList || data.skippedList.length === 0) {
+                    skippedCard.style.display = 'none';
+                } else {
+                    skippedCard.style.display = 'block';
+                    skippedCountEl.textContent = data.skippedList.length;
+                    
+                    data.skippedList.forEach(person => {
+                        const li = document.createElement('li');
+                        li.className = 'waiting-item'; // reuse styling
+                        if (person.isPriority) li.className += ' is-priority';
+                        
+                        let priorityHTML = person.isPriority 
+                            ? '<div class="waiting-badge" style="background: rgba(243, 156, 18, 0.2); color: #f39c12;">[PRIORITY]</div>' 
+                            : '<div class="waiting-badge" style="background: rgba(255,255,255,0.1); color: white;">[REGULAR]</div>';
+                        
+                        li.innerHTML = `
+                            <div class="waiting-info">
+                                <span class="waiting-ccd" style="color: #ffb8b8;">${shortenCcd(person.ccdNo)}</span>
+                                <span class="waiting-name">${person.fullName}</span>
+                                <span class="wait-time" style="color: #e74c3c;">Skipped</span>
+                            </div>
+                            <div style="display: flex; gap: 1rem; align-items: center; width: auto;">
+                                ${priorityHTML}
+                                <button class="btn-serve-now" style="background: #e74c3c; border: 1px solid #c0392b;" onclick="serveNow('${person.id}')">Serve Now</button>
+                            </div>
+                        `;
+                        skippedListEl.appendChild(li);
+                    });
+                }
             }
         }
 
