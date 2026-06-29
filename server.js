@@ -614,9 +614,17 @@ io.on('connection', async (socket) => {
     socket.on('next', async () => {
         try {
             if (state.currentlyServing) {
+                let serving_duration = null;
+                if (state.currentlyServing.startTimestamp) {
+                    const diffMs = Math.max(0, new Date() - new Date(state.currentlyServing.startTimestamp));
+                    const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
+                    const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                    serving_duration = `${mins}:${secs}`;
+                }
+
                 const { error: updateErr } = await supabase
                     .from('registrations')
-                    .update({ status: 'Served' })
+                    .update({ status: 'Served', ...(serving_duration ? { serving_duration } : {}) })
                     .eq('id', state.currentlyServing.id);
                 if (updateErr) throw updateErr;
 
@@ -742,9 +750,17 @@ io.on('connection', async (socket) => {
     socket.on('serve_specific', async (id) => {
         try {
             if (state.currentlyServing) {
+                let serving_duration = null;
+                if (state.currentlyServing.startTimestamp) {
+                    const diffMs = Math.max(0, new Date() - new Date(state.currentlyServing.startTimestamp));
+                    const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
+                    const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                    serving_duration = `${mins}:${secs}`;
+                }
+
                 const { error: updateErr1 } = await supabase
                     .from('registrations')
-                    .update({ status: 'Served' })
+                    .update({ status: 'Served', ...(serving_duration ? { serving_duration } : {}) })
                     .eq('id', state.currentlyServing.id);
                 if (updateErr1) throw updateErr1;
 
