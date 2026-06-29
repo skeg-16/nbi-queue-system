@@ -109,6 +109,7 @@ async function initServer() {
             .from('registrations')
             .select('*')
             .eq('status', 'Served')
+            .like('ccd_no', `CCD-${todayStr}-%`)
             .order('created_at', { ascending: false })
             .limit(4);
 
@@ -123,6 +124,7 @@ async function initServer() {
             .from('registrations')
             .select('*')
             .eq('status', 'Serving')
+            .like('ccd_no', `CCD-${todayStr}-%`)
             .limit(1);
 
         if (servingData && servingData.length > 0) {
@@ -637,10 +639,12 @@ io.on('connection', async (socket) => {
             ])
             .select();
 
+
         const { data: waitingList } = await supabase
             .from('registrations')
             .select('*')
-            .eq('status', 'Waiting');
+            .eq('status', 'Waiting')
+            .like('ccd_no', `CCD-${todayStr}-%`);
 
         const sortedList = getSortedList(waitingList || [], state.priorityServedCount);
 
@@ -683,10 +687,12 @@ io.on('connection', async (socket) => {
                 if (state.recentServed.length > 4) state.recentServed.pop();
             }
 
+            const todayStr = getTodayDateStr();
             const { data: waiting, error: fetchErr } = await supabase
                 .from('registrations')
                 .select('*')
-                .eq('status', 'Waiting');
+                .eq('status', 'Waiting')
+                .like('ccd_no', `CCD-${todayStr}-%`);
             if (fetchErr) throw fetchErr;
 
             if (!waiting || waiting.length === 0) {
@@ -778,10 +784,12 @@ io.on('connection', async (socket) => {
                 if (state.recentServed.length > 4) state.recentServed.pop();
             }
 
+            const todayStr = getTodayDateStr();
             const { data: skippedList, error: fetchErr } = await supabase
                 .from('registrations')
                 .select('*')
                 .eq('status', 'Skipped')
+                .like('ccd_no', `CCD-${todayStr}-%`)
                 .order('created_at', { ascending: true })
                 .limit(1);
 
