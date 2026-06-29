@@ -9,10 +9,12 @@
     <style>
         .staff-body {
             background: radial-gradient(circle at top, #11284d 0%, #050e1d 100%);
-            min-height: 100vh;
+            height: 100vh;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             font-family: 'Inter', sans-serif;
         }
 
@@ -65,6 +67,12 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 2rem 2rem 3rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 0;
         }
 
         .staff-header {
@@ -78,7 +86,9 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 2rem;
-            align-items: start;
+            align-items: stretch;
+            flex-grow: 1;
+            min-height: 0;
         }
 
         .left-column {
@@ -91,6 +101,8 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            min-height: 0;
+            gap: 1.5rem;
         }
 
         .dashboard-card {
@@ -101,6 +113,10 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             backdrop-filter: blur(15px);
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            box-sizing: border-box;
         }
 
         /* Serving Section */
@@ -220,7 +236,7 @@
         #stat-skipped { color: #e74c3c; }
 
         /* Waiting List */
-        .waiting-card { padding: 2rem; display: flex; flex-direction: column; height: auto; max-height: 80vh; }
+        .waiting-card, .skipped-card { padding: 2rem; display: flex; flex-direction: column; flex: 1; min-height: 0; }
         
         .waiting-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 0.8rem; padding-right: 10px; }
         
@@ -432,7 +448,7 @@
                 </div>
 
                 <!-- Skipped Complainants List -->
-                <div class="dashboard-card skipped-card" id="skipped-card-container" style="display: none; margin-top: 1.5rem; background: rgba(231, 76, 60, 0.1); border: 1px solid rgba(231, 76, 60, 0.3);">
+                <div class="dashboard-card skipped-card" id="skipped-card-container" style="display: none; background: rgba(231, 76, 60, 0.1); border: 1px solid rgba(231, 76, 60, 0.3);">
                     <div class="card-label" style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
                         <span style="color: #ffb8b8;">Skipped Complainants</span>
                         <span style="color: white; font-weight: bold; background: rgba(231, 76, 60, 0.5); padding: 0.2rem 0.8rem; border-radius: 50px;" id="skipped-count">0</span>

@@ -383,10 +383,10 @@
                 var fullText = "";
 
                 if (isPriority) {
-                    fullText = (isRepeat ? "Calling again. Priority number " : "Calling Priority number ") + num + ", please proceed to counter 1.";
+                    fullText = (isRepeat ? "Calling again. Priority number " : "Calling Priority number ") + num + ", please proceed to interview room.";
                     parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                 } else {
-                    fullText = (isRepeat ? "Calling again. Number " : "Calling Number ") + num + ", please proceed to counter 1.";
+                    fullText = (isRepeat ? "Calling again. Number " : "Calling Number ") + num + ", please proceed to interview room.";
                     parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                 }
 

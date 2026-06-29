@@ -47,7 +47,7 @@ function saveAgentRemarks(remarksObj) {
     fs.writeFileSync(agentRemarksFile, JSON.stringify(remarksObj, null, 2));
 }
 
-function getSortedList(waitingList) {
+function getSortedList(waitingList, currentPriorityCount = 0) {
     let priorityQueue = [];
     let regularQueue = [];
 
@@ -58,7 +58,28 @@ function getSortedList(waitingList) {
         else regularQueue.push(r);
     });
 
-    return [...priorityQueue, ...regularQueue];
+    let interleaved = [];
+    let pCount = currentPriorityCount;
+    let pIdx = 0;
+    let rIdx = 0;
+
+    while (pIdx < priorityQueue.length || rIdx < regularQueue.length) {
+        if (pCount >= 2 && rIdx < regularQueue.length) {
+            interleaved.push(regularQueue[rIdx]);
+            rIdx++;
+            pCount = 0;
+        } else if (pIdx < priorityQueue.length) {
+            interleaved.push(priorityQueue[pIdx]);
+            pIdx++;
+            pCount++;
+        } else if (rIdx < regularQueue.length) {
+            interleaved.push(regularQueue[rIdx]);
+            rIdx++;
+            pCount = 0;
+        }
+    }
+
+    return interleaved;
 }
 
 function getTodayDateStr() {
@@ -502,7 +523,7 @@ async function broadcastStaffUpdate() {
         skipped: skippedListRaw.length
     };
 
-    const sortedList = getSortedList(waitingList);
+    const sortedList = getSortedList(waitingList, state.priorityServedCount);
 
     const formattedList = sortedList.map(r => ({
         id: r.id,
@@ -517,7 +538,7 @@ async function broadcastStaffUpdate() {
     } else {
         const nextPerson = sortedList[0];
         if (nextPerson.is_priority) {
-            let slot = state.priorityServedCount === 2 ? 1 : state.priorityServedCount + 1;
+            let slot = (state.priorityServedCount >= 2) ? 1 : state.priorityServedCount + 1;
             cycleLabel = `Next: Priority (${slot}/2)`;
         } else {
             cycleLabel = `Next: Regular`;
@@ -603,7 +624,7 @@ io.on('connection', async (socket) => {
             .select('*')
             .eq('status', 'Waiting');
 
-        const sortedList = getSortedList(waitingList || []);
+        const sortedList = getSortedList(waitingList || [], state.priorityServedCount);
 
         let position = sortedList.findIndex(r => r.id === data[0].id);
         if (position === -1) position = sortedList.length - 1;
@@ -657,11 +678,11 @@ io.on('connection', async (socket) => {
                 return;
             }
 
-            const sortedWaiting = getSortedList(waiting);
+            const sortedWaiting = getSortedList(waiting, state.priorityServedCount);
             const nextPerson = sortedWaiting[0];
 
             if (nextPerson.is_priority) {
-                if (state.priorityServedCount === 2) {
+                if (state.priorityServedCount >= 2) {
                     state.priorityServedCount = 1;
                 } else {
                     state.priorityServedCount++;
@@ -718,11 +739,11 @@ io.on('connection', async (socket) => {
                     return;
                 }
 
-                const sortedWaiting = getSortedList(waiting);
+                const sortedWaiting = getSortedList(waiting, state.priorityServedCount);
                 const nextPerson = sortedWaiting[0];
 
                 if (nextPerson.is_priority) {
-                    if (state.priorityServedCount === 2) {
+                    if (state.priorityServedCount >= 2) {
                         state.priorityServedCount = 1;
                     } else {
                         state.priorityServedCount++;
@@ -828,7 +849,6 @@ io.on('connection', async (socket) => {
         state.currentlyServing = null;
         state.recentServed = [];
         state.priorityServedCount = 0;
-        state.dailyCounter = 0;
 
         await broadcastStaffUpdate();
         broadcastDisplayUpdate(false);
