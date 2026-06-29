@@ -292,8 +292,10 @@
                 
                 voices = customVoicesList;
                 
-                // Set Aria or Jenny as absolute default for a lively voice, fallback to first
+                // Set Natasha as absolute default for a lively voice, fallback to Aria, Jenny, etc.
                 selectedVoice = voices.find(function(v) { 
+                    return v.name.toLowerCase().includes('natasha');
+                }) || voices.find(function(v) { 
                     var lower = v.name.toLowerCase();
                     return lower.includes('aria') || lower.includes('jenny') || lower.includes('samantha'); 
                 }) || voices[0];
