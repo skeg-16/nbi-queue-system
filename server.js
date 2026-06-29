@@ -727,49 +727,8 @@ io.on('connection', async (socket) => {
 
                 state.currentlyServing = null;
 
-                const { data: waiting, error: fetchErr } = await supabase
-                    .from('registrations')
-                    .select('*')
-                    .eq('status', 'Waiting');
-                if (fetchErr) throw fetchErr;
-
-                if (!waiting || waiting.length === 0) {
-                    await broadcastStaffUpdate();
-                    broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Queue Empty`);
-                    return;
-                }
-
-                const sortedWaiting = getSortedList(waiting, state.priorityServedCount);
-                const nextPerson = sortedWaiting[0];
-
-                if (nextPerson.is_priority) {
-                    if (state.priorityServedCount >= 2) {
-                        state.priorityServedCount = 1;
-                    } else {
-                        state.priorityServedCount++;
-                    }
-                } else {
-                    state.priorityServedCount = 0;
-                }
-
-                const nowIso = new Date().toISOString();
-                const { error: updateErr2 } = await supabase
-                    .from('registrations')
-                    .update({ status: 'Serving', serving_start_timestamp: nowIso })
-                    .eq('id', nextPerson.id);
-                if (updateErr2) throw updateErr2;
-
-                state.currentlyServing = {
-                    id: nextPerson.id,
-                    ccdNo: nextPerson.ccd_no,
-                    fullName: nextPerson.full_name,
-                    isPriority: nextPerson.is_priority,
-                    status: 'Serving',
-                    startTimestamp: nowIso
-                };
-
                 await broadcastStaffUpdate();
-                broadcastDisplayUpdate(false, `${skippedCcd} Skipped — Now Serving ${state.currentlyServing.ccdNo}`);
+                broadcastDisplayUpdate(false, `${skippedCcd} Skipped`);
             }
         } catch (err) {
             console.error("Error in 'skip':", err);
