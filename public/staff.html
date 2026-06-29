@@ -629,7 +629,7 @@
                 if (!data.skippedList || data.skippedList.length === 0) {
                     skippedCard.style.display = 'none';
                 } else {
-                    skippedCard.style.display = 'block';
+                    skippedCard.style.display = 'flex';
                     skippedCountEl.textContent = data.skippedList.length;
                     
                     data.skippedList.forEach(person => {
