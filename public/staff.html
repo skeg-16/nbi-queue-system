@@ -390,10 +390,16 @@
                     </div>
                 </div>
 
-                <button class="btn btn-next" id="btn-next">
-                    <span class="btn-text">Call Next Number</span>
-                    <span class="btn-subtext" id="cycle-label">Absolute Priority Ordering</span>
-                </button>
+                <div style="display: flex; gap: 1rem; width: 100%;">
+                    <button class="btn btn-next" id="btn-next" style="flex: 1.5; padding: 1.5rem;">
+                        <span class="btn-text" style="font-size: 1.6rem;">Call Next</span>
+                        <span class="btn-subtext" id="cycle-label">Absolute Priority Ordering</span>
+                    </button>
+                    <button class="btn btn-next" id="btn-call-skipped" style="flex: 1; padding: 1.5rem; background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3); color: white;">
+                        <span class="btn-text" style="font-size: 1.4rem;">Call Skipped</span>
+                        <span class="btn-subtext" style="color: rgba(255,255,255,0.8);">Oldest First</span>
+                    </button>
+                </div>
                 
                 <!-- Secondary Actions -->
                 <div class="secondary-controls">
@@ -497,6 +503,7 @@
         const waitingListEl = document.getElementById('waiting-list');
         const waitingCountEl = document.getElementById('waiting-count');
         const btnNext = document.getElementById('btn-next');
+        const btnCallSkipped = document.getElementById('btn-call-skipped');
         const btnRecall = document.getElementById('btn-recall');
         const btnSkip = document.getElementById('btn-skip');
         const btnRepeat = document.getElementById('btn-repeat');
@@ -682,8 +689,17 @@
         }
 
         btnNext.addEventListener('click', () => {
-            setButtonLoading(btnNext, "Loading...");
+            btnNext.disabled = true;
+            btnCallSkipped.disabled = true;
             socket.emit('next');
+            setTimeout(() => { btnNext.disabled = false; btnCallSkipped.disabled = false; }, 2000);
+        });
+        
+        btnCallSkipped.addEventListener('click', () => {
+            btnCallSkipped.disabled = true;
+            btnNext.disabled = true;
+            socket.emit('call_skipped');
+            setTimeout(() => { btnCallSkipped.disabled = false; btnNext.disabled = false; }, 2000);
         });
 
         btnSkip.addEventListener('click', () => {

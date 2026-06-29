@@ -754,6 +754,71 @@ io.on('connection', async (socket) => {
         }
     });
 
+    socket.on('call_skipped', async () => {
+        try {
+            if (state.currentlyServing) {
+                let serving_duration = null;
+                if (state.currentlyServing.startTimestamp) {
+                    const diffMs = Math.max(0, new Date() - new Date(state.currentlyServing.startTimestamp));
+                    const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
+                    const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                    serving_duration = `${mins}:${secs}`;
+                }
+
+                const { error: updateErr } = await supabase
+                    .from('registrations')
+                    .update({ status: 'Served', ...(serving_duration ? { serving_duration } : {}) })
+                    .eq('id', state.currentlyServing.id);
+                if (updateErr) throw updateErr;
+
+                state.recentServed.unshift({
+                    ccdNo: state.currentlyServing.ccdNo,
+                    isPriority: state.currentlyServing.isPriority
+                });
+                if (state.recentServed.length > 4) state.recentServed.pop();
+            }
+
+            const { data: skippedList, error: fetchErr } = await supabase
+                .from('registrations')
+                .select('*')
+                .eq('status', 'Skipped')
+                .order('created_at', { ascending: true })
+                .limit(1);
+
+            if (fetchErr) throw fetchErr;
+
+            if (!skippedList || skippedList.length === 0) {
+                state.currentlyServing = null;
+                await broadcastStaffUpdate();
+                broadcastDisplayUpdate(false);
+                return;
+            }
+
+            const nextPerson = skippedList[0];
+            const nowIso = new Date().toISOString();
+            const { error: updateErr2 } = await supabase
+                .from('registrations')
+                .update({ status: 'Serving', serving_start_timestamp: nowIso })
+                .eq('id', nextPerson.id);
+            if (updateErr2) throw updateErr2;
+
+            state.currentlyServing = {
+                id: nextPerson.id,
+                ccdNo: nextPerson.ccd_no,
+                fullName: nextPerson.full_name,
+                isPriority: nextPerson.is_priority,
+                status: 'Serving',
+                startTimestamp: nowIso
+            };
+
+            await broadcastStaffUpdate();
+            broadcastDisplayUpdate(true);
+        } catch (err) {
+            console.error("Error in 'call_skipped':", err);
+            socket.emit('action_error', { message: "Failed to call skipped person. The database update was blocked or failed." });
+        }
+    });
+
     socket.on('serve_specific', async (id) => {
         try {
             if (state.currentlyServing) {
