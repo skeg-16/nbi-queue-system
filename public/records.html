@@ -232,7 +232,7 @@
     </div>
 
     <!-- Calendar Popover (Hidden by default) -->
-    <div class="calendar-popover" id="calendarPopover" style="top: 120px; right: 20px; bottom: auto; left: auto;">
+    <div class="calendar-popover" id="calendarPopover">
         <div class="cal-header">
             <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)">◀</button>
             <div class="cal-title" id="calMonthYear">June 2026</div>
@@ -714,6 +714,12 @@
                 } else {
                     calDateObj = new Date(viewDateObj);
                     renderCalendar();
+                    
+                    const rect = calTab.getBoundingClientRect();
+                    popover.style.top = (rect.bottom + 5) + 'px';
+                    popover.style.left = rect.left + 'px';
+                    popover.style.right = 'auto';
+                    
                     popover.classList.add('active');
                 }
             };
