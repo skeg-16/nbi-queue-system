@@ -256,22 +256,25 @@
 
         function loadAndSelectVoices() {
             loadVoicesAsync().then(function (v) {
-                // Preferred lively/natural voices
+                // Strictly filter to English voices only
+                var englishVoices = Array.from(v).filter(function(voice) {
+                    return voice.lang.startsWith('en');
+                });
+
+                // Preferred lively/natural English voices
                 var preferredNames = [
                     'aria', 'jenny', 'ana', 'michelle', 'guy', 'samantha', 'victoria', 
-                    'karen', 'rosa', 'james', 'google us english', 'google uk english female',
-                    'online', 'natural'
+                    'karen', 'rosa', 'james', 'online', 'natural'
                 ];
                 
-                // Filter voices that match our preferred list
-                var customVoicesList = Array.from(v).filter(function(voice) {
+                // Filter English voices that match our preferred lively list
+                var customVoicesList = englishVoices.filter(function(voice) {
                     var lower = voice.name.toLowerCase();
                     return preferredNames.some(p => lower.includes(p));
                 });
                 
-                // If we have fewer than 10 voices, fill up the rest with any English voices
+                // If we have fewer than 10 voices, fill up the rest with any other English voices
                 if (customVoicesList.length < 10) {
-                    var englishVoices = Array.from(v).filter(voice => voice.lang.startsWith('en'));
                     for (let i = 0; i < englishVoices.length && customVoicesList.length < 15; i++) {
                         if (!customVoicesList.includes(englishVoices[i])) {
                             customVoicesList.push(englishVoices[i]);
@@ -281,7 +284,7 @@
                 
                 // Fallback if somehow still empty
                 if (customVoicesList.length === 0) {
-                    customVoicesList = Array.from(v).slice(0, 15); 
+                    customVoicesList = englishVoices.slice(0, 15); 
                 } else {
                     // Limit to 15 voices to keep the dropdown clean
                     customVoicesList = customVoicesList.slice(0, 15);
