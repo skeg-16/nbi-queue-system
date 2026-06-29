@@ -358,9 +358,14 @@
             var num = rawNum.replace(/^0+/, '');
             if (num === '') num = '0';
 
-            var lang = currentLang;
-            var useFilipino = lang === 'fil';
-            var voiceToUse = selectedVoice;
+            // Always force English text for the lively voice as requested
+            var useFilipino = false; 
+            
+            // Force Natasha's voice if available, otherwise fallback to the selected one
+            var allVoices = window.speechSynthesis.getVoices();
+            var natasha = allVoices.find(function(v) { return v.name.toLowerCase().includes('natasha'); });
+            var voiceToUse = natasha || selectedVoice;
+            
             var baseRate = parseFloat(currentRate) || 0.85;
 
             var delay = skipDelay ? 0 : 600;
@@ -378,21 +383,11 @@
                 var fullText = "";
 
                 if (isPriority) {
-                    if (useFilipino) {
-                        fullText = (isRepeat ? "Tinatawag muli ang priority number " : "Priority number ") + num + ", handa na po ang counter 1 para sa inyo.";
-                        parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
-                    } else {
-                        fullText = (isRepeat ? "Calling again. Priority number " : "Priority number ") + num + ", Please proceed to the designated area.";
-                        parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
-                    }
+                    fullText = (isRepeat ? "Calling again. Priority number " : "Calling Priority number ") + num + ", please proceed to counter 1.";
+                    parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                 } else {
-                    if (useFilipino) {
-                        fullText = (isRepeat ? "Tinatawag muli ang number " : "Number ") + num + ", handa na po ang counter 1 para sa inyo.";
-                        parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
-                    } else {
-                        fullText = (isRepeat ? "Calling again. Number " : "Number ") + num + ", Please proceed to the designated area.";
-                        parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
-                    }
+                    fullText = (isRepeat ? "Calling again. Number " : "Calling Number ") + num + ", please proceed to counter 1.";
+                    parts.push({ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse });
                 }
 
                 // Function to actually trigger speech
