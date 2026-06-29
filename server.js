@@ -493,9 +493,14 @@ app.get('/api/ping', (req, res) => {
 // Google TTS Proxy Endpoint
 app.get('/api/tts', async (req, res) => {
     try {
-        const text = req.query.text;
+        let text = req.query.text;
         const lang = req.query.lang || 'tl'; // Default to Filipino/Tagalog
         if (!text) return res.status(400).send('Text is required');
+
+        // FOOLPROOF HACK: Forcefully replace 'counter 1' with 'interview room' on the server side
+        // This ensures the voice says 'interview room' even if the user's browser is using a stubbornly cached old version of display.html
+        text = text.replace(/counter 1/gi, 'interview room');
+        text = text.replace(/counter one/gi, 'interview room');
 
         const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${lang}&client=tw-ob`;
         
