@@ -642,7 +642,7 @@ io.on('connection', async (socket) => {
 
             if (error) {
                 console.error("Registration Insert Error:", error);
-                if (callback) callback({ success: false });
+                if (callback) callback({ success: false, error: error.message || "Unknown database error", details: error });
                 return;
             }
 
@@ -666,7 +666,7 @@ io.on('connection', async (socket) => {
             await broadcastStaffUpdate();
         } catch (err) {
             console.error("Exception in submit_registration:", err);
-            if (callback) callback({ success: false });
+            if (callback) callback({ success: false, error: err.message || "Server exception" });
         }
     });
 

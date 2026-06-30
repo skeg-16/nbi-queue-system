@@ -1200,7 +1200,12 @@
                         showSuccessScreen(response, formData.isPriority);
                     }, 800);
                 } else {
-                    serverErr.innerHTML = "⚠ Something went wrong. Please ask the staff for assistance.";
+                    let errorMsg = "⚠ Something went wrong. Please ask the staff for assistance.";
+                    if (response && response.error) {
+                        errorMsg = `⚠ Error: ${response.error}`;
+                        if (response.details && response.details.hint) errorMsg += ` (${response.details.hint})`;
+                    }
+                    serverErr.innerHTML = errorMsg;
                     serverErr.classList.add('active');
                     resetButtonState();
                 }
