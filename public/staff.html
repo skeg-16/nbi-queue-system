@@ -572,6 +572,7 @@
             waitingListEl.innerHTML = '';
             
             isQueueEmpty = !data.waitingList || data.waitingList.length === 0;
+            const hasCurrentlyServing = !!data.currentlyServing;
             
             if (isQueueEmpty) {
                 waitingListEl.innerHTML = `
@@ -580,20 +581,7 @@
                         <div>No complainants in queue. Waiting for registrations.</div>
                     </div>
                 `;
-                btnNext.disabled = true;
-                btnNext.style.opacity = '0.5';
-                btnNext.style.cursor = 'not-allowed';
-                btnSkip.disabled = true;
-                btnSkip.style.opacity = '0.5';
-                btnSkip.style.cursor = 'not-allowed';
             } else {
-                btnNext.disabled = false;
-                btnNext.style.opacity = '1';
-                btnNext.style.cursor = 'pointer';
-                btnSkip.disabled = false;
-                btnSkip.style.opacity = '1';
-                btnSkip.style.cursor = 'pointer';
-                
                 data.waitingList.forEach((person, index) => {
                     const li = document.createElement('li');
                     
@@ -625,6 +613,27 @@
                     waitingListEl.appendChild(li);
                 });
             }
+
+            if (isQueueEmpty && !hasCurrentlyServing) {
+                btnNext.disabled = true;
+                btnNext.style.opacity = '0.5';
+                btnNext.style.cursor = 'not-allowed';
+            } else {
+                btnNext.disabled = false;
+                btnNext.style.opacity = '1';
+                btnNext.style.cursor = 'pointer';
+            }
+
+            if (!hasCurrentlyServing) {
+                btnSkip.disabled = true;
+                btnSkip.style.opacity = '0.5';
+                btnSkip.style.cursor = 'not-allowed';
+            } else {
+                btnSkip.disabled = false;
+                btnSkip.style.opacity = '1';
+                btnSkip.style.cursor = 'pointer';
+            }
+
 
             // Update Skipped List
             const skippedCard = document.getElementById('skipped-card-container');
