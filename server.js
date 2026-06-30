@@ -95,7 +95,7 @@ async function initServer() {
             .from('registrations')
             .select('ccd_no')
             .like('ccd_no', `CCD-${todayStr}-%`)
-            .order('created_at', { ascending: false })
+            .order('ccd_no', { ascending: false })
             .limit(1);
 
         if (data && data.length > 0) {
