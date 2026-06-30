@@ -608,58 +608,66 @@ io.on('connection', async (socket) => {
 
     // Handle New Registration
     socket.on('submit_registration', async (formData, callback) => {
-        const todayStr = getTodayDateStr();
-        if (state.dateStr !== todayStr) {
-            state.dateStr = todayStr;
-            state.dailyCounter = 0;
-        }
+        try {
+            const todayStr = getTodayDateStr();
+            if (state.dateStr !== todayStr) {
+                state.dateStr = todayStr;
+                state.dailyCounter = 0;
+            }
 
-        state.dailyCounter++;
-        const ccdNo = `CCD-${todayStr}-${String(state.dailyCounter).padStart(4, '0')}`;
-        const isPriority = formData.isPriority === true || formData.isPriority === 'true';
+            state.dailyCounter++;
+            const ccdNo = `CCD-${todayStr}-${String(state.dailyCounter).padStart(4, '0')}`;
+            const isPriority = formData.isPriority === true || formData.isPriority === 'true';
 
-        const { data, error } = await supabase
-            .from('registrations')
-            .insert([
-                {
-                    ccd_no: ccdNo,
-                    full_name: formData.fullName,
-                    contact: formData.contact,
-                    age: parseInt(formData.age, 10),
-                    email: formData.email || null,
-                    civil_status: formData.civilStatus,
-                    gender: formData.gender,
-                    address: formData.address || 'N/A',
-                    purpose: formData.purpose || 'File a Complaint',
-                    referred_by: formData.referredBy || null,
-                    is_priority: isPriority,
-                    status: 'Waiting',
-                    e_signature: formData.signature || null
-                }
-            ])
-            .select();
+            const { data, error } = await supabase
+                .from('registrations')
+                .insert([
+                    {
+                        ccd_no: ccdNo,
+                        full_name: formData.fullName,
+                        contact: formData.contact,
+                        age: parseInt(formData.age, 10),
+                        email: formData.email || null,
+                        civil_status: formData.civilStatus,
+                        gender: formData.gender,
+                        address: formData.address || 'N/A',
+                        purpose: formData.purpose || 'File a Complaint',
+                        referred_by: formData.referredBy || null,
+                        is_priority: isPriority,
+                        status: 'Waiting',
+                        e_signature: formData.signature || null
+                    }
+                ])
+                .select();
 
-
-        const { data: waitingList } = await supabase
-            .from('registrations')
-            .select('*')
-            .eq('status', 'Waiting')
-            .like('ccd_no', `CCD-${todayStr}-%`);
-
-        const sortedList = getSortedList(waitingList || [], state.priorityServedCount);
-
-        let position = sortedList.findIndex(r => r.id === data[0].id);
-        if (position === -1) position = sortedList.length - 1;
-
-        if (callback) {
             if (error) {
-                console.error("Insert Error:", error);
-                callback({ success: false });
-            } else {
+                console.error("Registration Insert Error:", error);
+                if (callback) callback({ success: false });
+                return;
+            }
+
+            const { data: waitingList } = await supabase
+                .from('registrations')
+                .select('*')
+                .eq('status', 'Waiting')
+                .like('ccd_no', `CCD-${todayStr}-%`);
+
+            const sortedList = getSortedList(waitingList || [], state.priorityServedCount);
+
+            let position = -1;
+            if (data && data.length > 0) {
+                position = sortedList.findIndex(r => r.id === data[0].id);
+            }
+            if (position === -1) position = sortedList.length > 0 ? sortedList.length - 1 : 0;
+
+            if (callback) {
                 callback({ success: true, ccdNo: ccdNo, position: position, isPriority: isPriority });
             }
+            await broadcastStaffUpdate();
+        } catch (err) {
+            console.error("Exception in submit_registration:", err);
+            if (callback) callback({ success: false });
         }
-        await broadcastStaffUpdate();
     });
 
     // Handle "Next" logic with strict absolute priority algorithm
