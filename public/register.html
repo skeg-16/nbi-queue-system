@@ -1199,8 +1199,6 @@
             if (arrowIcon) arrowIcon.style.display = "none";
             btnSpinner.style.display = "block";
 
-            const fullAddress = (document.getElementById('address').value.trim() + ', ' + document.getElementById('region').value).toUpperCase();
-
             const formData = {
                 fullName: document.getElementById('fullName').value.trim().toUpperCase(),
                 contact: document.getElementById('contact').value.trim(),
@@ -1208,7 +1206,8 @@
                 email: document.getElementById('email').value.trim().toUpperCase(),
                 civilStatus: document.getElementById('civilStatus').value.toUpperCase(),
                 gender: document.getElementById('gender').value.toUpperCase(),
-                address: fullAddress,
+                region: document.getElementById('region').value.toUpperCase(),
+                address: document.getElementById('address').value.trim().toUpperCase(),
                 purpose: document.getElementById('purpose').value.toUpperCase(),
                 referredBy: document.getElementById('referredBy').value.trim().toUpperCase(),
                 isPriority: document.getElementById('isPriority').checked,

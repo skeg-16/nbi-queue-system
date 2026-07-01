@@ -217,6 +217,7 @@
                         <th class="col-title" onclick="handleSort('ccd_no', 1)">CCD No. <span id="sort-1"></span></th>
                         <th class="col-title" onclick="handleSort('full_name', 2)">Full Name <span id="sort-2"></span></th>
                         <th class="col-title" onclick="handleSort('age', 3)">Age <span id="sort-3"></span></th>
+                        <th class="col-title" onclick="handleSort('region', 3.5)">Region <span id="sort-3-5"></span></th>
                         <th class="col-title" onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></th>
                         <th class="col-title" onclick="handleSort('is_priority', 5)">Priority <span id="sort-5"></span></th>
                         <th class="col-title" onclick="handleSort('status', 6)">Status <span id="sort-6"></span></th>
@@ -1039,6 +1040,7 @@
                     <td style="font-weight: 500;">${r.ccd_no || ''}</td>
                     <td>${r.full_name || ''}</td>
                     <td>${r.age || ''}</td>
+                    <td>${r.region || ''}</td>
                     <td>${r.contact || ''}</td>
                     <td>
                         <select onchange="updateCell(this, 'is_priority', '${r.id}')" class="status-badge" data-priority="${r.is_priority}" style="cursor: pointer; border: none; font-weight: bold; padding: 4px 8px; border-radius: 4px;">
@@ -1143,6 +1145,7 @@
                 <div class="detail-row"><div class="detail-label">Full Name</div><div class="detail-value">${r.full_name}</div></div>
                 <div class="detail-row"><div class="detail-label">Demographics</div><div class="detail-value">${r.age} yrs • ${r.gender} • ${r.civil_status}</div></div>
                 <div class="detail-row"><div class="detail-label">Contact Info</div><div class="detail-value">${r.contact} <br> ${r.email || 'No email provided'}</div></div>
+                <div class="detail-row"><div class="detail-label">Region</div><div class="detail-value">${r.region || 'N/A'}</div></div>
                 <div class="detail-row"><div class="detail-label">Address</div><div class="detail-value">${r.address}</div></div>
                 <div class="detail-row"><div class="detail-label">Purpose</div><div class="detail-value">${r.purpose}</div></div>
                 <div class="detail-row"><div class="detail-label">Referred By</div><div class="detail-value">${r.referred_by || 'N/A'}</div></div>
@@ -1255,6 +1258,7 @@
                 "Contact": r.contact,
                 "Gender": r.gender,
                 "Civil Status": r.civil_status,
+                "Region": r.region,
                 "Address": r.address,
                 "Purpose": r.purpose,
                 "Priority": r.is_priority ? "YES" : "NO",
@@ -1292,11 +1296,11 @@
             doc.text(`Generated: ${new Date().toLocaleString('en-PH')}`, 14, 22);
 
             const tableData = filteredRecords.map(r => [
-                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no, r.full_name, r.age, r.contact, r.status, r.serving_duration || ''
+                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no, r.full_name, r.age, r.region, r.contact, r.status, r.serving_duration || ''
             ]);
 
             doc.autoTable({
-                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Contact', 'Status', 'Duration']],
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Contact', 'Status', 'Duration']],
                 body: tableData,
                 startY: 28,
                 styles: { fontSize: 8 }
@@ -1335,7 +1339,7 @@
                 <table>
                     <tr>
                         <th>Date & Time</th><th>CCD No.</th><th>Full Name</th>
-                        <th>Age</th><th>Contact</th><th>Status</th><th>Priority</th><th>Duration</th>
+                        <th>Age</th><th>Region</th><th>Contact</th><th>Status</th><th>Priority</th><th>Duration</th>
                     </tr>`;
 
             filteredRecords.forEach(r => {
@@ -1344,6 +1348,7 @@
                     <td>${r.ccd_no}</td>
                     <td>${r.full_name}</td>
                     <td>${r.age}</td>
+                    <td>${r.region || ''}</td>
                     <td>${r.contact}</td>
                     <td>${r.status}</td>
                     <td>${r.is_priority ? 'YES' : 'NO'}</td>
