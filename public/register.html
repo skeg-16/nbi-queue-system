@@ -7,6 +7,7 @@
     <title>Registration | NBI Cybercrime Division</title>
     <link rel="icon" type="image/png" href="/assets/nbi.png">
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
     <style>
         /* Modern Government Registration UI */
         body {
@@ -935,11 +936,24 @@
 
                 <!-- Signature Section -->
                 <div class="signature-wrapper" id="wrap-signature">
-                    <label class="static-label">E-Signature <span class="req">*</span></label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <label class="static-label" style="margin-bottom: 0;">E-Signature <span class="req">*</span></label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn-sig-mode active" id="btnModeDraw" onclick="setSignatureMode('draw')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s;">Draw</button>
+                            <button type="button" class="btn-sig-mode" id="btnModeType" onclick="setSignatureMode('type')" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s;">Type</button>
+                        </div>
+                    </div>
+                    
                     <div class="signature-pad-container" id="group-signature">
                         <canvas id="signature-pad"></canvas>
                     </div>
-                    <div class="signature-controls">
+                    
+                    <div class="signature-type-container" id="group-signature-type" style="display: none; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px; border: 1px solid rgba(240, 165, 0, 0.3);">
+                        <input type="text" id="typedSignatureInput" placeholder="Type your full name here" class="standard-input" autocomplete="off" style="font-family: 'Caveat', cursive; font-size: 2rem; color: #F0A500; text-align: center; height: 130px; text-transform: none;">
+                        <canvas id="hidden-signature-canvas" style="display: none;"></canvas>
+                    </div>
+
+                    <div class="signature-controls" id="signature-draw-controls">
                         <button type="button" class="btn-signature" id="btn-undo-signature">Undo</button>
                         <button type="button" class="btn-signature" id="btn-clear-signature">Clear</button>
                     </div>
@@ -1013,7 +1027,40 @@
         // Initialize Signature Pad
         const canvas = document.getElementById('signature-pad');
         const signatureGroup = document.getElementById('group-signature');
+        const signatureTypeGroup = document.getElementById('group-signature-type');
         const signatureErr = document.getElementById('err-signature');
+
+        let signatureMode = 'draw';
+        function setSignatureMode(mode) {
+            signatureMode = mode;
+            const btnDraw = document.getElementById('btnModeDraw');
+            const btnType = document.getElementById('btnModeType');
+            const drawControls = document.getElementById('signature-draw-controls');
+
+            if (mode === 'draw') {
+                btnDraw.classList.add('active');
+                btnType.classList.remove('active');
+                btnDraw.style.background = 'rgba(255,255,255,0.1)';
+                btnType.style.background = 'transparent';
+                
+                signatureGroup.style.display = 'block';
+                drawControls.style.display = 'flex';
+                signatureTypeGroup.style.display = 'none';
+                resizeCanvas(); // Ensure it resizes correctly when un-hidden
+            } else {
+                btnType.classList.add('active');
+                btnDraw.classList.remove('active');
+                btnType.style.background = 'rgba(255,255,255,0.1)';
+                btnDraw.style.background = 'transparent';
+                
+                signatureGroup.style.display = 'none';
+                drawControls.style.display = 'none';
+                signatureTypeGroup.style.display = 'block';
+            }
+            validateSignature();
+        }
+
+        document.getElementById('typedSignatureInput').addEventListener('input', validateSignature);
         
         function resizeCanvas() {
             const ratio =  Math.max(window.devicePixelRatio || 1, 1);
@@ -1050,14 +1097,49 @@
         });
         
         function validateSignature() {
-            if (signaturePad.isEmpty()) {
-                signatureGroup.classList.add('has-error');
+            let isValid = false;
+            if (signatureMode === 'draw') {
+                isValid = !signaturePad.isEmpty();
+                if(!isValid) signatureGroup.classList.add('has-error');
+                else signatureGroup.classList.remove('has-error');
+                signatureTypeGroup.classList.remove('has-error');
+            } else {
+                isValid = document.getElementById('typedSignatureInput').value.trim().length > 0;
+                if(!isValid) signatureTypeGroup.classList.add('has-error');
+                else signatureTypeGroup.classList.remove('has-error');
+                signatureGroup.classList.remove('has-error');
+            }
+            
+            if (!isValid) {
                 signatureErr.classList.add('active');
                 return false;
             } else {
-                signatureGroup.classList.remove('has-error');
                 signatureErr.classList.remove('active');
                 return true;
+            }
+        }
+        
+        function getSignatureDataURL() {
+            if (signatureMode === 'draw') {
+                return signaturePad.toDataURL('image/png');
+            } else {
+                const text = document.getElementById('typedSignatureInput').value.trim();
+                const hiddenCanvas = document.getElementById('hidden-signature-canvas');
+                hiddenCanvas.width = 400;
+                hiddenCanvas.height = 150;
+                const ctx = hiddenCanvas.getContext('2d');
+                
+                // Clear and set background
+                ctx.clearRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+                
+                // Draw text
+                ctx.font = '50px "Caveat", cursive';
+                ctx.fillStyle = 'rgb(240, 165, 0)';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, hiddenCanvas.width / 2, hiddenCanvas.height / 2);
+                
+                return hiddenCanvas.toDataURL('image/png');
             }
         }
 
@@ -1222,7 +1304,7 @@
                 purpose: document.getElementById('purpose').value.toUpperCase(),
                 referredBy: document.getElementById('referredBy').value.trim().toUpperCase(),
                 isPriority: document.getElementById('isPriority').checked,
-                signature: signaturePad.toDataURL('image/png'),
+                signature: getSignatureDataURL(),
                 registrationDuration: (() => {
                     if (!formStartTime) return "00:00";
                     const diffMs = Math.max(0, new Date() - formStartTime);
