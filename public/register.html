@@ -1154,6 +1154,17 @@
             }
         });
 
+        // Registration Timer Logic
+        let formStartTime = null;
+        let keystrokeCount = 0;
+
+        document.getElementById('regForm').addEventListener('input', () => {
+            keystrokeCount++;
+            if (keystrokeCount === 2 && !formStartTime) {
+                formStartTime = new Date();
+            }
+        });
+
         // Form Submit
         document.getElementById('regForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1211,7 +1222,14 @@
                 purpose: document.getElementById('purpose').value.toUpperCase(),
                 referredBy: document.getElementById('referredBy').value.trim().toUpperCase(),
                 isPriority: document.getElementById('isPriority').checked,
-                signature: signaturePad.toDataURL('image/png')
+                signature: signaturePad.toDataURL('image/png'),
+                registrationDuration: (() => {
+                    if (!formStartTime) return "00:00";
+                    const diffMs = Math.max(0, new Date() - formStartTime);
+                    const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
+                    const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                    return `${mins}:${secs}`;
+                })()
             };
 
             // Timeout safety

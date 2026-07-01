@@ -637,7 +637,8 @@ io.on('connection', async (socket) => {
                         referred_by: formData.referredBy || null,
                         is_priority: isPriority,
                         status: 'Waiting',
-                        e_signature: formData.signature || null
+                        e_signature: formData.signature || null,
+                        registration_duration: formData.registrationDuration || null
                     }
                 ])
                 .select();

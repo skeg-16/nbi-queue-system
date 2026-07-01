@@ -221,7 +221,8 @@
                         <th class="col-title" onclick="handleSort('contact', 4)">Contact <span id="sort-4"></span></th>
                         <th class="col-title" onclick="handleSort('is_priority', 5)">Priority <span id="sort-5"></span></th>
                         <th class="col-title" onclick="handleSort('status', 6)">Status <span id="sort-6"></span></th>
-                        <th class="col-title" style="text-align: center;" title="Serving Duration in Minutes">Duration</th>
+                        <th class="col-title" style="text-align: center;" title="Registration Duration in Minutes">Registration Duration</th>
+                        <th class="col-title" style="text-align: center;" title="Serving Duration in Minutes">Interview Duration</th>
                         <th class="col-title" style="text-align: center;">Actions</th>
                     </tr>
                 </thead>
@@ -1056,6 +1057,7 @@
                             <option value="Skipped" ${r.status === 'Skipped' ? 'selected' : ''}>Skipped</option>
                             <option value="No-show" ${r.status === 'No-show' ? 'selected' : ''}>No-show</option>
                         </select>
+                    <td style="text-align: center; color: var(--text-muted); font-family: monospace;">${r.registration_duration || '---'}</td>
                     <td style="text-align: center;">
                         <input type="text" value="${r.serving_duration || ''}" onchange="updateCell(this, 'serving_duration', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="-">
                     </td>
@@ -1149,7 +1151,8 @@
                 <div class="detail-row"><div class="detail-label">Address</div><div class="detail-value">${r.address}</div></div>
                 <div class="detail-row"><div class="detail-label">Purpose</div><div class="detail-value">${r.purpose}</div></div>
                 <div class="detail-row"><div class="detail-label">Referred By</div><div class="detail-value">${r.referred_by || 'N/A'}</div></div>
-                <div class="detail-row"><div class="detail-label">Serving Duration</div><div class="detail-value">${r.serving_duration ? r.serving_duration : 'N/A'}</div></div>
+                <div class="detail-row"><div class="detail-label">Registration Time</div><div class="detail-value">${r.registration_duration || 'N/A'}</div></div>
+                <div class="detail-row"><div class="detail-label">Interview Duration</div><div class="detail-value">${r.serving_duration ? r.serving_duration : 'N/A'}</div></div>
                 <div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem;">Agent Remarks</div><div class="detail-value" style="width: 100%; background: var(--panel-bg); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); white-space: pre-wrap; text-align: left;">${remarksText}</div></div>
                 ${r.e_signature ? `<div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;"><span>E-Signature</span> <a href="${r.e_signature}" download="Signature_${r.ccd_no}.png" style="text-decoration: none; background: var(--btn-bg); color: var(--text-main); padding: 4px 12px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 0.75rem;">Download</a></div><div class="detail-value" style="width: 100%; background: white; padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;"><img src="${r.e_signature}" style="max-height: 150px; max-width: 100%;" alt="E-Signature"/></div></div>` : ''}
             `;
@@ -1263,7 +1266,8 @@
                 "Purpose": r.purpose,
                 "Priority": r.is_priority ? "YES" : "NO",
                 "Queue Status": r.status,
-                "Duration": r.serving_duration || ""
+                "Registration Time": r.registration_duration || "",
+                "Interview Duration": r.serving_duration || ""
             }));
         }
 
@@ -1296,11 +1300,11 @@
             doc.text(`Generated: ${new Date().toLocaleString('en-PH')}`, 14, 22);
 
             const tableData = filteredRecords.map(r => [
-                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no, r.full_name, r.age, r.region, r.contact, r.status, r.serving_duration || ''
+                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no, r.full_name, r.age, r.region, r.contact, r.status, r.registration_duration || '', r.serving_duration || ''
             ]);
 
             doc.autoTable({
-                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Contact', 'Status', 'Duration']],
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Contact', 'Status', 'Reg. Time', 'Interview Time']],
                 body: tableData,
                 startY: 28,
                 styles: { fontSize: 8 }
@@ -1339,7 +1343,7 @@
                 <table>
                     <tr>
                         <th>Date & Time</th><th>CCD No.</th><th>Full Name</th>
-                        <th>Age</th><th>Region</th><th>Contact</th><th>Status</th><th>Priority</th><th>Duration</th>
+                        <th>Age</th><th>Region</th><th>Contact</th><th>Status</th><th>Priority</th><th>Reg. Time</th><th>Interview Time</th>
                     </tr>`;
 
             filteredRecords.forEach(r => {
@@ -1352,6 +1356,7 @@
                     <td>${r.contact}</td>
                     <td>${r.status}</td>
                     <td>${r.is_priority ? 'YES' : 'NO'}</td>
+                    <td>${r.registration_duration || ''}</td>
                     <td>${r.serving_duration || ''}</td>
                 </tr>`;
             });
