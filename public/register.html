@@ -192,6 +192,7 @@
             padding: 0 1rem;
             font-family: inherit;
             transition: all 0.2s ease;
+            text-transform: uppercase;
         }
 
         .standard-input::placeholder {
@@ -806,7 +807,7 @@
 
         <div class="header-divider"></div>
 
-        <form id="regForm" novalidate>
+        <form id="regForm" autocomplete="off" novalidate>
             <div class="form-grid">
 
                 <!-- Row 1 -->
@@ -814,7 +815,7 @@
                     <label class="static-label" for="fullName">Full Name <span class="req">*</span></label>
                     <div class="input-group" id="group-fullName">
                         <input type="text" class="standard-input" id="fullName" placeholder="Enter your full name"
-                            tabindex="1">
+                            tabindex="1" autocomplete="off">
                     </div>
                     <div class="error-msg" id="err-fullName">⚠ Please enter a valid full name (letters only)</div>
                 </div>
@@ -823,7 +824,7 @@
                     <label class="static-label" for="contact">Mobile Number <span class="req">*</span></label>
                     <div class="input-group" id="group-contact">
                         <input type="tel" class="standard-input" id="contact" placeholder="e.g. 09XXXXXXXXX"
-                            tabindex="2" maxlength="11" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            tabindex="2" maxlength="11" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" autocomplete="off">
                     </div>
                     <div class="error-msg" id="err-contact">⚠ Please enter a valid mobile number</div>
                 </div>
@@ -831,7 +832,7 @@
                 <div class="field-wrapper" id="wrap-email">
                     <label class="static-label" for="email">Email</label>
                     <div class="input-group" id="group-email">
-                        <input type="email" class="standard-input" id="email" placeholder="Optional" tabindex="3">
+                        <input type="email" class="standard-input" id="email" placeholder="Optional" tabindex="3" autocomplete="off">
                     </div>
                     <div class="error-msg" id="err-email">⚠ Please enter a valid email</div>
                 </div>
@@ -846,11 +847,38 @@
                     <div class="error-msg" id="err-age">⚠ Please enter a valid age</div>
                 </div>
 
+                <div class="field-wrapper" id="wrap-region">
+                    <label class="static-label" for="region">Region <span class="req">*</span></label>
+                    <div class="input-group" id="group-region">
+                        <select class="standard-input" id="region" tabindex="5">
+                            <option value="" disabled selected hidden>Select Region</option>
+                            <option value="NCR">National Capital Region (NCR)</option>
+                            <option value="CAR">Cordillera Administrative Region (CAR)</option>
+                            <option value="Region I">Ilocos Region (Region I)</option>
+                            <option value="Region II">Cagayan Valley (Region II)</option>
+                            <option value="Region III">Central Luzon (Region III)</option>
+                            <option value="Region IV-A">CALABARZON (Region IV-A)</option>
+                            <option value="MIMAROPA">MIMAROPA Region</option>
+                            <option value="Region V">Bicol Region (Region V)</option>
+                            <option value="Region VI">Western Visayas (Region VI)</option>
+                            <option value="Region VII">Central Visayas (Region VII)</option>
+                            <option value="Region VIII">Eastern Visayas (Region VIII)</option>
+                            <option value="Region IX">Zamboanga Peninsula (Region IX)</option>
+                            <option value="Region X">Northern Mindanao (Region X)</option>
+                            <option value="Region XI">Davao Region (Region XI)</option>
+                            <option value="Region XII">SOCCSKSARGEN (Region XII)</option>
+                            <option value="Region XIII">Caraga (Region XIII)</option>
+                            <option value="BARMM">Bangsamoro (BARMM)</option>
+                        </select>
+                    </div>
+                    <div class="error-msg" id="err-region">⚠ Please select a region</div>
+                </div>
+
                 <div class="field-wrapper span-2" id="wrap-address">
-                    <label class="static-label" for="address">Complete Address <span class="req">*</span></label>
+                    <label class="static-label" for="address">Complete Address (City, Brgy, St) <span class="req">*</span></label>
                     <div class="input-group" id="group-address">
                         <input type="text" class="standard-input" id="address" placeholder="Enter your complete address"
-                            tabindex="5">
+                            tabindex="5" autocomplete="off">
                     </div>
                     <div class="error-msg" id="err-address">⚠ Please enter your complete address</div>
                 </div>
@@ -900,7 +928,7 @@
                 <div class="field-wrapper" id="wrap-referredBy">
                     <label class="static-label" for="referredBy">Referred By</label>
                     <div class="input-group" id="group-referredBy">
-                        <input type="text" class="standard-input" id="referredBy" placeholder="Optional" tabindex="9">
+                        <input type="text" class="standard-input" id="referredBy" placeholder="Optional" tabindex="9" autocomplete="off">
                     </div>
                     <div class="error-msg" id="err-referredBy"></div>
                 </div>
@@ -1074,6 +1102,11 @@
                 errorEl: 'err-address',
                 groupEl: 'group-address'
             },
+            region: {
+                validate: (val) => val !== '',
+                errorEl: 'err-region',
+                groupEl: 'group-region'
+            },
             purpose: {
                 validate: (val) => val !== '',
                 errorEl: 'err-purpose',
@@ -1166,16 +1199,18 @@
             if (arrowIcon) arrowIcon.style.display = "none";
             btnSpinner.style.display = "block";
 
+            const fullAddress = (document.getElementById('address').value.trim() + ', ' + document.getElementById('region').value).toUpperCase();
+
             const formData = {
-                fullName: document.getElementById('fullName').value.trim(),
+                fullName: document.getElementById('fullName').value.trim().toUpperCase(),
                 contact: document.getElementById('contact').value.trim(),
                 age: document.getElementById('age').value,
-                email: document.getElementById('email').value.trim(),
-                civilStatus: document.getElementById('civilStatus').value,
-                gender: document.getElementById('gender').value,
-                address: document.getElementById('address').value.trim(),
-                purpose: document.getElementById('purpose').value,
-                referredBy: document.getElementById('referredBy').value.trim(),
+                email: document.getElementById('email').value.trim().toUpperCase(),
+                civilStatus: document.getElementById('civilStatus').value.toUpperCase(),
+                gender: document.getElementById('gender').value.toUpperCase(),
+                address: fullAddress,
+                purpose: document.getElementById('purpose').value.toUpperCase(),
+                referredBy: document.getElementById('referredBy').value.trim().toUpperCase(),
                 isPriority: document.getElementById('isPriority').checked,
                 signature: signaturePad.toDataURL('image/png')
             };
