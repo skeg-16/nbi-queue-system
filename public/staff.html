@@ -654,8 +654,14 @@
                 skippedListEl.innerHTML = '';
                 if (!data.skippedList || data.skippedList.length === 0) {
                     skippedCard.style.display = 'none';
+                    btnCallSkipped.disabled = true;
+                    btnCallSkipped.style.opacity = '0.5';
+                    btnCallSkipped.style.cursor = 'not-allowed';
                 } else {
                     skippedCard.style.display = 'flex';
+                    btnCallSkipped.disabled = false;
+                    btnCallSkipped.style.opacity = '1';
+                    btnCallSkipped.style.cursor = 'pointer';
                     skippedCountEl.textContent = data.skippedList.length;
                     
                     data.skippedList.forEach(person => {
