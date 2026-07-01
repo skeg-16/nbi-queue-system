@@ -671,6 +671,41 @@ io.on('connection', async (socket) => {
         }
     });
 
+    // Handle "End Current" logic
+    socket.on('end_current', async () => {
+        try {
+            if (state.currentlyServing) {
+                let serving_duration = null;
+                if (state.currentlyServing.startTimestamp) {
+                    const diffMs = Math.max(0, new Date() - new Date(state.currentlyServing.startTimestamp));
+                    const mins = Math.floor(diffMs / 60000).toString().padStart(2, '0');
+                    const secs = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                    serving_duration = `${mins}:${secs}`;
+                }
+
+                const { error: updateErr } = await supabase
+                    .from('registrations')
+                    .update({ status: 'Served', ...(serving_duration ? { serving_duration } : {}) })
+                    .eq('id', state.currentlyServing.id);
+                if (updateErr) throw updateErr;
+
+                state.recentServed.unshift({
+                    ccdNo: state.currentlyServing.ccdNo,
+                    isPriority: state.currentlyServing.isPriority
+                });
+                if (state.recentServed.length > 4) state.recentServed.pop();
+                
+                state.currentlyServing = null;
+                
+                await broadcastStaffUpdate();
+                broadcastDisplayUpdate(false);
+            }
+        } catch (err) {
+            console.error("Error in 'end_current':", err);
+            socket.emit('action_error', { message: "Failed to end current session. Database update blocked or failed." });
+        }
+    });
+
     // Handle "Next" logic with strict absolute priority algorithm
     socket.on('next', async () => {
         try {

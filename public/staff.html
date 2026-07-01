@@ -179,7 +179,7 @@
         .btn-next .btn-text { font-size: 2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;}
         .btn-next .btn-subtext { font-size: 1rem; font-weight: 600; opacity: 0.8; }
         
-        .secondary-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; width: 100%; }
+        .secondary-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; }
         
         .btn-secondary {
             padding: 1.2rem; flex-direction: row; gap: 0.8rem;
@@ -203,6 +203,12 @@
             color: #e74c3c;
         }
         .btn-reset:hover:not(:disabled) { background: rgba(231, 76, 60, 0.3); }
+
+        .btn-end {
+            background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.4); 
+            color: #2ecc71;
+        }
+        .btn-end:hover:not(:disabled) { background: rgba(46, 204, 113, 0.3); box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); }
 
         /* Stats Row */
         .stats-row {
@@ -403,6 +409,9 @@
                 
                 <!-- Secondary Actions -->
                 <div class="secondary-controls">
+                    <button class="btn btn-secondary btn-end" id="btn-end">
+                        <span class="btn-text">End Session (Break)</span>
+                    </button>
                     <button class="btn btn-secondary btn-skip" id="btn-skip">
                         <span class="btn-text">Skip Person</span>
                     </button>
@@ -508,6 +517,7 @@
         const btnSkip = document.getElementById('btn-skip');
         const btnRepeat = document.getElementById('btn-repeat');
         const btnReset = document.getElementById('btn-reset');
+        const btnEnd = document.getElementById('btn-end');
         
         let isQueueEmpty = true;
         
@@ -713,8 +723,20 @@
 
         btnSkip.addEventListener('click', () => {
             if (currentCcdEl.textContent === '---') return;
-            setButtonLoading(btnSkip, "Skipping...");
-            socket.emit('skip');
+            if (confirm("Are you sure you want to skip the current person? They will be moved to the skipped list.")) {
+                setButtonLoading(btnSkip, "Skipping...");
+                socket.emit('skip');
+            }
+        });
+
+        btnEnd.addEventListener('click', () => {
+            if (!document.getElementById('current-ccd').textContent || document.getElementById('current-ccd').textContent === '---') {
+                return;
+            }
+            if (confirm("End current session and go idle? Use this if you are taking a break before calling the next person.")) {
+                setButtonLoading(btnEnd, "Ending...");
+                socket.emit('end_current');
+            }
         });
 
         btnRepeat.addEventListener('click', () => {
