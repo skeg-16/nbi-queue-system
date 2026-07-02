@@ -384,17 +384,17 @@
             <input type="hidden" id="remarksId">
             
             <div class="form-group" style="margin-bottom: 1rem;">
-                <label class="form-label">Actionable ba?</label>
+                <label class="form-label">Is Actionable?</label>
                 <select id="remarksActionable" class="form-input" onchange="document.getElementById('caseTypeGroup').style.display = this.value === 'yes' ? 'block' : 'none'">
-                    <option value="no">Hindi (Remarks/Comment lang)</option>
-                    <option value="yes">Oo (Actionable)</option>
+                    <option value="no">No (Remarks/Comment only)</option>
+                    <option value="yes">Yes (Actionable)</option>
                 </select>
             </div>
             
             <div class="form-group" id="caseTypeGroup" style="display: none; margin-bottom: 1rem;">
-                <label class="form-label">Mga Kaso (Case Type)</label>
+                <label class="form-label">Case Type</label>
                 <select id="remarksCaseType" class="form-input">
-                    <option value="" disabled selected>Pumili ng kaso...</option>
+                    <option value="" disabled selected>Select case type...</option>
                     <option value="Cyber Libel">Cyber Libel</option>
                     <option value="Online Scam">Online Scam</option>
                     <option value="Identity Theft">Identity Theft</option>
@@ -1263,7 +1263,7 @@
             const caseType = document.getElementById('remarksCaseType').value;
 
             if (isActionable === 'yes' && !caseType) {
-                showToast("Pumili ng kaso kung actionable.", true);
+                showToast("Please select a case type if actionable.", true);
                 return;
             }
 
