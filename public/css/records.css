@@ -175,6 +175,33 @@ body, html {
     opacity: 0.9;
 }
 
+/* ---- Icon Buttons ---- */
+.btn-icon {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-right: 4px;
+}
+.btn-icon:hover {
+    background: var(--table-hover);
+    color: var(--text-main);
+    transform: scale(1.05);
+}
+.btn-icon:active {
+    transform: scale(0.95);
+}
+.btn-icon.delete:hover {
+    color: var(--red);
+    background: rgba(220, 38, 38, 0.1);
+}
+
 /* ---- Sheet Tabs ---- */
 .sheet-tabs {
     display: flex;

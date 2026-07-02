@@ -1038,7 +1038,7 @@
                 tr.innerHTML = `
                     <td>${dateStr}</td>
                     <td>${timeStr}</td>
-                    <td style="font-weight: 500;">${r.ccd_no || ''}</td>
+                    <td style="font-weight: 500;">${r.ccd_no ? r.ccd_no.split('-').pop() : ''}</td>
                     <td>${r.full_name || ''}</td>
                     <td>${r.age || ''}</td>
                     <td>${r.region || ''}</td>
@@ -1062,9 +1062,15 @@
                         <input type="text" value="${r.serving_duration || ''}" onchange="updateCell(this, 'serving_duration', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="-">
                     </td>
                     <td style="text-align: center; white-space: nowrap;">
-                        <button class="btn-formal" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 4px;" onclick="viewDetails('${r.id}')" title="View Dossier">View</button>
-                        <button class="btn-formal" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 4px;" onclick="openEditModal('${r.id}')" title="Edit Record">Edit</button>
-                        <button class="btn-formal" style="padding: 4px 8px; font-size: 0.8rem; color: #ef4444;" onclick="cmDeleteRow('${r.id}')" title="Delete Record">Del</button>
+                        <button class="btn-icon" onclick="viewDetails('${r.id}')" title="View Details">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                        <button class="btn-icon" onclick="openEditModal('${r.id}')" title="Edit Record">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="btn-icon delete" onclick="cmDeleteRow('${r.id}')" title="Delete Record">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1141,7 +1147,7 @@
 
             const dateStr = new Date(r.created_at).toLocaleString('en-PH');
             const html = `
-                <div class="detail-row"><div class="detail-label">Control No.</div><div class="detail-value" style="color: var(--gold); font-weight: 800;">${r.ccd_no}</div></div>
+                <div class="detail-row"><div class="detail-label">Control No.</div><div class="detail-value" style="color: var(--gold); font-weight: 800;">${r.ccd_no ? r.ccd_no.split('-').pop() : ''}</div></div>
                 <div class="detail-row"><div class="detail-label">Registration</div><div class="detail-value">${dateStr}</div></div>
                 <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${r.status} ${r.is_priority ? '<span class="badge badge-priority" style="margin-left:5px;">Priority</span>' : ''}</div></div>
                 <div class="detail-row"><div class="detail-label">Full Name</div><div class="detail-value">${r.full_name}</div></div>
@@ -1255,7 +1261,7 @@
         function getExportData() {
             return filteredRecords.map(r => ({
                 "Date & Time": new Date(r.created_at).toLocaleString('en-PH'),
-                "CCD No.": r.ccd_no,
+                "CCD No.": r.ccd_no ? r.ccd_no.split('-').pop() : '',
                 "Full Name": r.full_name,
                 "Age": r.age,
                 "Contact": r.contact,
@@ -1300,7 +1306,7 @@
             doc.text(`Generated: ${new Date().toLocaleString('en-PH')}`, 14, 22);
 
             const tableData = filteredRecords.map(r => [
-                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no, r.full_name, r.age, r.region, r.contact, r.status, r.registration_duration || '', r.serving_duration || ''
+                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no ? r.ccd_no.split('-').pop() : '', r.full_name, r.age, r.region, r.contact, r.status, r.registration_duration || '', r.serving_duration || ''
             ]);
 
             doc.autoTable({
@@ -1349,7 +1355,7 @@
             filteredRecords.forEach(r => {
                 html += `<tr>
                     <td>${new Date(r.created_at).toLocaleString('en-PH')}</td>
-                    <td>${r.ccd_no}</td>
+                    <td>${r.ccd_no ? r.ccd_no.split('-').pop() : ''}</td>
                     <td>${r.full_name}</td>
                     <td>${r.age}</td>
                     <td>${r.region || ''}</td>
