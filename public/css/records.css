@@ -24,6 +24,7 @@
     --table-hover: #f1f5f9;
     --nbi-cell-border: #e2e8f0;
     --nbi-blue: #0b1d3a;
+    --gold: #f59e0b;
 
     --btn-bg: #ffffff;
     --btn-border: #cbd5e1;
@@ -58,6 +59,7 @@
     --table-hover: rgba(255, 255, 255, 0.05);
     --nbi-cell-border: rgba(255, 255, 255, 0.1);
     --nbi-blue: #f1c40f;
+    --gold: #f1c40f;
 
     --btn-bg: rgba(255, 255, 255, 0.1);
     --btn-border: rgba(255, 255, 255, 0.1);
@@ -266,7 +268,7 @@ body, html {
     border-bottom: 2px solid var(--border-heavy);
 }
 .data-table th:hover {
-    background: rgba(255,255,255,0.05);
+    opacity: 0.9;
 }
 .data-table th span {
     font-size: 0.7rem;
