@@ -1055,13 +1055,21 @@
                 const tr = document.createElement('tr');
                 if (r.is_priority) tr.className = 'priority-row';
 
+                const actionableTag = r.isActionable === 'yes' ? `<div style="font-size: 0.75em; margin-top: 4px; color: var(--gold); font-weight: bold;">Actionable: ${r.caseType || 'N/A'}</div>` : (r.isActionable === 'no' ? `<div style="font-size: 0.75em; margin-top: 4px; color: var(--text-muted);">Not Actionable</div>` : '');
+                const addressTag = `<div style="font-size: 0.75em; color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.address || ''}">${r.address || ''}</div>`;
                 tr.innerHTML = `
                     <td>${dateStr}</td>
                     <td>${timeStr}</td>
                     <td style="font-weight: 500;">${r.ccd_no ? r.ccd_no.split('-').pop() : ''}</td>
-                    <td>${r.full_name || ''}</td>
+                    <td>
+                        <div style="font-weight: 500;">${r.full_name || ''}</div>
+                        ${actionableTag}
+                    </td>
                     <td>${r.age || ''}</td>
-                    <td>${r.region || ''}</td>
+                    <td>
+                        <div>${r.region || ''}</div>
+                        ${addressTag}
+                    </td>
                     <td>${r.contact || ''}</td>
                     <td>
                         <select onchange="updateCell(this, 'is_priority', '${r.id}')" class="status-badge" data-priority="${r.is_priority}" style="cursor: pointer; border: none; font-weight: bold; padding: 4px 8px; border-radius: 4px;">
@@ -1315,6 +1323,8 @@
                 "Purpose": r.purpose,
                 "Priority": r.is_priority ? "YES" : "NO",
                 "Queue Status": r.status,
+                "Actionable": r.isActionable === 'yes' ? 'Yes' : (r.isActionable === 'no' ? 'No' : ''),
+                "Case Type": r.caseType || '',
                 "Registration Time": r.registration_duration || "",
                 "Interview Duration": r.serving_duration || ""
             }));
@@ -1349,11 +1359,11 @@
             doc.text(`Generated: ${new Date().toLocaleString('en-PH')}`, 14, 22);
 
             const tableData = filteredRecords.map(r => [
-                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no ? r.ccd_no.split('-').pop() : '', r.full_name, r.age, r.region, r.contact, r.status, r.registration_duration || '', r.serving_duration || ''
+                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no ? r.ccd_no.split('-').pop() : '', r.full_name, r.age, r.region, r.address, r.contact, r.status, r.isActionable === 'yes' ? `Yes (${r.caseType})` : (r.isActionable === 'no' ? 'No' : ''), r.registration_duration || '', r.serving_duration || ''
             ]);
 
             doc.autoTable({
-                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Contact', 'Status', 'Reg. Time', 'Interview Time']],
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Address', 'Contact', 'Status', 'Actionable', 'Reg. Time', 'Interview']],
                 body: tableData,
                 startY: 28,
                 styles: { fontSize: 8 }
@@ -1392,7 +1402,7 @@
                 <table>
                     <tr>
                         <th>Date & Time</th><th>CCD No.</th><th>Full Name</th>
-                        <th>Age</th><th>Region</th><th>Contact</th><th>Status</th><th>Priority</th><th>Reg. Time</th><th>Interview Time</th>
+                        <th>Age</th><th>Region</th><th>Address</th><th>Contact</th><th>Status</th><th>Priority</th><th>Actionable</th><th>Case Type</th><th>Reg. Time</th><th>Interview Time</th>
                     </tr>`;
 
             filteredRecords.forEach(r => {
@@ -1402,9 +1412,12 @@
                     <td>${r.full_name}</td>
                     <td>${r.age}</td>
                     <td>${r.region || ''}</td>
+                    <td>${r.address || ''}</td>
                     <td>${r.contact}</td>
                     <td>${r.status}</td>
                     <td>${r.is_priority ? 'YES' : 'NO'}</td>
+                    <td>${r.isActionable === 'yes' ? 'Yes' : (r.isActionable === 'no' ? 'No' : '')}</td>
+                    <td>${r.caseType || ''}</td>
                     <td>${r.registration_duration || ''}</td>
                     <td>${r.serving_duration || ''}</td>
                 </tr>`;

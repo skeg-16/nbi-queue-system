@@ -202,7 +202,16 @@ app.get('/api/records', async (req, res) => {
         if (error) throw error;
 
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        res.json({ success: true, data: data });
+        
+        // Append Agent Assessment data to each record
+        const remarksObj = loadAgentRemarks();
+        const recordsWithRemarks = data.map(r => ({
+            ...r,
+            isActionable: remarksObj[r.id] ? (remarksObj[r.id].isActionable || 'no') : 'no',
+            caseType: remarksObj[r.id] ? (remarksObj[r.id].caseType || '') : ''
+        }));
+        
+        res.json({ success: true, data: recordsWithRemarks });
     } catch (err) {
         console.error("Error fetching records:", err);
         res.status(500).json({ success: false, error: "Database fetch failed" });
