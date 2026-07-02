@@ -378,20 +378,40 @@
     <div class="modal-overlay" id="modalRemarks">
         <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
-                <div class="modal-title">Agent Remarks</div>
+                <div class="modal-title">Agent Assessment</div>
                 <button class="modal-close" onclick="closeModal('modalRemarks')">&times;</button>
             </div>
             <input type="hidden" id="remarksId">
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label">Actionable ba?</label>
+                <select id="remarksActionable" class="form-input" onchange="document.getElementById('caseTypeGroup').style.display = this.value === 'yes' ? 'block' : 'none'">
+                    <option value="no">Hindi (Remarks/Comment lang)</option>
+                    <option value="yes">Oo (Actionable)</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="caseTypeGroup" style="display: none; margin-bottom: 1rem;">
+                <label class="form-label">Mga Kaso (Case Type)</label>
+                <select id="remarksCaseType" class="form-input">
+                    <option value="" disabled selected>Pumili ng kaso...</option>
+                    <option value="Cyber Libel">Cyber Libel</option>
+                    <option value="Online Scam">Online Scam</option>
+                    <option value="Identity Theft">Identity Theft</option>
+                    <option value="Hacking">Hacking</option>
+                </select>
+            </div>
+
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label class="form-label">Case Notes & Remarks</label>
                 <textarea id="remarksText" class="form-textarea"
-                    placeholder="Enter private agent remarks for this complainant..."></textarea>
+                    placeholder="Enter agent remarks or comment for this complainant..."></textarea>
             </div>
             <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.5rem;"
                 id="remarksTimestamp"></div>
             <div class="modal-footer">
                 <button class="btn-formal" onclick="closeModal('modalRemarks')">Cancel</button>
-                <button class="btn-formal btn-primary" onclick="submitRemarks()">Save Remarks</button>
+                <button class="btn-formal btn-primary" onclick="submitRemarks()">Save Assessment</button>
             </div>
         </div>
     </div>
@@ -1065,6 +1085,9 @@
                         <button class="btn-icon" onclick="viewDetails('${r.id}')" title="View Details">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
+                        <button class="btn-icon" onclick="openRemarks('${r.id}')" title="Agent Assessment">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </button>
                         <button class="btn-icon" onclick="openEditModal('${r.id}')" title="Edit Record">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
@@ -1139,10 +1162,16 @@
 
             // Fetch remarks for full details
             let remarksText = 'None';
+            let assessmentHtml = '';
             try {
                 const res = await fetch(`/api/records/${id}/remarks`);
                 const json = await res.json();
-                if (json.success && json.data.text) remarksText = json.data.text;
+                if (json.success) {
+                    if (json.data.text) remarksText = json.data.text;
+                    const isActionableText = json.data.isActionable === 'yes' ? '<span style="color:#2ecc71; font-weight:bold;">Yes (Actionable)</span>' : '<span style="color:#e74c3c; font-weight:bold;">No</span>';
+                    const caseTypeText = (json.data.isActionable === 'yes' && json.data.caseType) ? ` | Case: <strong>${json.data.caseType}</strong>` : '';
+                    assessmentHtml = `<div class="detail-row"><div class="detail-label">Assessment</div><div class="detail-value">${isActionableText}${caseTypeText}</div></div>`;
+                }
             } catch (e) { }
 
             const dateStr = new Date(r.created_at).toLocaleString('en-PH');
@@ -1159,6 +1188,7 @@
                 <div class="detail-row"><div class="detail-label">Referred By</div><div class="detail-value">${r.referred_by || 'N/A'}</div></div>
                 <div class="detail-row"><div class="detail-label">Registration Time</div><div class="detail-value">${r.registration_duration || 'N/A'}</div></div>
                 <div class="detail-row"><div class="detail-label">Interview Duration</div><div class="detail-value">${r.serving_duration ? r.serving_duration : 'N/A'}</div></div>
+                ${assessmentHtml}
                 <div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem;">Agent Remarks</div><div class="detail-value" style="width: 100%; background: var(--panel-bg); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); white-space: pre-wrap; text-align: left;">${remarksText}</div></div>
                 ${r.e_signature ? `<div class="detail-row" style="flex-direction: column; border-bottom: none;"><div class="detail-label" style="width: 100%; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;"><span>E-Signature</span> <a href="${r.e_signature}" download="Signature_${r.ccd_no}.png" style="text-decoration: none; background: var(--btn-bg); color: var(--text-main); padding: 4px 12px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 0.75rem;">Download</a></div><div class="detail-value" style="width: 100%; background: white; padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); text-align: center;"><img src="${r.e_signature}" style="max-height: 150px; max-width: 100%;" alt="E-Signature"/></div></div>` : ''}
             `;
@@ -1199,6 +1229,9 @@
         async function openRemarks(id) {
             document.getElementById('remarksId').value = id;
             document.getElementById('remarksText').value = "Loading...";
+            document.getElementById('remarksActionable').value = "no";
+            document.getElementById('caseTypeGroup').style.display = "none";
+            document.getElementById('remarksCaseType').value = "";
             document.getElementById('remarksTimestamp').textContent = "";
             openModal('modalRemarks');
 
@@ -1207,33 +1240,43 @@
                 const json = await res.json();
                 if (json.success) {
                     document.getElementById('remarksText').value = json.data.text || "";
+                    document.getElementById('remarksActionable').value = json.data.isActionable || "no";
+                    document.getElementById('caseTypeGroup').style.display = (json.data.isActionable === 'yes') ? "block" : "none";
+                    document.getElementById('remarksCaseType').value = json.data.caseType || "";
                     if (json.data.last_modified) {
                         const d = new Date(json.data.last_modified).toLocaleString('en-PH');
                         document.getElementById('remarksTimestamp').textContent = `Last modified: ${d}`;
                     } else {
-                        document.getElementById('remarksTimestamp').textContent = "No previous remarks.";
+                        document.getElementById('remarksTimestamp').textContent = "No previous assessment.";
                     }
                 }
             } catch (e) {
                 document.getElementById('remarksText').value = "";
-                showToast("Failed to load existing remarks", true);
+                showToast("Failed to load existing assessment", true);
             }
         }
 
         async function submitRemarks() {
             const id = document.getElementById('remarksId').value;
             const text = document.getElementById('remarksText').value;
+            const isActionable = document.getElementById('remarksActionable').value;
+            const caseType = document.getElementById('remarksCaseType').value;
+
+            if (isActionable === 'yes' && !caseType) {
+                showToast("Pumili ng kaso kung actionable.", true);
+                return;
+            }
 
             try {
                 const response = await fetch(`/api/records/${id}/remarks`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
+                    body: JSON.stringify({ text, isActionable, caseType })
                 });
                 if ((await response.json()).success) {
-                    showToast('Remarks saved successfully');
+                    showToast('Assessment saved successfully');
                     closeModal('modalRemarks');
-                } else { showToast('Failed to save remarks.', true); }
+                } else { showToast('Failed to save assessment.', true); }
             } catch (err) { showToast('Server error.', true); }
         }
 

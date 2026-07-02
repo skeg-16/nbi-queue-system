@@ -242,7 +242,7 @@ app.get('/api/audit', (req, res) => {
 app.get('/api/records/:id/remarks', (req, res) => {
     try {
         const remarks = loadAgentRemarks();
-        const recordRemarks = remarks[req.params.id] || { text: '', last_modified: null };
+        const recordRemarks = remarks[req.params.id] || { text: '', isActionable: 'no', caseType: '', last_modified: null };
         res.json({ success: true, data: recordRemarks });
     } catch (err) {
         res.status(500).json({ success: false, error: "Failed to load remarks" });
@@ -252,9 +252,9 @@ app.get('/api/records/:id/remarks', (req, res) => {
 app.post('/api/records/:id/remarks', (req, res) => {
     try {
         const id = req.params.id;
-        const { text } = req.body;
+        const { text, isActionable, caseType } = req.body;
         let remarks = loadAgentRemarks();
-        remarks[id] = { text: text || '', last_modified: new Date().toISOString() };
+        remarks[id] = { text: text || '', isActionable: isActionable || 'no', caseType: caseType || '', last_modified: new Date().toISOString() };
         saveAgentRemarks(remarks);
         auditLog('Agent Remarks', `Updated remarks for ID ${id}`);
         res.json({ success: true, data: remarks[id] });
