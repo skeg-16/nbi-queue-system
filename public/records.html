@@ -188,11 +188,8 @@
                 </label>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
-                <button class="btn-formal" onclick="exportToExcel()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg> Excel
-                </button>
-                <button class="btn-formal" onclick="exportToPDF()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg> PDF
+                <button class="btn-formal" onclick="openExportModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export Records
                 </button>
                 <button class="btn-formal" onclick="window.print()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg> Print
@@ -412,6 +409,32 @@
             <div class="modal-footer">
                 <button class="btn-formal" onclick="closeModal('modalRemarks')">Cancel</button>
                 <button class="btn-formal btn-primary" onclick="submitRemarks()">Save Assessment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Range Modal -->
+    <div class="modal-overlay" id="modalExport">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-title">Export Records</div>
+                <button class="modal-close" onclick="closeModal('modalExport')">&times;</button>
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label">Start Date</label>
+                <input type="date" id="exportStartDate" class="form-input">
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label">End Date</label>
+                <input type="date" id="exportEndDate" class="form-input">
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: space-between; margin-bottom: 10px;">
+                <button class="btn-formal btn-primary" style="flex: 1;" onclick="doExport('excel')">Excel</button>
+                <button class="btn-formal btn-primary" style="flex: 1;" onclick="doExport('csv')">CSV</button>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: space-between;">
+                <button class="btn-formal btn-primary" style="flex: 1;" onclick="doExport('pdf')">PDF</button>
+                <button class="btn-formal btn-primary" style="flex: 1;" onclick="doExport('word')">Word</button>
             </div>
         </div>
     </div>
@@ -1309,8 +1332,37 @@
         }
 
         // --- Export & Reports ---
-        function getExportData() {
-            return filteredRecords.map(r => ({
+        function openExportModal() {
+            document.getElementById('exportStartDate').value = getViewDateString();
+            document.getElementById('exportEndDate').value = getViewDateString();
+            openModal('modalExport');
+        }
+
+        function getExportDataRange() {
+            const start = document.getElementById('exportStartDate').value;
+            const end = document.getElementById('exportEndDate').value;
+            if (!start || !end) return [];
+            return allRecords.filter(r => {
+                if (!r.created_at) return false;
+                const d = r.created_at.split('T')[0];
+                return d >= start && d <= end;
+            }).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        }
+
+        function doExport(type) {
+            const recordsToExport = getExportDataRange();
+            if (recordsToExport.length === 0) return alert("No records found in this date range.");
+            
+            closeModal('modalExport');
+            
+            if (type === 'excel') exportToExcel(recordsToExport);
+            else if (type === 'csv') exportToCSV(recordsToExport);
+            else if (type === 'pdf') exportToPDF(recordsToExport);
+            else if (type === 'word') exportToWord(recordsToExport);
+        }
+
+        function getExportData(recordsList) {
+            return recordsList.map(r => ({
                 "Date & Time": new Date(r.created_at).toLocaleString('en-PH'),
                 "CCD No.": r.ccd_no ? r.ccd_no.split('-').pop() : '',
                 "Full Name": r.full_name,
@@ -1322,7 +1374,6 @@
                 "Address": r.address,
                 "Purpose": r.purpose,
                 "Priority": r.is_priority ? "YES" : "NO",
-                "Queue Status": r.status,
                 "Actionable": r.isActionable === 'yes' ? 'Yes' : (r.isActionable === 'no' ? 'No' : ''),
                 "Case Type": r.caseType || '',
                 "Registration Time": r.registration_duration || "",
@@ -1330,50 +1381,47 @@
             }));
         }
 
-        function exportToExcel() {
-            if (filteredRecords.length === 0) return alert("No records to export.");
-            const ws = XLSX.utils.json_to_sheet(getExportData());
+        function exportToExcel(recordsList) {
+            const ws = XLSX.utils.json_to_sheet(getExportData(recordsList));
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Records");
-            XLSX.writeFile(wb, `NBI_Records_${getViewDateString()}.xlsx`);
+            XLSX.writeFile(wb, `NBI_Records.xlsx`);
         }
 
-        function exportToCSV() {
-            if (filteredRecords.length === 0) return alert("No records to export.");
-            const ws = XLSX.utils.json_to_sheet(getExportData());
+        function exportToCSV(recordsList) {
+            const ws = XLSX.utils.json_to_sheet(getExportData(recordsList));
             const csv = XLSX.utils.sheet_to_csv(ws);
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `NBI_Records_${getViewDateString()}.csv`;
+            link.download = `NBI_Records.csv`;
             link.click();
         }
 
-        function exportToPDF() {
-            if (filteredRecords.length === 0) return alert("No records to export.");
+        function exportToPDF(recordsList) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('landscape');
             doc.setFontSize(16);
             doc.text("NBI Cybercrime Division - Official Records", 14, 15);
             doc.setFontSize(10);
-            doc.text(`Generated: ${new Date().toLocaleString('en-PH')}`, 14, 22);
+            const start = document.getElementById('exportStartDate').value;
+            const end = document.getElementById('exportEndDate').value;
+            doc.text(`Generated: ${new Date().toLocaleString('en-PH')} | Range: ${start} to ${end}`, 14, 22);
 
-            const tableData = filteredRecords.map(r => [
-                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no ? r.ccd_no.split('-').pop() : '', r.full_name, r.age, r.region, r.address, r.contact, r.status, r.isActionable === 'yes' ? `Yes (${r.caseType})` : (r.isActionable === 'no' ? 'No' : ''), r.registration_duration || '', r.serving_duration || ''
+            const tableData = recordsList.map(r => [
+                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no ? r.ccd_no.split('-').pop() : '', r.full_name, r.age, r.region, r.address, r.contact, r.isActionable === 'yes' ? `Yes (${r.caseType})` : (r.isActionable === 'no' ? 'No' : ''), r.registration_duration || '', r.serving_duration || ''
             ]);
 
             doc.autoTable({
-                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Address', 'Contact', 'Status', 'Actionable', 'Reg. Time', 'Interview']],
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Address', 'Contact', 'Actionable', 'Reg. Time', 'Interview']],
                 body: tableData,
                 startY: 28,
                 styles: { fontSize: 8 }
             });
-            doc.save(`NBI_Records_${getViewDateString()}.pdf`);
+            doc.save(`NBI_Records.pdf`);
         }
 
-        function exportToWord() {
-            if (filteredRecords.length === 0) return alert("No records to export.");
-
+        function exportToWord(recordsList) {
             let html = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head><meta charset='utf-8'><title>NBI Records</title>
@@ -1398,14 +1446,14 @@
 
                 <h1>NBI Cybercrime Division - Official Records</h1>
                 <p><strong>Generated on:</strong> ${new Date().toLocaleString('en-PH')}</p>
-                <p><strong>Date:</strong> ${getViewDateString()}</p>
+                <p><strong>Date Range:</strong> ${document.getElementById('exportStartDate').value} to ${document.getElementById('exportEndDate').value}</p>
                 <table>
                     <tr>
                         <th>Date & Time</th><th>CCD No.</th><th>Full Name</th>
-                        <th>Age</th><th>Region</th><th>Address</th><th>Contact</th><th>Status</th><th>Priority</th><th>Actionable</th><th>Case Type</th><th>Reg. Time</th><th>Interview Time</th>
+                        <th>Age</th><th>Region</th><th>Address</th><th>Contact</th><th>Priority</th><th>Actionable</th><th>Case Type</th><th>Reg. Time</th><th>Interview Time</th>
                     </tr>`;
 
-            filteredRecords.forEach(r => {
+            recordsList.forEach(r => {
                 html += `<tr>
                     <td>${new Date(r.created_at).toLocaleString('en-PH')}</td>
                     <td>${r.ccd_no ? r.ccd_no.split('-').pop() : ''}</td>
@@ -1414,7 +1462,6 @@
                     <td>${r.region || ''}</td>
                     <td>${r.address || ''}</td>
                     <td>${r.contact}</td>
-                    <td>${r.status}</td>
                     <td>${r.is_priority ? 'YES' : 'NO'}</td>
                     <td>${r.isActionable === 'yes' ? 'Yes' : (r.isActionable === 'no' ? 'No' : '')}</td>
                     <td>${r.caseType || ''}</td>
@@ -1427,7 +1474,7 @@
             const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `NBI_Records_${getViewDateString()}.doc`;
+            link.download = `NBI_Records.doc`;
             link.click();
         }
 
