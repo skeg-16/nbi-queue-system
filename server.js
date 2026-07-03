@@ -6,6 +6,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
+const cron = require('node-cron');
 
 const app = express();
 const server = http.createServer(app);
@@ -983,6 +984,30 @@ io.on('connection', async (socket) => {
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
     });
+});
+
+// Daily fallback: At 6:00 PM (18:00) every day, mark all unserved queues as 'Served'
+cron.schedule('0 18 * * *', async () => {
+    console.log("Running 6:00 PM fallback: Marking all unserved queues as Served");
+    try {
+        const { error } = await supabase
+            .from('registrations')
+            .update({ status: 'Served' })
+            .in('status', ['Waiting', 'Serving']);
+        
+        if (error) {
+            console.error("Error running 6:00 PM fallback:", error);
+        } else {
+            console.log("Successfully ran 6 PM fallback.");
+            state.currentlyServing = null;
+            state.recentServed = [];
+            state.priorityServedCount = 0;
+            // Broadcast the queue reset to all connected clients
+            await broadcastStaffUpdate();
+        }
+    } catch (err) {
+        console.error("Exception in 6:00 PM fallback:", err);
+    }
 });
 
 const PORT = process.env.PORT || 3000;
