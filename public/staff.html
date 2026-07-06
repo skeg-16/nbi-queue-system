@@ -330,6 +330,25 @@
         .btn-cancel { flex: 1; padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer; font-weight: 600;}
         .btn-confirm-danger { flex: 1; padding: 1rem; border-radius: 8px; border: none; background: var(--danger-color); color: white; cursor: pointer; font-weight: 800;}
 
+        /* Mobile Queue Drawer */
+        .mobile-queue-toggle {
+            display: none;
+            background: rgba(243, 156, 18, 0.1);
+            border: 1px solid rgba(243, 156, 18, 0.3);
+            color: #f39c12;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            align-items: center;
+            gap: 0.5rem;
+            margin-right: auto;
+        }
+        .mobile-queue-close {
+            display: none;
+        }
+
         /* Responsive Breakpoints */
         @media (max-width: 1024px) {
             .dashboard-layout { gap: 1.5rem; }
@@ -368,11 +387,46 @@
             .connection-indicator-wrapper { position: static; margin-left: auto; margin-right: 1rem; }
             .staff-nav { justify-content: flex-start; padding-left: 1rem; }
             .nav-links-container { justify-content: flex-start; gap: 1rem; }
+            
+            .mobile-queue-toggle { display: flex; }
+            .right-column {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 100%;
+                height: 100vh;
+                background: #050e1d;
+                z-index: 1000;
+                padding: 1.5rem;
+                transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                overflow-y: auto;
+                box-shadow: -5px 0 30px rgba(0,0,0,0.8);
+            }
+            .right-column.open { right: 0; }
+            .mobile-queue-close {
+                display: flex;
+                align-self: flex-end;
+                background: rgba(231, 76, 60, 0.2);
+                color: #e74c3c;
+                border: 1px solid rgba(231, 76, 60, 0.4);
+                font-size: 1.2rem;
+                cursor: pointer;
+                margin-bottom: 1rem;
+                padding: 0.5rem;
+                border-radius: 8px;
+                width: 40px;
+                height: 40px;
+                align-items: center;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body class="staff-body">
     <div class="staff-nav">
+        <button id="mobile-queue-btn" class="mobile-queue-toggle">
+            ☰ Queue
+        </button>
         <div class="nav-links-container">
             <!-- Navigation links removed -->
         </div>
@@ -446,6 +500,7 @@
             </div>
 
             <div class="right-column">
+                <button id="mobile-queue-close" class="mobile-queue-close">✕</button>
                 <!-- Queue Preview List -->
                 <div class="dashboard-card waiting-card">
                     <div class="card-label" style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
@@ -788,7 +843,19 @@
             closeResetModal();
         }
 
+        // Mobile Queue Drawer Toggle
+        const mobileQueueBtn = document.getElementById('mobile-queue-btn');
+        const mobileQueueClose = document.getElementById('mobile-queue-close');
+        const rightColumn = document.querySelector('.right-column');
 
+        if (mobileQueueBtn && mobileQueueClose && rightColumn) {
+            mobileQueueBtn.addEventListener('click', () => {
+                rightColumn.classList.add('open');
+            });
+            mobileQueueClose.addEventListener('click', () => {
+                rightColumn.classList.remove('open');
+            });
+        }
     </script>
 </body>
 </html>
