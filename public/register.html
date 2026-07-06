@@ -1157,7 +1157,7 @@
         // Validation Rules
         const rules = {
             fullName: {
-                validate: (val) => val.trim().length >= 2 && /^[a-zA-Z\s]+$/.test(val),
+                validate: (val) => val.trim().length >= 2 && /^[a-zA-Z\s.,]+$/.test(val),
                 errorEl: 'err-fullName',
                 groupEl: 'group-fullName'
             },
