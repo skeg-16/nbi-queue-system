@@ -804,15 +804,29 @@
             <div class="brand-title" style="font-size: 2.2rem; margin-top: 0.5rem;">Cybercrime Division</div>
         </div>
         
-        <h2 style="color: white; margin-bottom: 2rem; font-size: 1.8rem; font-weight: 600; line-height: 1.4;">Are you a Senior Citizen, PWD, or Pregnant?</h2>
-        
-        <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0 1rem;">
-            <button type="button" id="btn-landing-yes" style="background: linear-gradient(135deg, #F0A500, #d35400); color: white; border: none; padding: 1.5rem; font-size: 1.3rem; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: transform 0.2s; box-shadow: 0 10px 20px rgba(240, 165, 0, 0.2);">
-                Yes, I am a Priority
+        <!-- Initial Register Button Screen -->
+        <div id="landing-register-screen">
+            <button type="button" id="btn-register-here" style="background: linear-gradient(135deg, #F0A500, #d35400); color: white; border: none; padding: 2.5rem 4rem; font-size: 2.5rem; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 10px 20px rgba(240, 165, 0, 0.2); width: 90%; max-width: 500px; margin: 0 auto;">
+                Register Here
             </button>
-            <button type="button" id="btn-landing-no" style="background: #0A1628; color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.2); padding: 1.5rem; font-size: 1.3rem; font-weight: 600; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s;">
-                No, Regular Registration
+        </div>
+
+        <!-- Priority Question Screen -->
+        <div id="landing-priority-screen" style="display: none;">
+            <button type="button" id="btn-back-to-register" style="position: absolute; top: 24px; left: 32px; background: transparent; border: none; color: rgba(255, 255, 255, 0.6); font-size: 1.5rem; cursor: pointer; padding: 0.5rem; transition: all 0.2s ease; z-index: 10;">
+                ←
             </button>
+            
+            <h2 style="color: white; margin-bottom: 2rem; font-size: 1.8rem; font-weight: 600; line-height: 1.4;">Are you a Senior Citizen, PWD, or Pregnant?</h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0 1rem;">
+                <button type="button" id="btn-landing-yes" style="background: linear-gradient(135deg, #F0A500, #d35400); color: white; border: none; padding: 1.5rem; font-size: 1.3rem; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 10px 20px rgba(240, 165, 0, 0.2);">
+                    Yes, I am a Priority
+                </button>
+                <button type="button" id="btn-landing-no" style="background: #0A1628; color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.2); padding: 1.5rem; font-size: 1.3rem; font-weight: 600; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">
+                    No, Regular Registration
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1043,8 +1057,44 @@
     <script>
         const socket = io();
 
+        // Register Here Button - Show Priority Question
+        document.getElementById('btn-register-here').addEventListener('click', () => {
+            document.getElementById('landing-register-screen').style.display = 'none';
+            document.getElementById('landing-priority-screen').style.display = 'block';
+        });
+
+        // Register Here Button Hover Effects
+        const btnRegisterHere = document.getElementById('btn-register-here');
+        btnRegisterHere.addEventListener('mouseenter', () => {
+            btnRegisterHere.style.transform = 'translateY(-3px)';
+            btnRegisterHere.style.boxShadow = '0 15px 30px rgba(240, 165, 0, 0.4)';
+        });
+
+        btnRegisterHere.addEventListener('mouseleave', () => {
+            btnRegisterHere.style.transform = 'translateY(0)';
+            btnRegisterHere.style.boxShadow = '0 10px 20px rgba(240, 165, 0, 0.2)';
+        });
+
+        // Back Button to Return to Register Screen
+        const btnBackToRegister = document.getElementById('btn-back-to-register');
+        btnBackToRegister.addEventListener('click', () => {
+            document.getElementById('landing-priority-screen').style.display = 'none';
+            document.getElementById('landing-register-screen').style.display = 'block';
+        });
+
+        btnBackToRegister.addEventListener('mouseenter', () => {
+            btnBackToRegister.style.color = 'white';
+        });
+
+        btnBackToRegister.addEventListener('mouseleave', () => {
+            btnBackToRegister.style.color = 'rgba(255, 255, 255, 0.6)';
+        });
+
         // Landing Page Logic
-        document.getElementById('btn-landing-yes').addEventListener('click', () => {
+        const btnYes = document.getElementById('btn-landing-yes');
+        const btnNo = document.getElementById('btn-landing-no');
+
+        btnYes.addEventListener('click', () => {
             const priorityToggle = document.getElementById('isPriority');
             priorityToggle.checked = true;
             document.getElementById('priorityRowLabel').classList.add('is-active');
@@ -1057,7 +1107,7 @@
             document.getElementById('fullName').focus();
         });
 
-        document.getElementById('btn-landing-no').addEventListener('click', () => {
+        btnNo.addEventListener('click', () => {
             const priorityToggle = document.getElementById('isPriority');
             priorityToggle.checked = false;
             document.getElementById('priorityRowLabel').classList.remove('is-active');
@@ -1070,13 +1120,28 @@
             document.getElementById('fullName').focus();
         });
 
-        const btnNo = document.getElementById('btn-landing-no');
-        btnNo.addEventListener('mouseenter', () => btnNo.style.background = 'rgba(255,255,255,0.05)');
-        btnNo.addEventListener('mouseleave', () => btnNo.style.background = '#0A1628');
-        
-        const btnYes = document.getElementById('btn-landing-yes');
-        btnYes.addEventListener('mouseenter', () => btnYes.style.transform = 'translateY(-2px)');
-        btnYes.addEventListener('mouseleave', () => btnYes.style.transform = 'translateY(0)');
+        // Hover Effects
+        btnYes.addEventListener('mouseenter', () => {
+            btnYes.style.transform = 'translateY(-3px)';
+            btnYes.style.boxShadow = '0 15px 30px rgba(240, 165, 0, 0.4)';
+        });
+
+        btnYes.addEventListener('mouseleave', () => {
+            btnYes.style.transform = 'translateY(0)';
+            btnYes.style.boxShadow = '0 10px 20px rgba(240, 165, 0, 0.2)';
+        });
+
+        btnNo.addEventListener('mouseenter', () => {
+            btnNo.style.background = 'rgba(255, 255, 255, 0.1)';
+            btnNo.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+            btnNo.style.transform = 'translateY(-2px)';
+        });
+
+        btnNo.addEventListener('mouseleave', () => {
+            btnNo.style.background = '#0A1628';
+            btnNo.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            btnNo.style.transform = 'translateY(0)';
+        });
 
         // Initialize Signature Pad
         const canvas = document.getElementById('signature-pad');
@@ -1437,7 +1502,55 @@
             document.getElementById('successQueue').textContent = queueText;
 
             document.getElementById('successOverlay').classList.add('active');
-        }
+
+            // Auto-redirect to register screen 
+            setTimeout(() => {
+                document.getElementById('successOverlay').classList.remove('active');
+                document.getElementById('landing-container').style.display = 'block';
+                document.getElementById('main-register-container').style.display = 'none';
+                document.getElementById('landing-register-screen').style.display = 'block';
+                document.getElementById('landing-priority-screen').style.display = 'none';
+                
+                // Complete form reset
+                document.getElementById('regForm').reset();
+                document.getElementById('isPriority').checked = false;
+                document.getElementById('priorityRowLabel').classList.remove('is-active');
+                
+                // Reset button state
+                const submitBtn = document.getElementById('btnSubmit');
+                const btnText = document.getElementById('btnText');
+                const btnSpinner = document.getElementById('btnSpinner');
+                const arrowIcon = submitBtn.querySelector('span:nth-child(2)');
+                
+                submitBtn.disabled = false;
+                btnText.textContent = "Submit Registration";
+                if (arrowIcon) arrowIcon.style.display = "inline";
+                btnSpinner.style.display = "none";
+                submitBtn.classList.remove('success-state');
+                
+                // Reset signature pad
+                if (typeof signaturePad !== 'undefined') {
+                    signaturePad.clear();
+                }
+                
+                // Clear all error messages
+                document.querySelectorAll('.error-msg').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                document.querySelectorAll('.input-group').forEach(el => {
+                    el.classList.remove('has-error');
+                });
+                
+                // Reset form timers
+                formStartTime = null;
+                keystrokeCount = 0;
+                
+                // Clear server errors
+                document.getElementById('err-server').classList.remove('active');
+            }, 7000); 
+        } 
+    
     </script>
 </body>
 </html>
