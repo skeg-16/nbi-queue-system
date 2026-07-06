@@ -475,6 +475,9 @@
                     <button class="btn btn-secondary btn-reset" id="btn-reset">
                         <span class="btn-text">Reset Queue</span>
                     </button>
+                    <button class="btn btn-secondary btn-undo" id="btn-undo" style="grid-column: 1 / -1; background: rgba(155, 89, 182, 0.2); border: 1px solid rgba(155, 89, 182, 0.4); color: #9b59b6;">
+                        <span class="btn-text">↩ Undo Last Action</span>
+                    </button>
                 </div>
 
                 <!-- Stats Row -->
@@ -789,6 +792,16 @@
                 socket.emit('skip');
             }
         });
+
+        const btnUndo = document.getElementById('btn-undo');
+        if (btnUndo) {
+            btnUndo.addEventListener('click', () => {
+                if (confirm("Are you sure you want to undo the last action? This will revert the screen to the previous person.")) {
+                    setButtonLoading(btnUndo, "Undoing...");
+                    socket.emit('undo');
+                }
+            });
+        }
 
         btnEnd.addEventListener('click', () => {
             if (!document.getElementById('current-ccd').textContent || document.getElementById('current-ccd').textContent === '---') {

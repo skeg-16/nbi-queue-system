@@ -29,6 +29,7 @@ let state = {
     currentlyServing: null,
     recentServed: [],
     priorityServedCount: 0,
+    lastAction: null,
     voiceSettings: {
         lang: 'en',
         rate: 0.85,
@@ -721,6 +722,7 @@ io.on('connection', async (socket) => {
     // Handle "Next" logic with strict absolute priority algorithm
     socket.on('next', async () => {
         try {
+            const previousServing = state.currentlyServing ? { ...state.currentlyServing } : null;
             if (state.currentlyServing) {
                 let serving_duration = null;
                 if (state.currentlyServing.startTimestamp) {
@@ -787,6 +789,12 @@ io.on('connection', async (socket) => {
                 startTimestamp: nowIso
             };
 
+            state.lastAction = {
+                action: 'next',
+                revertToWaitingId: nextPerson.id,
+                restoreToServing: previousServing
+            };
+
             await broadcastStaffUpdate();
             broadcastDisplayUpdate(true);
         } catch (err) {
@@ -798,6 +806,7 @@ io.on('connection', async (socket) => {
     socket.on('skip', async () => {
         try {
             if (state.currentlyServing) {
+                const previousServing = { ...state.currentlyServing };
                 const skippedCcd = state.currentlyServing.ccdNo;
                 const { error: updateErr1 } = await supabase
                     .from('registrations')
@@ -806,6 +815,12 @@ io.on('connection', async (socket) => {
                 if (updateErr1) throw updateErr1;
 
                 state.currentlyServing = null;
+
+                state.lastAction = {
+                    action: 'skip',
+                    revertToWaitingId: null,
+                    restoreToServing: previousServing
+                };
 
                 await broadcastStaffUpdate();
                 broadcastDisplayUpdate(false, `${skippedCcd} Skipped`);
@@ -818,6 +833,7 @@ io.on('connection', async (socket) => {
 
     socket.on('call_skipped', async () => {
         try {
+            const previousServing = state.currentlyServing ? { ...state.currentlyServing } : null;
             if (state.currentlyServing) {
                 let serving_duration = null;
                 if (state.currentlyServing.startTimestamp) {
@@ -875,6 +891,12 @@ io.on('connection', async (socket) => {
                 startTimestamp: nowIso
             };
 
+            state.lastAction = {
+                action: 'call_skipped',
+                revertToSkippedId: nextPerson.id,
+                restoreToServing: previousServing
+            };
+
             await broadcastStaffUpdate();
             broadcastDisplayUpdate(true);
         } catch (err) {
@@ -885,6 +907,7 @@ io.on('connection', async (socket) => {
 
     socket.on('serve_specific', async (id) => {
         try {
+            const previousServing = state.currentlyServing ? { ...state.currentlyServing } : null;
             if (state.currentlyServing) {
                 let serving_duration = null;
                 if (state.currentlyServing.startTimestamp) {
@@ -931,12 +954,62 @@ io.on('connection', async (socket) => {
                     startTimestamp: nowIso
                 };
 
+                state.lastAction = {
+                    action: 'serve_specific',
+                    revertToWaitingId: data.id,
+                    restoreToServing: previousServing
+                };
+
                 await broadcastStaffUpdate();
                 broadcastDisplayUpdate(true);
             }
         } catch (err) {
             console.error("Error in 'serve_specific':", err);
             socket.emit('action_error', { message: "Failed to serve specific person. The database update was blocked or failed." });
+        }
+    });
+
+    socket.on('undo', async () => {
+        try {
+            if (!state.lastAction) return;
+            const action = state.lastAction;
+
+            // 1. Revert the newly served person back to their previous state
+            if (action.revertToWaitingId) {
+                await supabase.from('registrations')
+                    .update({ status: 'Waiting', serving_start_timestamp: null })
+                    .eq('id', action.revertToWaitingId);
+            } else if (action.revertToSkippedId) {
+                await supabase.from('registrations')
+                    .update({ status: 'Skipped', serving_start_timestamp: null })
+                    .eq('id', action.revertToSkippedId);
+            }
+
+            // 2. Restore the previous person to Serving
+            if (action.restoreToServing) {
+                await supabase.from('registrations')
+                    .update({ status: 'Serving' })
+                    .eq('id', action.restoreToServing.id);
+                state.currentlyServing = action.restoreToServing;
+                
+                // Remove from recentServed if they were put there
+                if (action.action === 'next' || action.action === 'serve_specific' || action.action === 'call_skipped') {
+                    if (state.recentServed.length > 0 && state.recentServed[0].ccdNo === action.restoreToServing.ccdNo) {
+                        state.recentServed.shift();
+                    }
+                }
+            } else {
+                state.currentlyServing = null;
+            }
+
+            // 3. Clear last action
+            state.lastAction = null;
+
+            await broadcastStaffUpdate();
+            broadcastDisplayUpdate(false); // Quietly update display (no voice)
+        } catch (err) {
+            console.error("Error in 'undo':", err);
+            socket.emit('action_error', { message: "Failed to undo action." });
         }
     });
 
