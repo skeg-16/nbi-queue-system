@@ -147,6 +147,33 @@ async function initServer() {
 }
 initServer();
 
+// Function to mark all today's unserved registrations as served
+async function markTodayAsServed() {
+    try {
+        const todayStr = getTodayDateStr();
+        console.log(`[${new Date().toLocaleTimeString()}] Marking all registrations as served for ${todayStr}...`);
+        
+        const { data: updated, error } = await supabase
+            .from('registrations')
+            .update({ status: 'Served' })
+            .like('ccd_no', `CCD-${todayStr}-%`)
+            .neq('status', 'Served');
+        
+        if (error) {
+            console.error("Error marking registrations as served:", error);
+            return false;
+        } else {
+            console.log(`✓ Successfully marked all remaining registrations as served for ${todayStr}`);
+            return true;
+        }
+    } catch (err) {
+        console.error("Error in markTodayAsServed:", err);
+        return false;
+    }
+}
+
+// Scheduled Task will run below at 6:00 PM
+
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public'), {
     setHeaders: (res, path) => {
@@ -190,6 +217,21 @@ app.post('/api/feedback', async (req, res) => {
     } catch (err) {
         console.error("Error submitting feedback:", err);
         res.status(500).json({ success: false, error: "Failed to save feedback" });
+    }
+});
+
+// API Endpoint for Manual Queue Reset (for staff)
+app.post('/api/reset-queue', async (req, res) => {
+    try {
+        const success = await markTodayAsServed();
+        if (success) {
+            res.json({ success: true, message: "Queue reset successfully" });
+        } else {
+            res.status(500).json({ success: false, error: "Failed to reset queue" });
+        }
+    } catch (err) {
+        console.error("Error resetting queue:", err);
+        res.status(500).json({ success: false, error: "Failed to reset queue" });
     }
 });
 
@@ -660,6 +702,19 @@ io.on('connection', async (socket) => {
                 return;
             }
 
+            // Send SMS notification with the person's queue number
+            if (formData.contact) {
+                const firstName = (formData.fullName || '').trim().split(/\s+/)[0] || 'there';
+                // Convert to title case for friendlier SMS tone
+                const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                const shortNo = ccdNo.split('-').pop(); // e.g. "0007" from "CCD-2026-07-06-0007"
+
+                sendSMS(
+                    formData.contact,
+                    `Hello, ${displayName}! Your number is ${shortNo}.`
+                ).catch(err => console.error('[SMS] Failed to notify:', err));
+            }
+
             const { data: waitingList } = await supabase
                 .from('registrations')
                 .select('*')
@@ -1006,7 +1061,7 @@ io.on('connection', async (socket) => {
             state.lastAction = null;
 
             await broadcastStaffUpdate();
-            broadcastDisplayUpdate(false); // Quietly update display (no voice)
+            broadcastDisplayUpdate(false); 
         } catch (err) {
             console.error("Error in 'undo':", err);
             socket.emit('action_error', { message: "Failed to undo action." });
@@ -1059,29 +1114,79 @@ io.on('connection', async (socket) => {
     });
 });
 
-// Daily fallback: At 6:00 PM (18:00) every day, mark all unserved queues as 'Served'
 cron.schedule('0 18 * * *', async () => {
-    console.log("Running 6:00 PM fallback: Marking all unserved queues as Served");
+    console.log(`\n\n========== 6 PM AUTOMATIC QUEUE RESET ==========`);
+    console.log(`[${new Date().toLocaleTimeString()}] Marking ALL unserved registrations as Served...`);
     try {
-        const { error } = await supabase
+        const { error, count } = await supabase
             .from('registrations')
             .update({ status: 'Served' })
             .in('status', ['Waiting', 'Serving']);
         
         if (error) {
-            console.error("Error running 6:00 PM fallback:", error);
+            console.error("❌ Error running 6:00 PM reset:", error);
         } else {
-            console.log("Successfully ran 6 PM fallback.");
+            console.log(`✅ Successfully marked queue as Served at 6 PM`);
             state.currentlyServing = null;
             state.recentServed = [];
-            state.priorityServedCount = 0;
-            // Broadcast the queue reset to all connected clients
+            state.regularServedCount = 0;
             await broadcastStaffUpdate();
+            console.log(`========== QUEUE RESET COMPLETE ==========\n\n`);
         }
     } catch (err) {
-        console.error("Exception in 6:00 PM fallback:", err);
+        console.error("❌ Exception in 6:00 PM reset:", err);
     }
+}, {
+    timezone: "Asia/Manila"
 });
+
+const SEMAPHORE_API_KEY = process.env.SEMAPHORE_API_KEY;
+const SEMAPHORE_SENDER_NAME = process.env.SEMAPHORE_SENDER_NAME || 'SEMAPHORE';
+
+async function sendSMS(number, message) {
+    if (!SEMAPHORE_API_KEY) {
+        console.warn('[SMS] SEMAPHORE_API_KEY not set — skipping SMS send');
+        return { success: false, error: 'No API key configured' };
+    }
+    if (!number) {
+        console.warn('[SMS] No phone number provided — skipping SMS send');
+        return { success: false, error: 'No number provided' };
+    }
+
+    try {
+        const response = await fetch('https://api.semaphore.co/api/v4/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                apikey: SEMAPHORE_API_KEY,
+                number: number,        
+                message: message,
+                sendername: SEMAPHORE_SENDER_NAME
+            })
+        });
+
+        const responseText = await response.text();
+        let data;
+        
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseErr) {
+            console.error('[SMS] API returned non-JSON response:', responseText);
+            return { success: false, error: 'API returned invalid response: ' + responseText.substring(0, 100) };
+        }
+
+        if (!response.ok) {
+            console.error('[SMS] Semaphore error:', data);
+            return { success: false, error: data.message || data.error || 'Semaphore API error' };
+        }
+
+        console.log('[SMS] ✓ Sent to', number, '- message_id:', data[0]?.message_id);
+        return { success: true, data };
+    } catch (err) {
+        console.error('[SMS] Exception:', err.message);
+        return { success: false, error: err.message };
+    }
+}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
