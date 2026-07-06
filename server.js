@@ -28,7 +28,7 @@ let state = {
     dailyCounter: 0,
     currentlyServing: null,
     recentServed: [],
-    priorityServedCount: 0,
+    regularServedCount: 0,
     lastAction: null,
     voiceSettings: {
         lang: 'en',
@@ -50,7 +50,7 @@ function saveAgentRemarks(remarksObj) {
     fs.writeFileSync(agentRemarksFile, JSON.stringify(remarksObj, null, 2));
 }
 
-function getSortedList(waitingList, currentPriorityCount = 0) {
+function getSortedList(waitingList, currentRegularCount = 0) {
     let priorityQueue = [];
     let regularQueue = [];
 
@@ -62,23 +62,23 @@ function getSortedList(waitingList, currentPriorityCount = 0) {
     });
 
     let interleaved = [];
-    let pCount = currentPriorityCount;
+    let rCount = currentRegularCount;
     let pIdx = 0;
     let rIdx = 0;
 
     while (pIdx < priorityQueue.length || rIdx < regularQueue.length) {
-        if (pCount >= 2 && rIdx < regularQueue.length) {
-            interleaved.push(regularQueue[rIdx]);
-            rIdx++;
-            pCount = 0;
-        } else if (pIdx < priorityQueue.length) {
+        if (rCount >= 3 && pIdx < priorityQueue.length) {
             interleaved.push(priorityQueue[pIdx]);
             pIdx++;
-            pCount++;
+            rCount = 0;
         } else if (rIdx < regularQueue.length) {
             interleaved.push(regularQueue[rIdx]);
             rIdx++;
-            pCount = 0;
+            rCount++;
+        } else if (pIdx < priorityQueue.length) {
+            interleaved.push(priorityQueue[pIdx]);
+            pIdx++;
+            rCount = 0;
         }
     }
 
@@ -555,7 +555,7 @@ async function broadcastStaffUpdate() {
         skipped: skippedListRaw.length
     };
 
-    const sortedList = getSortedList(waitingList, state.priorityServedCount);
+    const sortedList = getSortedList(waitingList, state.regularServedCount);
 
     const formattedList = sortedList.map(r => ({
         id: r.id,
@@ -569,11 +569,11 @@ async function broadcastStaffUpdate() {
         cycleLabel = "Queue Empty";
     } else {
         const nextPerson = sortedList[0];
-        if (nextPerson.is_priority) {
-            let slot = (state.priorityServedCount >= 2) ? 1 : state.priorityServedCount + 1;
-            cycleLabel = `Next: Priority (${slot}/2)`;
+        if (!nextPerson.is_priority) {
+            let slot = (state.regularServedCount >= 3) ? 1 : state.regularServedCount + 1;
+            cycleLabel = `Next: Regular (${slot}/3)`;
         } else {
-            cycleLabel = `Next: Regular`;
+            cycleLabel = `Next: Priority`;
         }
     }
 
@@ -760,17 +760,17 @@ io.on('connection', async (socket) => {
                 return;
             }
 
-            const sortedWaiting = getSortedList(waiting, state.priorityServedCount);
+            const sortedWaiting = getSortedList(waiting, state.regularServedCount);
             const nextPerson = sortedWaiting[0];
 
-            if (nextPerson.is_priority) {
-                if (state.priorityServedCount >= 2) {
-                    state.priorityServedCount = 1;
+            if (!nextPerson.is_priority) {
+                if (state.regularServedCount >= 3) {
+                    state.regularServedCount = 1;
                 } else {
-                    state.priorityServedCount++;
+                    state.regularServedCount++;
                 }
             } else {
-                state.priorityServedCount = 0;
+                state.regularServedCount = 0;
             }
 
             const nowIso = new Date().toISOString();
