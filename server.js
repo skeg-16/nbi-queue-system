@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const server = http.createServer(app);
@@ -169,6 +170,42 @@ async function markTodayAsServed() {
     } catch (err) {
         console.error("Error in markTodayAsServed:", err);
         return false;
+    }
+}
+
+// Email Configuration
+const emailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+// Function to send queue confirmation email
+async function sendQueueEmail(toEmail, displayName, shortNo) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping email send');
+        return { success: false, error: 'Email not configured' };
+    }
+    if (!toEmail) {
+        return { success: false, error: 'No email provided' };
+    }
+
+    try {
+        const info = await emailTransporter.sendMail({
+            from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
+            to: toEmail,
+            subject: `Your Queue Number: ${shortNo}`,
+            text: `Hello, ${displayName}!\n\nYour queue number is ${shortNo}.\n\nPlease wait to be called. Thank you for registering with the NBI Cybercrime Division.`,
+            html: `<p>Hello, <strong>${displayName}</strong>!</p><p>Your queue number is <strong style="font-size: 1.5em; color: #F0A500;">${shortNo}</strong>.</p><p>Please wait to be called. Thank you for registering with the NBI Cybercrime Division.</p>`
+        });
+
+        console.log('[Email] ✓ Sent to', toEmail, '- message_id:', info.messageId);
+        return { success: true, info };
+    } catch (err) {
+        console.error('[Email] Exception:', err.message);
+        return { success: false, error: err.message };
     }
 }
 
@@ -702,17 +739,23 @@ io.on('connection', async (socket) => {
                 return;
             }
 
-            // Send SMS notification with the person's queue number
-            if (formData.contact) {
-                const firstName = (formData.fullName || '').trim().split(/\s+/)[0] || 'there';
-                // Convert to title case for friendlier SMS tone
-                const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-                const shortNo = ccdNo.split('-').pop(); // e.g. "0007" from "CCD-2026-07-06-0007"
+            // Compute display name and short number once
+            const firstName = (formData.fullName || '').trim().split(/\s+/)[0] || 'there';
+            const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+            const shortNo = ccdNo.split('-').pop();
 
+            // Send SMS notification (if contact number provided)
+            if (formData.contact) {
                 sendSMS(
                     formData.contact,
                     `Hello, ${displayName}! Your number is ${shortNo}.`
                 ).catch(err => console.error('[SMS] Failed to notify:', err));
+            }
+
+            // Send email notification (if email provided)
+            if (formData.email) {
+                sendQueueEmail(formData.email, displayName, shortNo)
+                    .catch(err => console.error('[Email] Failed to notify:', err));
             }
 
             const { data: waitingList } = await supabase
@@ -1140,6 +1183,8 @@ cron.schedule('0 18 * * *', async () => {
     timezone: "Asia/Manila"
 });
 
+
+//SMS Notification Functionality
 const SEMAPHORE_API_KEY = process.env.SEMAPHORE_API_KEY;
 const SEMAPHORE_SENDER_NAME = process.env.SEMAPHORE_SENDER_NAME || 'SEMAPHORE';
 
@@ -1187,6 +1232,35 @@ async function sendSMS(number, message) {
         return { success: false, error: err.message };
     }
 }
+
+
+async function sendQueueEmail(toEmail, displayName, shortNo) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping email send');
+        return { success: false, error: 'Email not configured' };
+    }
+    if (!toEmail) {
+        return { success: false, error: 'No email provided' };
+    }
+
+    try {
+        const info = await emailTransporter.sendMail({
+            from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
+            to: toEmail,
+            subject: `Your Queue Number: ${shortNo}`,
+            text: `Hello, ${displayName}!\n\nYour queue number is ${shortNo}.\n\nPlease wait to be called. Thank you for registering with the NBI Cybercrime Division.`,
+            html: `<p>Hello, <strong>${displayName}</strong>!</p><p>Your queue number is <strong style="font-size: 1.5em; color: #F0A500;">${shortNo}</strong>.</p><p>Please wait to be called. Thank you for registering with the NBI Cybercrime Division.</p>`
+        });
+
+        console.log('[Email] Sent to', toEmail, '- message_id:', info.messageId);
+        return { success: true, info };
+    } catch (err) {
+        console.error('[Email] Exception:', err);
+        return { success: false, error: err.message };
+    }
+}
+
+
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
