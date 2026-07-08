@@ -17,6 +17,8 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            height: auto;
+            overflow-y: auto;
             padding: 1rem;
         }
 
@@ -626,6 +628,19 @@
             border-color: white;
         }
 
+        @keyframes tapPulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+                text-shadow: 0 0 25px rgba(240, 165, 0, 0.35);
+            }
+            50% {
+                opacity: 0.85;
+                transform: scale(1.03);
+                text-shadow: 0 0 45px rgba(240, 165, 0, 0.6);
+            }
+        }
+
         /* Responsive Breakpoints */
         @media (max-width: 860px) {
             .form-grid {
@@ -796,46 +811,62 @@
             background: rgba(255, 255, 255, 0.1);
             color: white;
         }
+
+        .field-wrapper .static-label {
+    text-align: left;
+}
     </style>
 </head>
 
 <body>
 
-    <div id="landing-container" class="register-container" style="text-align: center; max-width: 650px;">
-        <div class="header-section" style="margin-bottom: 2rem;">
-            <img src="/assets/nbi.png" alt="NBI Logo" class="nbi-seal-img" style="width: 120px; height: 120px; margin-bottom: 1.5rem;">
-            <div class="agency-name">National Bureau of Investigation</div>
-            <div class="brand-title" style="font-size: 2.2rem; margin-top: 0.5rem;">Cybercrime Division</div>
-        </div>
-        
-        <!-- Initial Register Button Screen -->
-        <div id="landing-register-screen">
-            <button type="button" id="btn-register-here" style="background: linear-gradient(135deg, #F0A500, #d35400); color: white; border: none; padding: 2.5rem 4rem; font-size: 2.5rem; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 10px 20px rgba(240, 165, 0, 0.2); width: 90%; max-width: 500px; margin: 0 auto;">
-                Register Here
-            </button>
-        </div>
+   <!-- Full-screen Tap Anywhere to Register -->
+<div id="landing-register-screen" style="cursor: pointer; position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; z-index: 1;">
+    <img src="/assets/nbi.png" alt="NBI Logo" style="width: 110px; height: 110px; object-fit: contain; margin-bottom: 1rem; filter: drop-shadow(0 0 10px rgba(240, 165, 0, 0.2));">
+    <div class="agency-name">National Bureau of Investigation</div>
+    <div class="brand-title" style="font-size: 1.8rem; margin-top: 0.3rem; margin-bottom: 3rem;">Cybercrime Division</div>
 
-        <!-- Priority Question Screen -->
-        <div id="landing-priority-screen" style="display: none;">
-            <button type="button" id="btn-back-to-register" style="position: absolute; top: 24px; left: 32px; background: transparent; border: none; color: rgba(255, 255, 255, 0.6); font-size: 1.5rem; cursor: pointer; padding: 0.5rem; transition: all 0.2s ease; z-index: 10;">
-                ←
-            </button>
-            
-            <h2 style="color: white; margin-bottom: 2rem; font-size: 1.8rem; font-weight: 600; line-height: 1.4;">Are you a Senior Citizen, PWD, or Pregnant?</h2>
-            
-            <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0 1rem;">
-                <button type="button" id="btn-landing-yes" style="background: linear-gradient(135deg, #F0A500, #d35400); color: white; border: none; padding: 1.5rem; font-size: 1.3rem; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 10px 20px rgba(240, 165, 0, 0.2);">
-                    Yes, I am a Priority
-                </button>
-                <button type="button" id="btn-landing-no" style="background: #0A1628; color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.2); padding: 1.5rem; font-size: 1.3rem; font-weight: 600; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">
-                    No, Regular Registration
-                </button>
-            </div>
-        </div>
+    <div style="font-size: clamp(3rem, 9vw, 6rem); font-weight: 800; color: #F0A500; text-transform: uppercase; letter-spacing: 3px; line-height: 1.2; animation: tapPulse 2s ease-in-out infinite;">
+        Tap Anywhere<br>to Register!
+    </div>
+    <div style="margin-top: 1.5rem; font-size: 1.1rem; color: rgba(255,255,255,0.45); letter-spacing: 2px; text-transform: uppercase; font-weight: 600;">
+        Complainant Registration
+    </div>
+</div>
+
+<div id="landing-container" class="register-container" style="display: none; text-align: center; max-width: 650px;">
+    <div class="header-section" style="margin-bottom: 2rem;">
+        <img src="/assets/nbi.png" alt="NBI Logo" class="nbi-seal-img" style="width: 120px; height: 120px; margin-bottom: 1.5rem;">
+        <div class="agency-name">National Bureau of Investigation</div>
+        <div class="brand-title" style="font-size: 2.2rem; margin-top: 0.5rem;">Cybercrime Division</div>
     </div>
 
-    <div class="register-container" id="main-register-container" style="display: none;">
+    <!-- Priority Question Screen -->
+    <div id="landing-priority-screen">
+        <button type="button" id="btn-back-to-register" style="position: absolute; top: 24px; left: 32px; background: transparent; border: none; color: rgba(255, 255, 255, 0.6); font-size: 1.5rem; cursor: pointer; padding: 0.5rem; transition: all 0.2s ease; z-index: 10;">
+            ←
+        </button>
 
+        <h2 style="color: white; margin-bottom: 2rem; font-size: 1.8rem; font-weight: 600; line-height: 1.4;">Are you a Senior Citizen, PWD, or Pregnant?</h2>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0 1rem;">
+            <button type="button" id="btn-landing-yes" style="background: linear-gradient(135deg, #F0A500, #d35400); color: white; border: none; padding: 1.5rem; font-size: 1.3rem; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 10px 20px rgba(240, 165, 0, 0.2);">
+                Yes, I am a Priority
+            </button>
+            <button type="button" id="btn-landing-no" style="background: #0A1628; color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.2); padding: 1.5rem; font-size: 1.3rem; font-weight: 600; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">
+                No, Regular Registration
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="register-container" id="main-register-container" style="display: none;">
+
+    <button type="button" id="btn-back-to-landing" style="position: absolute; top: 24px; left: 32px; background: transparent; border: none; color: rgba(255, 255, 255, 0.6); font-size: 1.5rem; cursor: pointer; padding: 0.5rem; transition: all 0.2s ease; z-index: 10;">
+        ←
+    </button>
+
+    <div class="header-section">
         <div class="header-section">
             <img src="/assets/nbi.png" alt="NBI Logo" class="nbi-seal-img">
             <div class="agency-name">National Bureau of Investigation</div>
@@ -1061,29 +1092,20 @@
     <script>
         const socket = io();
 
-        // Register Here Button - Show Priority Question
-        document.getElementById('btn-register-here').addEventListener('click', () => {
+        // Register Here Screen - Tap Anywhere to Show Priority Question
+        document.getElementById('landing-register-screen').addEventListener('click', () => {
             document.getElementById('landing-register-screen').style.display = 'none';
+            document.getElementById('landing-container').style.display = 'block';
             document.getElementById('landing-priority-screen').style.display = 'block';
         });
 
-        // Register Here Button Hover Effects
-        const btnRegisterHere = document.getElementById('btn-register-here');
-        btnRegisterHere.addEventListener('mouseenter', () => {
-            btnRegisterHere.style.transform = 'translateY(-3px)';
-            btnRegisterHere.style.boxShadow = '0 15px 30px rgba(240, 165, 0, 0.4)';
-        });
-
-        btnRegisterHere.addEventListener('mouseleave', () => {
-            btnRegisterHere.style.transform = 'translateY(0)';
-            btnRegisterHere.style.boxShadow = '0 10px 20px rgba(240, 165, 0, 0.2)';
-        });
+        const btnBackToRegister = document.getElementById('btn-back-to-register');   // ⬅ idagdag ito
 
         // Back Button to Return to Register Screen
-        const btnBackToRegister = document.getElementById('btn-back-to-register');
         btnBackToRegister.addEventListener('click', () => {
-            document.getElementById('landing-priority-screen').style.display = 'none';
-            document.getElementById('landing-register-screen').style.display = 'block';
+        document.getElementById('landing-priority-screen').style.display = 'none';
+        document.getElementById('landing-container').style.display = 'none';  
+        document.getElementById('landing-register-screen').style.display = 'block';
         });
 
         btnBackToRegister.addEventListener('mouseenter', () => {
@@ -1092,6 +1114,21 @@
 
         btnBackToRegister.addEventListener('mouseleave', () => {
             btnBackToRegister.style.color = 'rgba(255, 255, 255, 0.6)';
+        });
+
+        const btnBackToLanding = document.getElementById('btn-back-to-landing');
+
+        btnBackToLanding.addEventListener('click', () => {
+            document.getElementById('main-register-container').style.display = 'none';
+            document.getElementById('landing-register-screen').style.display = 'block';
+        });
+
+        btnBackToLanding.addEventListener('mouseenter', () => {
+            btnBackToLanding.style.color = 'white';
+        });
+
+        btnBackToLanding.addEventListener('mouseleave', () => {
+            btnBackToLanding.style.color = 'rgba(255, 255, 255, 0.6)';
         });
 
         // Landing Page Logic
@@ -1532,7 +1569,7 @@
             // Auto-redirect to register screen 
             setTimeout(() => {
                 document.getElementById('successOverlay').classList.remove('active');
-                document.getElementById('landing-container').style.display = 'block';
+                document.getElementById('landing-container').style.display = 'none';
                 document.getElementById('main-register-container').style.display = 'none';
                 document.getElementById('landing-register-screen').style.display = 'block';
                 document.getElementById('landing-priority-screen').style.display = 'none';
