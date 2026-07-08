@@ -843,6 +843,11 @@
         const serveModal = document.getElementById('serveModal');
 
         // Serve Now Override
+
+        window.serveNow = function(id) {
+            personToServeId = id;
+            serveModal.classList.add('active');
+        };
        window.archivePerson = function(id) {
             if (confirm("Archive this complainant? Their status will be marked as SERVED but they will NOT appear in Currently Serving or trigger the TV display.")) {
                 socket.emit('archive_person', id);
