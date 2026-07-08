@@ -196,6 +196,10 @@
             text-transform: uppercase;
         }
 
+        #fullName {
+            text-transform: none;
+        }
+
         .standard-input::placeholder {
             color: rgba(255, 255, 255, 0.35);
         }
@@ -1262,6 +1266,28 @@
             }
         }
 
+        // Title Case helper — auto-capitalizes only the FIRST letter of every word,
+        // leaves the rest of each word untouched so users can manually type
+        // suffixes like III, IV, JR, SR in uppercase.
+        function toTitleCase(str) {
+            return str
+                .split(' ')
+                .map(word => word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word)
+                .join(' ');
+        }
+
+        // Auto-format Full Name as Title Case while preserving cursor position
+        const fullNameInput = document.getElementById('fullName');
+        fullNameInput.addEventListener('input', () => {
+            const cursorPos = fullNameInput.selectionStart;
+            const original = fullNameInput.value;
+            const formatted = toTitleCase(original);
+            if (formatted !== original) {
+                fullNameInput.value = formatted;
+                fullNameInput.setSelectionRange(cursorPos, cursorPos);
+            }
+        });
+
         // Priority Row Toggle Style Logic
         const priorityCheckbox = document.getElementById('isPriority');
         const priorityRowLabel = document.getElementById('priorityRowLabel');
@@ -1412,7 +1438,7 @@
             btnSpinner.style.display = "block";
 
             const formData = {
-                fullName: document.getElementById('fullName').value.trim().toUpperCase(),
+                fullName: toTitleCase(document.getElementById('fullName').value.trim()),
                 contact: document.getElementById('contact').value.trim(),
                 age: document.getElementById('age').value,
                 email: document.getElementById('email').value.trim(),
