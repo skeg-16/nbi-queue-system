@@ -110,6 +110,28 @@
         .menu-btn:hover {
             background: var(--table-hover);
         }
+
+       #remarksCaseType {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 10px 16px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        #remarksCaseType option {
+            white-space: normal;
+            word-wrap: break-word;
+            max-width: 820px;
+            padding: 8px 10px;
+        }
+
+        #remarksCustomCaseType {
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
     </style>
 </head>
 
@@ -371,38 +393,67 @@
         </div>
     </div>
 
-    <!-- Agent Remarks Modal -->
+<!-- Agent Remarks Modal -->
     <div class="modal-overlay" id="modalRemarks">
-        <div class="modal" style="max-width: 500px;">
+    <div class="modal" style="max-width: 900px; width: 90vw;">
             <div class="modal-header">
                 <div class="modal-title">Agent Assessment</div>
                 <button class="modal-close" onclick="closeModal('modalRemarks')">&times;</button>
             </div>
             <input type="hidden" id="remarksId">
-            
+
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label class="form-label">Is Actionable?</label>
-                <select id="remarksActionable" class="form-input" onchange="document.getElementById('caseTypeGroup').style.display = this.value === 'yes' ? 'block' : 'none'">
+                <select id="remarksActionable" class="form-input" onchange="toggleActionableFields(this.value)">
                     <option value="no">No (Remarks/Comment only)</option>
                     <option value="yes">Yes (Actionable)</option>
                 </select>
             </div>
-            
+
             <div class="form-group" id="caseTypeGroup" style="display: none; margin-bottom: 1rem;">
                 <label class="form-label">Case Type</label>
-                <select id="remarksCaseType" class="form-input">
+                <select id="remarksCaseType" class="form-input" onchange="document.getElementById('customCaseTypeGroup').style.display = this.value === '__custom__' ? 'block' : 'none'">
                     <option value="" disabled selected>Select case type...</option>
-                    <option value="Cyber Libel">Cyber Libel</option>
-                    <option value="Online Scam">Online Scam</option>
-                    <option value="Identity Theft">Identity Theft</option>
-                    <option value="Hacking">Hacking</option>
+                    <option value="Alleged Violation of Sec. 4 (a)(3) &quot;Data Interference&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;.">Alleged Violation of Sec. 4 (a)(3) "Data Interference" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012".</option>
+                    <option value="Alleged Violation of Sec. 4 (a)(1) &quot;Illegal Access&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4 (a)(1) "Illegal Access" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Sec. 4 (b)(2) &quot;Computer related Fraud&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4 (b)(2) "Computer related Fraud" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Sec. 4 Sec (b)(3) &quot;Computer related Identity Theft&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4 Sec (b)(3) "Computer related Identity Theft" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Sec. 4(b)(1)(i) &quot;Computer-related Forgery&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4(b)(1)(i) "Computer-related Forgery" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Sec. 4(c)(4) &quot;Libel&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot; and R.A. 9995 otherwise known as &quot;Anti-Photo and Video Voyeurism Act of 2009&quot;.">Alleged Violation of Sec. 4(c)(4) "Libel" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012" and R.A. 9995 otherwise known as "Anti-Photo and Video Voyeurism Act of 2009".</option>
+                    <option value="Alleged R.A. 8484 otherwise known as &quot;Access Devices Regulation Act of 1998&quot; in relation to RA 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged R.A. 8484 otherwise known as "Access Devices Regulation Act of 1998" in relation to RA 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Harassment and Article 282 &quot;Grave Threat&quot; of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Harassment and Article 282 "Grave Threat" of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Article 282 &quot;Grave Threat&quot; of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Article 282 "Grave Threat" of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Sec. 4(c)(4) &quot;Libel &quot;under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4(c)(4) "Libel "under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Article 283 of the RPC otherwise known as &quot;Light Threats' in relation to R.A. 10175 otherwise known as the &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Article 283 of the RPC otherwise known as "Light Threats' in relation to R.A. 10175 otherwise known as the "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Art. 315 &quot;Estafa&quot; of the Revised Penal Code in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Art. 315 "Estafa" of the Revised Penal Code in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Art. 287 of the Revised Penal Code &quot;Unjust Vexation&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Art. 287 of the Revised Penal Code "Unjust Vexation" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="RA 9775 is known as the &quot;Anti-Child Pornography Act of 2009&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">RA 9775 is known as the "Anti-Child Pornography Act of 2009" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="RA 9165 is known as the Comprehensive Dangerous Drugs Act of 2002&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">RA 9165 is known as the Comprehensive Dangerous Drugs Act of 2002" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of RA 9995 &quot;Anti-Photo and Video Voyeurism Act of 2009&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of RA 9995 "Anti-Photo and Video Voyeurism Act of 2009" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Harassment; and Art. 294 (Robbery with Intimidation of Persons) of the Revised Penal Code R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Harassment; and Art. 294 (Robbery with Intimidation of Persons) of the Revised Penal Code R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                    <option value="Alleged Violation of Sec. 261(a) &quot;Vote Buying & Vote-Selling&quot; under BP. BLG. 881 (Omnibus Election Code)&quot;.">Alleged Violation of Sec. 261(a) "Vote Buying & Vote-Selling" under BP. BLG. 881 (Omnibus Election Code)".</option>
+                    <option value="__custom__">Other (specify)...</option>
                 </select>
             </div>
 
+            <div class="form-group" id="customCaseTypeGroup" style="display: none; margin-bottom: 1rem;">
+                <label class="form-label" style="display: block; margin-bottom: 6px;">Custom Case Type</label>
+                <input type="text" id="remarksCustomCaseType" class="form-input" placeholder="Enter custom case type..." style="width: 100%; box-sizing: border-box; display: block; padding: 10px 16px;">
+            </div>
+
+            <div class="form-group" id="subjectGroup" style="display: none; margin-bottom: 1rem;">
+                <label class="form-label">Subject</label>
+            <textarea id="remarksSubject" class="form-input" placeholder="Brief subject/title of the case..." rows="2" style="width: 100%; box-sizing: border-box; display: block; resize: none; min-height: 50px; font-family: inherit;"></textarea>
+            </div>
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label class="form-label">Case Notes & Remarks</label>
                 <textarea id="remarksText" class="form-textarea"
-                    placeholder="Enter agent remarks or comment for this complainant..."></textarea>
+                    placeholder="Enter agent remarks or comment for this complainant..."
+                    style="min-height: 140px; font-size: 1rem; line-height: 1.5; resize: none;"
+                    oninput="enforceWordLimit(this, 300)"></textarea>
+                <div style="display: flex; justify-content: flex-end; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                    <span id="remarksWordCount">0</span>&nbsp;/&nbsp;300 words
+                </div>
             </div>
             <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.5rem;"
                 id="remarksTimestamp"></div>
@@ -1201,7 +1252,8 @@
                     if (json.data.text) remarksText = json.data.text;
                     const isActionableText = json.data.isActionable === 'yes' ? '<span style="color:#2ecc71; font-weight:bold;">Yes (Actionable)</span>' : '<span style="color:#e74c3c; font-weight:bold;">No</span>';
                     const caseTypeText = (json.data.isActionable === 'yes' && json.data.caseType) ? ` | Case: <strong>${json.data.caseType}</strong>` : '';
-                    assessmentHtml = `<div class="detail-row"><div class="detail-label">Assessment</div><div class="detail-value">${isActionableText}${caseTypeText}</div></div>`;
+                    const subjectText = (json.data.isActionable === 'yes' && json.data.subject) ? ` | Subject: <strong>${json.data.subject}</strong>` : '';
+                    assessmentHtml = `<div class="detail-row"><div class="detail-label">Assessment</div><div class="detail-value">${isActionableText}${caseTypeText}${subjectText}</div></div>`;
                 }
             } catch (e) { }
 
@@ -1257,23 +1309,48 @@
             } catch (err) { showToast('Server error.', true); }
         }
 
+        function toggleActionableFields(value) {
+            const isYes = value === 'yes';
+            document.getElementById('caseTypeGroup').style.display = isYes ? 'block' : 'none';
+            document.getElementById('subjectGroup').style.display = isYes ? 'block' : 'none';
+            if (!isYes) {
+                document.getElementById('customCaseTypeGroup').style.display = 'none';
+            }
+        }
+
         async function openRemarks(id) {
             document.getElementById('remarksId').value = id;
-            document.getElementById('remarksText').value = "Loading...";
             document.getElementById('remarksActionable').value = "no";
             document.getElementById('caseTypeGroup').style.display = "none";
+            document.getElementById('customCaseTypeGroup').style.display = "none";
+            document.getElementById('subjectGroup').style.display = "none";
             document.getElementById('remarksCaseType').value = "";
+            document.getElementById('remarksCustomCaseType').value = "";
+            document.getElementById('remarksSubject').value = "";
             document.getElementById('remarksTimestamp').textContent = "";
             openModal('modalRemarks');
 
-            try {
+           try {
                 const res = await fetch(`/api/records/${id}/remarks`);
                 const json = await res.json();
                 if (json.success) {
                     document.getElementById('remarksText').value = json.data.text || "";
+                    enforceWordLimit(document.getElementById('remarksText'), 300);
                     document.getElementById('remarksActionable').value = json.data.isActionable || "no";
-                    document.getElementById('caseTypeGroup').style.display = (json.data.isActionable === 'yes') ? "block" : "none";
-                    document.getElementById('remarksCaseType').value = json.data.caseType || "";
+                    document.getElementById('remarksSubject').value = json.data.subject || "";
+                    toggleActionableFields(json.data.isActionable || "no");
+
+                    const caseTypeSelect = document.getElementById('remarksCaseType');
+                    const knownCaseTypes = Array.from(caseTypeSelect.options).map(opt => opt.value);
+                    const savedCaseType = json.data.caseType || "";
+                    if (savedCaseType && !knownCaseTypes.includes(savedCaseType)) {
+                        caseTypeSelect.value = '__custom__';
+                        document.getElementById('customCaseTypeGroup').style.display = 'block';
+                        document.getElementById('remarksCustomCaseType').value = savedCaseType;
+                    } else {
+                        caseTypeSelect.value = savedCaseType;
+                        document.getElementById('customCaseTypeGroup').style.display = 'none';
+                    }
                     if (json.data.last_modified) {
                         const d = new Date(json.data.last_modified).toLocaleString('en-PH');
                         document.getElementById('remarksTimestamp').textContent = `Last modified: ${d}`;
@@ -1291,10 +1368,15 @@
             const id = document.getElementById('remarksId').value;
             const text = document.getElementById('remarksText').value;
             const isActionable = document.getElementById('remarksActionable').value;
-            const caseType = document.getElementById('remarksCaseType').value;
+            const subject = document.getElementById('remarksSubject').value.trim();
+            let caseType = document.getElementById('remarksCaseType').value;
+
+            if (caseType === '__custom__') {
+                caseType = document.getElementById('remarksCustomCaseType').value.trim();
+            }
 
             if (isActionable === 'yes' && !caseType) {
-                showToast("Please select a case type if actionable.", true);
+                showToast("Please select or enter a case type if actionable.", true);
                 return;
             }
 
@@ -1302,7 +1384,7 @@
                 const response = await fetch(`/api/records/${id}/remarks`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text, isActionable, caseType })
+                    body: JSON.stringify({ text, isActionable, caseType, subject })
                 });
                 if ((await response.json()).success) {
                     showToast('Assessment saved successfully');
@@ -1314,6 +1396,17 @@
         function confirmDelete(id) {
             document.getElementById('deleteId').value = id;
             openModal('modalDelete');
+        }
+
+        // --- Word limit enforcement for Remarks ---
+        function enforceWordLimit(el, maxWords) {
+            let words = el.value.trim().length ? el.value.trim().split(/\s+/) : [];
+            if (words.length > maxWords) {
+                el.value = words.slice(0, maxWords).join(' ');
+                words = el.value.trim().split(/\s+/);
+            }
+            const counter = document.getElementById('remarksWordCount');
+            if (counter) counter.textContent = words.length;
         }
 
         async function submitDelete() {
