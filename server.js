@@ -39,17 +39,6 @@ let state = {
     availableVoices: []
 };
 
-// Agent Remarks Storage
-const agentRemarksFile = path.join(__dirname, 'agent_remarks.json');
-function loadAgentRemarks() {
-    if (fs.existsSync(agentRemarksFile)) {
-        try { return JSON.parse(fs.readFileSync(agentRemarksFile, 'utf8')); } catch (e) { return {}; }
-    }
-    return {};
-}
-function saveAgentRemarks(remarksObj) {
-    fs.writeFileSync(agentRemarksFile, JSON.stringify(remarksObj, null, 2));
-}
 
 function getSortedList(waitingList, currentRegularCount = 0) {
     let priorityQueue = [];
@@ -85,6 +74,22 @@ function getSortedList(waitingList, currentRegularCount = 0) {
 
     return interleaved;
 }
+
+// Retries transient network failures (Render <-> Supabase connection drops)
+async function withRetry(fn, retries = 3, delayMs = 400) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (err) {
+            const msg = String(err && err.message || err);
+            const isTransient = msg.includes('terminated') || msg.includes('ECONNRESET') || msg.includes('timeout') || msg.includes('fetch failed');
+            if (i === retries - 1 || !isTransient) throw err;
+            console.warn(`[Retry] Transient error, attempt ${i + 1}/${retries}:`, msg);
+            await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+        }
+    }
+}
+
 
 function getTodayDateStr() {
     const today = new Date();
@@ -255,21 +260,30 @@ app.post('/api/reset-queue', async (req, res) => {
 // API Endpoint for Database Records Interface
 app.get('/api/records', async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await withRetry(() => supabase
             .from('registrations')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false }));
 
         if (error) throw error;
 
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         
         // Append Agent Assessment data to each record
-        const remarksObj = loadAgentRemarks();
+        const { data: remarksRows, error: remarksErr } = await withRetry(() => supabase
+            .from('agent_remarks')
+            .select('record_id, is_actionable, case_type, subject'));
+
+        if (remarksErr) console.error("Error fetching agent_remarks:", remarksErr);
+
+        const remarksMap = {};
+        (remarksRows || []).forEach(r => { remarksMap[r.record_id] = r; });
+
         const recordsWithRemarks = data.map(r => ({
             ...r,
-            isActionable: remarksObj[r.id] ? (remarksObj[r.id].isActionable || 'no') : 'no',
-            caseType: remarksObj[r.id] ? (remarksObj[r.id].caseType || '') : ''
+            isActionable: remarksMap[r.id] ? (remarksMap[r.id].is_actionable || 'no') : 'no',
+            caseType: remarksMap[r.id] ? (remarksMap[r.id].case_type || '') : '',
+            subject: remarksMap[r.id] ? (remarksMap[r.id].subject || '') : ''
         }));
         
         res.json({ success: true, data: recordsWithRemarks });
@@ -309,26 +323,56 @@ app.get('/api/audit', (req, res) => {
 
 // === Agent Remarks API ===
 
-app.get('/api/records/:id/remarks', (req, res) => {
+app.get('/api/records/:id/remarks', async (req, res) => {
     try {
-        const remarks = loadAgentRemarks();
-        const recordRemarks = remarks[req.params.id] || { text: '', isActionable: 'no', caseType: '', last_modified: null };
+        const { data, error } = await supabase
+            .from('agent_remarks')
+            .select('*')
+            .eq('record_id', req.params.id)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        const recordRemarks = data
+            ? { text: data.text || '', isActionable: data.is_actionable || 'no', caseType: data.case_type || '', subject: data.subject || '', last_modified: data.last_modified }
+            : { text: '', isActionable: 'no', caseType: '', subject: '', last_modified: null };
+
         res.json({ success: true, data: recordRemarks });
     } catch (err) {
+        console.error("Error loading remarks:", err);
         res.status(500).json({ success: false, error: "Failed to load remarks" });
     }
 });
 
-app.post('/api/records/:id/remarks', (req, res) => {
+app.post('/api/records/:id/remarks', async (req, res) => {
     try {
         const id = req.params.id;
-        const { text, isActionable, caseType } = req.body;
-        let remarks = loadAgentRemarks();
-        remarks[id] = { text: text || '', isActionable: isActionable || 'no', caseType: caseType || '', last_modified: new Date().toISOString() };
-        saveAgentRemarks(remarks);
+        const { text, isActionable, caseType, subject } = req.body;
+
+        const payload = {
+            record_id: id,
+            text: text || '',
+            is_actionable: isActionable || 'no',
+            case_type: caseType || '',
+            subject: subject || '',
+            last_modified: new Date().toISOString()
+        };
+
+        const { data, error } = await supabase
+            .from('agent_remarks')
+            .upsert(payload, { onConflict: 'record_id' })
+            .select()
+            .single();
+
+        if (error) throw error;
+
         auditLog('Agent Remarks', `Updated remarks for ID ${id}`);
-        res.json({ success: true, data: remarks[id] });
+        res.json({
+            success: true,
+            data: { text: data.text, isActionable: data.is_actionable, caseType: data.case_type, subject: data.subject, last_modified: data.last_modified }
+        });
     } catch (err) {
+        console.error("Error saving remarks:", err);
         res.status(500).json({ success: false, error: "Failed to save remarks" });
     }
 });
@@ -724,14 +768,6 @@ io.on('connection', async (socket) => {
             const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
             const shortNo = ccdNo.split('-').pop();
 
-            // Send SMS notification (if contact number provided)
-            if (formData.contact) {
-                sendSMS(
-                    formData.contact,
-                    `Hello, ${displayName}! Your number is ${shortNo}.`
-                ).catch(err => console.error('[SMS] Failed to notify:', err));
-            }
-
             // Send email notification (if email provided)
             if (formData.email) {
                 sendQueueEmail(formData.email, displayName, shortNo)
@@ -1047,6 +1083,38 @@ io.on('connection', async (socket) => {
         }
     });
 
+    socket.on('archive_person', async (id) => {
+        try {
+            const { data, error: fetchErr } = await supabase
+                .from('registrations')
+                .select('*')
+                .eq('id', id)
+                .single();
+            if (fetchErr) throw fetchErr;
+
+            if (!data) {
+                socket.emit('action_error', { message: "Person not found." });
+                return;
+            }
+
+            const { error: updateErr } = await supabase
+                .from('registrations')
+                .update({ status: 'Served' })
+                .eq('id', id);
+            if (updateErr) throw updateErr;
+
+            auditLog('Archive Person', `Archived (marked Served) ID ${id} - ${data.ccd_no}`);
+
+            // Intentionally NOT touching state.currentlyServing or state.recentServed
+            // so this person never flashes on the TV display screen.
+
+            await broadcastStaffUpdate();
+        } catch (err) {
+            console.error("Error in 'archive_person':", err);
+            socket.emit('action_error', { message: "Failed to archive person. The database update was blocked or failed." });
+        }
+    });
+
     socket.on('undo', async () => {
         try {
             if (!state.lastAction) return;
@@ -1162,56 +1230,6 @@ cron.schedule('0 18 * * *', async () => {
 }, {
     timezone: "Asia/Manila"
 });
-
-
-//SMS Notification Functionality
-const SEMAPHORE_API_KEY = process.env.SEMAPHORE_API_KEY;
-const SEMAPHORE_SENDER_NAME = process.env.SEMAPHORE_SENDER_NAME || 'SEMAPHORE';
-
-async function sendSMS(number, message) {
-    if (!SEMAPHORE_API_KEY) {
-        console.warn('[SMS] SEMAPHORE_API_KEY not set — skipping SMS send');
-        return { success: false, error: 'No API key configured' };
-    }
-    if (!number) {
-        console.warn('[SMS] No phone number provided — skipping SMS send');
-        return { success: false, error: 'No number provided' };
-    }
-
-    try {
-        const response = await fetch('https://api.semaphore.co/api/v4/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                apikey: SEMAPHORE_API_KEY,
-                number: number,        
-                message: message,
-                sendername: SEMAPHORE_SENDER_NAME
-            })
-        });
-
-        const responseText = await response.text();
-        let data;
-        
-        try {
-            data = JSON.parse(responseText);
-        } catch (parseErr) {
-            console.error('[SMS] API returned non-JSON response:', responseText);
-            return { success: false, error: 'API returned invalid response: ' + responseText.substring(0, 100) };
-        }
-
-        if (!response.ok) {
-            console.error('[SMS] Semaphore error:', data);
-            return { success: false, error: data.message || data.error || 'Semaphore API error' };
-        }
-
-        console.log('[SMS] ✓ Sent to', number, '- message_id:', data[0]?.message_id);
-        return { success: true, data };
-    } catch (err) {
-        console.error('[SMS] Exception:', err.message);
-        return { success: false, error: err.message };
-    }
-}
 
 
 async function sendQueueEmail(toEmail, displayName, shortNo) {
