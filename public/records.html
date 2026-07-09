@@ -1565,7 +1565,7 @@
             ]);
 
             doc.autoTable({
-                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Address', 'Contact', 'Agent Assessment', 'Reg. Time', 'Interview']],
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Address', 'Contact', 'Agent\'s Remarks \ / Nature of Case', 'Reg. Time', 'Interview']],
                 body: tableData,
                 startY: 28,
                 styles: { fontSize: 8 }
@@ -1878,7 +1878,7 @@
                     fetchRecords();
                 } else {
                     showToast('Failed to save record.', true);
-                }
+                } 
             } catch(err) {
                 console.error(err);
                 showToast('Network error.', true);
