@@ -112,12 +112,13 @@
         }
 
        #remarksCaseType {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 10px 16px;
+            white-space: normal;
+            word-wrap: break-word;
+            padding: 10px 40px 10px 16px;
             box-sizing: border-box;
             width: 100%;
+            min-height: 5em;
+            line-height: 1.4em;
         }
 
         #remarksCaseType option {
@@ -298,6 +299,10 @@
                 <input type="hidden" id="editId">
                 <div class="form-grid">
                     <div class="form-group full-width">
+                        <label class="form-label">Date & Time</label>
+                        <input type="datetime-local" id="editDateTime" class="form-input" required>
+                    </div>
+                    <div class="form-group full-width">
                         <label class="form-label">Full Name</label>
                         <input type="text" id="editName" class="form-input" required>
                     </div>
@@ -394,75 +399,78 @@
     </div>
 
 <!-- Agent Remarks Modal -->
-    <div class="modal-overlay" id="modalRemarks">
-    <div class="modal" style="max-width: 900px; width: 90vw;">
-            <div class="modal-header">
-                <div class="modal-title">Agent Assessment</div>
-                <button class="modal-close" onclick="closeModal('modalRemarks')">&times;</button>
-            </div>
-            <input type="hidden" id="remarksId">
+<div class="modal-overlay" id="modalRemarks">
+<div class="modal" style="max-width: 900px; width: 90vw;">
+        <div class="modal-header">
+            <div class="modal-title">Agent Assessment</div>
+            <button class="modal-close" onclick="closeModal('modalRemarks')">&times;</button>
+        </div>
+        <input type="hidden" id="remarksId">
 
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <label class="form-label">Is Actionable?</label>
-                <select id="remarksActionable" class="form-input" onchange="toggleActionableFields(this.value)">
-                    <option value="no">No (Remarks/Comment only)</option>
-                    <option value="yes">Yes (Actionable)</option>
-                </select>
-            </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label">Is Actionable?</label>
+            <select id="remarksActionable" class="form-input" onchange="toggleActionableFields(this.value)">
+                <option value="no">No (Remarks/Comment only)</option>
+                <option value="yes">Yes (Actionable)</option>
+            </select>
+        </div>
 
-            <div class="form-group" id="caseTypeGroup" style="display: none; margin-bottom: 1rem;">
-                <label class="form-label">Case Type</label>
-                <select id="remarksCaseType" class="form-input" onchange="document.getElementById('customCaseTypeGroup').style.display = this.value === '__custom__' ? 'block' : 'none'">
-                    <option value="" disabled selected>Select case type...</option>
-                    <option value="Alleged Violation of Sec. 4 (a)(3) &quot;Data Interference&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;.">Alleged Violation of Sec. 4 (a)(3) "Data Interference" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012".</option>
-                    <option value="Alleged Violation of Sec. 4 (a)(1) &quot;Illegal Access&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4 (a)(1) "Illegal Access" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Sec. 4 (b)(2) &quot;Computer related Fraud&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4 (b)(2) "Computer related Fraud" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Sec. 4 Sec (b)(3) &quot;Computer related Identity Theft&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4 Sec (b)(3) "Computer related Identity Theft" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Sec. 4(b)(1)(i) &quot;Computer-related Forgery&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4(b)(1)(i) "Computer-related Forgery" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Sec. 4(c)(4) &quot;Libel&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot; and R.A. 9995 otherwise known as &quot;Anti-Photo and Video Voyeurism Act of 2009&quot;.">Alleged Violation of Sec. 4(c)(4) "Libel" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012" and R.A. 9995 otherwise known as "Anti-Photo and Video Voyeurism Act of 2009".</option>
-                    <option value="Alleged R.A. 8484 otherwise known as &quot;Access Devices Regulation Act of 1998&quot; in relation to RA 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged R.A. 8484 otherwise known as "Access Devices Regulation Act of 1998" in relation to RA 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Harassment and Article 282 &quot;Grave Threat&quot; of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Harassment and Article 282 "Grave Threat" of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Article 282 &quot;Grave Threat&quot; of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Article 282 "Grave Threat" of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Sec. 4(c)(4) &quot;Libel &quot;under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4(c)(4) "Libel "under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Article 283 of the RPC otherwise known as &quot;Light Threats' in relation to R.A. 10175 otherwise known as the &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Article 283 of the RPC otherwise known as "Light Threats' in relation to R.A. 10175 otherwise known as the "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Art. 315 &quot;Estafa&quot; of the Revised Penal Code in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Art. 315 "Estafa" of the Revised Penal Code in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Art. 287 of the Revised Penal Code &quot;Unjust Vexation&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Art. 287 of the Revised Penal Code "Unjust Vexation" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="RA 9775 is known as the &quot;Anti-Child Pornography Act of 2009&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">RA 9775 is known as the "Anti-Child Pornography Act of 2009" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="RA 9165 is known as the Comprehensive Dangerous Drugs Act of 2002&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">RA 9165 is known as the Comprehensive Dangerous Drugs Act of 2002" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of RA 9995 &quot;Anti-Photo and Video Voyeurism Act of 2009&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of RA 9995 "Anti-Photo and Video Voyeurism Act of 2009" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Harassment; and Art. 294 (Robbery with Intimidation of Persons) of the Revised Penal Code R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Harassment; and Art. 294 (Robbery with Intimidation of Persons) of the Revised Penal Code R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
-                    <option value="Alleged Violation of Sec. 261(a) &quot;Vote Buying & Vote-Selling&quot; under BP. BLG. 881 (Omnibus Election Code)&quot;.">Alleged Violation of Sec. 261(a) "Vote Buying & Vote-Selling" under BP. BLG. 881 (Omnibus Election Code)".</option>
-                    <option value="__custom__">Other (specify)...</option>
-                </select>
-            </div>
-
-            <div class="form-group" id="customCaseTypeGroup" style="display: none; margin-bottom: 1rem;">
-                <label class="form-label" style="display: block; margin-bottom: 6px;">Custom Case Type</label>
-                <input type="text" id="remarksCustomCaseType" class="form-input" placeholder="Enter custom case type..." style="width: 100%; box-sizing: border-box; display: block; padding: 10px 16px;">
-            </div>
-
-            <div class="form-group" id="subjectGroup" style="display: none; margin-bottom: 1rem;">
-                <label class="form-label">Subject</label>
-            <textarea id="remarksSubject" class="form-input" placeholder="Brief subject/title of the case..." rows="2" style="width: 100%; box-sizing: border-box; display: block; resize: none; min-height: 50px; font-family: inherit;"></textarea>
-            </div>
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <label class="form-label">Case Notes & Remarks</label>
-                <textarea id="remarksText" class="form-textarea"
-                    placeholder="Enter agent remarks or comment for this complainant..."
-                    style="min-height: 140px; font-size: 1rem; line-height: 1.5; resize: none;"
-                    oninput="enforceWordLimit(this, 300)"></textarea>
-                <div style="display: flex; justify-content: flex-end; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
-                    <span id="remarksWordCount">0</span>&nbsp;/&nbsp;300 words
-                </div>
-            </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.5rem;"
-                id="remarksTimestamp"></div>
-            <div class="modal-footer">
-                <button class="btn-formal" onclick="closeModal('modalRemarks')">Cancel</button>
-                <button class="btn-formal btn-primary" onclick="submitRemarks()">Save Assessment</button>
+        <div class="form-group" id="remarksTextGroup" style="margin-bottom: 1rem;">
+            <label class="form-label">Case Notes & Remarks</label>
+            <textarea id="remarksText" class="form-textarea"
+                placeholder="Enter agent remarks or comment for this complainant..."
+                style="min-height: 140px; font-size: 1rem; line-height: 1.5; resize: none;"
+                oninput="enforceWordLimit(this, 300)"></textarea>
+            <div style="display: flex; justify-content: flex-end; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                <span id="remarksWordCount">0</span>&nbsp;/&nbsp;300 words
             </div>
         </div>
+
+        <div class="form-group" id="caseTypeGroup" style="display: none; margin-bottom: 1rem;">
+            <label class="form-label">Case Type</label>
+            <select id="remarksCaseType" class="form-input" onchange="document.getElementById('customCaseTypeGroup').style.display = this.value === '__custom__' ? 'block' : 'none'">
+                <option value="" disabled selected>Select case type...</option>
+                <option value="Alleged Violation of Sec. 4 (a)(3) &quot;Data Interference&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;.">Alleged Violation of Sec. 4 (a)(3) "Data Interference" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012".</option>
+                <option value="Alleged Violation of Sec. 4 (a)(1) &quot;Illegal Access&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4 (a)(1) "Illegal Access" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Sec. 4 (b)(2) &quot;Computer related Fraud&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4 (b)(2) "Computer related Fraud" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Sec. 4 Sec (b)(3) &quot;Computer related Identity Theft&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4 Sec (b)(3) "Computer related Identity Theft" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Sec. 4(b)(1)(i) &quot;Computer-related Forgery&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4(b)(1)(i) "Computer-related Forgery" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Sec. 4(c)(4) &quot;Libel&quot; under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot; and R.A. 9995 otherwise known as &quot;Anti-Photo and Video Voyeurism Act of 2009&quot;.">Alleged Violation of Sec. 4(c)(4) "Libel" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012" and R.A. 9995 otherwise known as "Anti-Photo and Video Voyeurism Act of 2009".</option>
+                <option value="Alleged R.A. 8484 otherwise known as &quot;Access Devices Regulation Act of 1998&quot; in relation to RA 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged R.A. 8484 otherwise known as "Access Devices Regulation Act of 1998" in relation to RA 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Harassment and Article 282 &quot;Grave Threat&quot; of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Harassment and Article 282 "Grave Threat" of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Article 282 &quot;Grave Threat&quot; of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Article 282 "Grave Threat" of the Revised Penal Code (RPC) in relation to Sec. 6 of R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Sec. 4(c)(4) &quot;Libel &quot;under R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Sec. 4(c)(4) "Libel "under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Article 283 of the RPC otherwise known as &quot;Light Threats' in relation to R.A. 10175 otherwise known as the &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Article 283 of the RPC otherwise known as "Light Threats' in relation to R.A. 10175 otherwise known as the "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Art. 315 &quot;Estafa&quot; of the Revised Penal Code in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Art. 315 "Estafa" of the Revised Penal Code in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Art. 287 of the Revised Penal Code &quot;Unjust Vexation&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Art. 287 of the Revised Penal Code "Unjust Vexation" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="RA 9775 is known as the &quot;Anti-Child Pornography Act of 2009&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">RA 9775 is known as the "Anti-Child Pornography Act of 2009" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="RA 9165 is known as the Comprehensive Dangerous Drugs Act of 2002&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">RA 9165 is known as the Comprehensive Dangerous Drugs Act of 2002" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of RA 9995 &quot;Anti-Photo and Video Voyeurism Act of 2009&quot; in relation to R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of RA 9995 "Anti-Photo and Video Voyeurism Act of 2009" in relation to R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Harassment; and Art. 294 (Robbery with Intimidation of Persons) of the Revised Penal Code R.A. 10175 otherwise known as &quot;Cybercrime Prevention Act of 2012&quot;">Alleged Violation of Harassment; and Art. 294 (Robbery with Intimidation of Persons) of the Revised Penal Code R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012"</option>
+                <option value="Alleged Violation of Sec. 261(a) &quot;Vote Buying & Vote-Selling&quot; under BP. BLG. 881 (Omnibus Election Code)&quot;.">Alleged Violation of Sec. 261(a) "Vote Buying & Vote-Selling" under BP. BLG. 881 (Omnibus Election Code)".</option>
+                <option value="__custom__">Other (specify)...</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="customCaseTypeGroup" style="display: none; margin-bottom: 1rem;">
+            <label class="form-label" style="display: block; margin-bottom: 6px;">Custom Case Type</label>
+            <input type="text" id="remarksCustomCaseType" class="form-input" placeholder="Enter custom case type..." style="width: 100%; box-sizing: border-box; display: block; padding: 10px 16px;">
+        </div>
+
+        <div class="form-group" id="subjectGroup" style="display: none; margin-bottom: 1rem;">
+            <label class="form-label">Subject</label>
+            <textarea id="remarksSubject" class="form-input" placeholder="Brief subject/title of the case..." rows="2" style="width: 100%; box-sizing: border-box; display: block; resize: none; min-height: 50px; font-family: inherit;"></textarea>
+        </div>
+
+        <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.5rem;"
+            id="remarksTimestamp"></div>
+        <div class="modal-footer">
+            <button class="btn-formal" onclick="closeModal('modalRemarks')">Cancel</button>
+            <button class="btn-formal btn-primary" onclick="submitRemarks()">Save Assessment</button>
+        </div>
     </div>
+</div>
+
 
     <!-- Export Range Modal -->
     <div class="modal-overlay" id="modalExport">
@@ -1159,7 +1167,9 @@
                             <option value="Skipped" ${r.status === 'Skipped' ? 'selected' : ''}>Skipped</option>
                             <option value="No-show" ${r.status === 'No-show' ? 'selected' : ''}>No-show</option>
                         </select>
-                    <td style="text-align: center; color: var(--text-muted); font-family: monospace;">${r.registration_duration || '---'}</td>
+                    <td style="text-align: center;">
+                        <input type="text" value="${r.registration_duration || ''}" onchange="updateCell(this, 'registration_duration', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="-">
+                    </td>
                     <td style="text-align: center;">
                         <input type="text" value="${r.serving_duration || ''}" onchange="updateCell(this, 'serving_duration', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="-">
                     </td>
@@ -1189,7 +1199,7 @@
             let payloadValue = newValue;
             if (field === 'is_priority') {
                 payloadValue = (newValue === 'true' || newValue === true);
-            } else if (field === 'serving_duration') {
+            } else if (field === 'serving_duration' || field === 'registration_duration') {
                 payloadValue = newValue === '' ? null : newValue;
             }
 
@@ -1252,7 +1262,7 @@
                     if (json.data.text) remarksText = json.data.text;
                     const isActionableText = json.data.isActionable === 'yes' ? '<span style="color:#2ecc71; font-weight:bold;">Yes (Actionable)</span>' : '<span style="color:#e74c3c; font-weight:bold;">No</span>';
                     const caseTypeText = (json.data.isActionable === 'yes' && json.data.caseType) ? ` | Case: <strong>${json.data.caseType}</strong>` : '';
-                    const subjectText = (json.data.isActionable === 'yes' && json.data.subject) ? ` | Subject: <strong>${json.data.subject}</strong>` : '';
+                    const subjectText = (json.data.isActionable === 'yes' && json.data.subject) ? ` | <br>Subject: <strong>${json.data.subject}</strong>` : '';
                     assessmentHtml = `<div class="detail-row"><div class="detail-label">Assessment</div><div class="detail-value">${isActionableText}${caseTypeText}${subjectText}</div></div>`;
                 }
             } catch (e) { }
@@ -1313,6 +1323,7 @@
             const isYes = value === 'yes';
             document.getElementById('caseTypeGroup').style.display = isYes ? 'block' : 'none';
             document.getElementById('subjectGroup').style.display = isYes ? 'block' : 'none';
+            document.getElementById('remarksTextGroup').style.display = isYes ? 'none' : 'block';
             if (!isYes) {
                 document.getElementById('customCaseTypeGroup').style.display = 'none';
             }
@@ -1424,7 +1435,6 @@
             } catch (err) { showToast('Server error. Deletion failed.', true); }
         }
 
-        // --- Export & Reports ---
         function openExportModal() {
             document.getElementById('exportStartDate').value = getViewDateString();
             document.getElementById('exportEndDate').value = getViewDateString();
@@ -1442,17 +1452,67 @@
             }).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         }
 
-        function doExport(type) {
-            const recordsToExport = getExportDataRange();
-            if (recordsToExport.length === 0) return alert("No records found in this date range.");
-            
-            closeModal('modalExport');
-            
-            if (type === 'excel') exportToExcel(recordsToExport);
-            else if (type === 'csv') exportToCSV(recordsToExport);
-            else if (type === 'pdf') exportToPDF(recordsToExport);
-            else if (type === 'word') exportToWord(recordsToExport);
+        async function fetchRemarksForExport(recordsList) {
+            const results = await Promise.allSettled(recordsList.map(async (r) => {
+                try {
+                    const res = await fetch(`/api/records/${r.id}/remarks`);
+                    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+                    const json = await res.json();
+                    if (json.success) {
+                        r._remarksData = json.data;
+                    } else {
+                        r._remarksData = null;
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch remarks for record', r.id, e);
+                    r._remarksData = null;
+                }
+            }));
+            return recordsList;
         }
+
+    
+   function getAssessmentText(r) {
+    const rd = r._remarksData || {};
+    let isActionable = (rd.isActionable !== undefined && rd.isActionable !== null && rd.isActionable !== '')
+        ? rd.isActionable
+        : r.isActionable;
+
+    isActionable = (isActionable || '').toString().trim().toLowerCase();
+
+    const caseType = rd.caseType || r.caseType || '';
+    const subject = rd.subject || '';
+    const remarksTxt = rd.text || '';
+
+    if (isActionable === 'yes') {
+        let text = `Case Type: ${caseType || 'N/A'}`;
+        if (subject) text += ` | Subject: ${subject}`;
+        return text;
+    } else if (isActionable === 'no') {
+        return remarksTxt ? `Remarks: ${remarksTxt}` : 'Not Actionable';
+    }
+    return 'Not Assessed';
+}
+
+        async function doExport(type) {
+    const recordsToExport = getExportDataRange();
+    if (recordsToExport.length === 0) return alert("No records found in this date range.");
+    
+    closeModal('modalExport');
+    showToast("Preparing export, fetching assessments...");
+
+    try {
+        await fetchRemarksForExport(recordsToExport);
+    } catch (e) {
+        console.error('Error fetching assessments for export:', e);
+        showToast('Some assessments failed to load, exporting with available data.', true);
+    }
+    
+    if (type === 'excel') exportToExcel(recordsToExport);
+    else if (type === 'csv') exportToCSV(recordsToExport);
+    else if (type === 'pdf') exportToPDF(recordsToExport);
+    else if (type === 'word') exportToWord(recordsToExport);
+}
 
         function getExportData(recordsList) {
             return recordsList.map(r => ({
@@ -1467,8 +1527,7 @@
                 "Address": r.address,
                 "Purpose": r.purpose,
                 "Priority": r.is_priority ? "YES" : "NO",
-                "Actionable": r.isActionable === 'yes' ? 'Yes' : (r.isActionable === 'no' ? 'No' : ''),
-                "Case Type": r.caseType || '',
+                "Agent Assessment": getAssessmentText(r),
                 "Registration Time": r.registration_duration || "",
                 "Interview Duration": r.serving_duration || ""
             }));
@@ -1502,11 +1561,11 @@
             doc.text(`Generated: ${new Date().toLocaleString('en-PH')} | Range: ${start} to ${end}`, 14, 22);
 
             const tableData = recordsList.map(r => [
-                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no ? r.ccd_no.split('-').pop() : '', r.full_name, r.age, r.region, r.address, r.contact, r.isActionable === 'yes' ? `Yes (${r.caseType})` : (r.isActionable === 'no' ? 'No' : ''), r.registration_duration || '', r.serving_duration || ''
+                new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no ? r.ccd_no.split('-').pop() : '', r.full_name, r.age, r.region, r.address, r.contact, getAssessmentText(r), r.registration_duration || '', r.serving_duration || ''
             ]);
 
             doc.autoTable({
-                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Address', 'Contact', 'Actionable', 'Reg. Time', 'Interview']],
+                head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Address', 'Contact', 'Agent Assessment', 'Reg. Time', 'Interview']],
                 body: tableData,
                 startY: 28,
                 styles: { fontSize: 8 }
@@ -1542,9 +1601,9 @@
                 <p><strong>Date Range:</strong> ${document.getElementById('exportStartDate').value} to ${document.getElementById('exportEndDate').value}</p>
                 <table>
                     <tr>
-                        <th>Date & Time</th><th>CCD No.</th><th>Full Name</th>
-                        <th>Age</th><th>Region</th><th>Address</th><th>Contact</th><th>Priority</th><th>Actionable</th><th>Case Type</th><th>Reg. Time</th><th>Interview Time</th>
-                    </tr>`;
+                    <th>Date & Time</th><th>CCD No.</th><th>Full Name</th>
+                    <th>Age</th><th>Region</th><th>Address</th><th>Contact</th><th>Priority</th><th>Agent Assessment</th><th>Reg. Time</th><th>Interview Time</th>
+                </tr>`;
 
             recordsList.forEach(r => {
                 html += `<tr>
@@ -1556,8 +1615,7 @@
                     <td>${r.address || ''}</td>
                     <td>${r.contact}</td>
                     <td>${r.is_priority ? 'YES' : 'NO'}</td>
-                    <td>${r.isActionable === 'yes' ? 'Yes' : (r.isActionable === 'no' ? 'No' : '')}</td>
-                    <td>${r.caseType || ''}</td>
+                    <td>${getAssessmentText(r)}</td>
                     <td>${r.registration_duration || ''}</td>
                     <td>${r.serving_duration || ''}</td>
                 </tr>`;
@@ -1729,6 +1787,12 @@
             document.getElementById('editId').value = ''; 
             document.getElementById('editForm').reset();
             document.getElementById('modalEdit').querySelector('.modal-title').textContent = 'Add New Record';
+
+            const now = new Date();
+            const offset = now.getTimezoneOffset();
+            const localNow = new Date(now.getTime() - (offset * 60 * 1000));
+            document.getElementById('editDateTime').value = localNow.toISOString().slice(0, 16);
+
             openModal('modalEdit');
         }
 
@@ -1737,6 +1801,14 @@
             if (!record) return;
             
             document.getElementById('editId').value = record.id;
+
+            if (record.created_at) {
+                const dObj = new Date(record.created_at);
+                const offset = dObj.getTimezoneOffset();
+                const localDate = new Date(dObj.getTime() - (offset * 60 * 1000));
+                document.getElementById('editDateTime').value = localDate.toISOString().slice(0, 16);
+            }
+
             document.getElementById('editName').value = record.full_name || '';
             document.getElementById('editAge').value = record.age || '';
             document.getElementById('editContact').value = record.contact || '';
@@ -1756,6 +1828,9 @@
         async function submitEdit(e) {
             e.preventDefault();
             const id = document.getElementById('editId').value;
+            const dateTimeVal = document.getElementById('editDateTime').value;
+            const isoCreatedAt = dateTimeVal ? new Date(dateTimeVal).toISOString() : new Date().toISOString();
+
             const payload = {
                 full_name: document.getElementById('editName').value,
                 age: document.getElementById('editAge').value,
@@ -1767,7 +1842,8 @@
                 purpose: document.getElementById('editPurpose').value,
                 referred_by: document.getElementById('editReferred').value,
                 serving_duration: document.getElementById('editDuration').value || null,
-                is_priority: document.getElementById('editPriority').checked
+                is_priority: document.getElementById('editPriority').checked,
+                created_at: isoCreatedAt
             };
 
             try {
@@ -1779,10 +1855,16 @@
                         body: JSON.stringify(payload)
                     });
                 } else {
-                    // Add new record via the import endpoint
-                    payload.ccd_no = 'CCD-' + Date.now();
+                    // Add new record via the import endpoint — use a distinct manual CCD numbering scheme
+                    const dateForSeq = dateTimeVal ? dateTimeVal.slice(0, 10).replace(/-/g, '') : new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                    const sameDateCount = allRecords.filter(r => {
+                        if (!r.created_at) return false;
+                        const rDate = r.created_at.split('T')[0].replace(/-/g, '');
+                        return rDate === dateForSeq;
+                    }).length;
+                    const seq = String(sameDateCount + 1).padStart(4, '0');
+                    payload.ccd_no = `CCD-MANUAL-${dateForSeq}-${seq}`;
                     payload.status = 'Waiting';
-                    payload.created_at = new Date().toISOString();
                     res = await fetch('/api/import', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
