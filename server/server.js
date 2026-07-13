@@ -8,10 +8,20 @@ const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 const nodemailer = require('nodemailer');
+const { runBackupAndCleanup } = require('./backupJob');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, { cors: { origin: '*' } });
+
+// Server-side cache for /api/records to limit Supabase API rate usage
+let cachedRecords = null;
+let lastRecordsFetch = 0;
+const CACHE_DURATION = 5000; // 5 seconds cache
+
+function invalidateRecordsCache() {
+    cachedRecords = null;
+}
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
@@ -158,13 +168,13 @@ async function markTodayAsServed() {
     try {
         const todayStr = getTodayDateStr();
         console.log(`[${new Date().toLocaleTimeString()}] Marking all registrations as served for ${todayStr}...`);
-        
+
         const { data: updated, error } = await supabase
             .from('registrations')
             .update({ status: 'Served' })
             .like('ccd_no', `CCD-${todayStr}-%`)
             .neq('status', 'Served');
-        
+
         if (error) {
             console.error("Error marking registrations as served:", error);
             return false;
@@ -203,7 +213,7 @@ async function sendQueueEmail(toEmail, displayName, shortNo) {
             to: toEmail,
             subject: `NBI Cybercrime Division — Your Queue Number: ${shortNo}`,
             text:
-`Hello, ${displayName}!
+                `Hello, ${displayName}!
 
 Thank you for registering with the NBI Cybercrime Division.
 
@@ -390,6 +400,12 @@ app.post('/api/reset-queue', async (req, res) => {
 // API Endpoint for Database Records Interface
 app.get('/api/records', async (req, res) => {
     try {
+        const now = Date.now();
+        if (cachedRecords && (now - lastRecordsFetch < CACHE_DURATION)) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+            return res.json({ success: true, data: cachedRecords });
+        }
+
         const { data, error } = await withRetry(() => supabase
             .from('registrations')
             .select('*')
@@ -398,7 +414,7 @@ app.get('/api/records', async (req, res) => {
         if (error) throw error;
 
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        
+
         // Append Agent Assessment data to each record
         const { data: remarksRows, error: remarksErr } = await withRetry(() => supabase
             .from('agent_remarks')
@@ -415,7 +431,11 @@ app.get('/api/records', async (req, res) => {
             caseType: remarksMap[r.id] ? (remarksMap[r.id].case_type || '') : '',
             subject: remarksMap[r.id] ? (remarksMap[r.id].subject || '') : ''
         }));
-        
+
+        // Update cache
+        cachedRecords = recordsWithRemarks;
+        lastRecordsFetch = now;
+
         res.json({ success: true, data: recordsWithRemarks });
     } catch (err) {
         console.error("Error fetching records:", err);
@@ -464,8 +484,8 @@ app.get('/api/records/:id/remarks', async (req, res) => {
         if (error) throw error;
 
         const recordRemarks = data
-            ? { text: data.text || '', isActionable: data.is_actionable || 'no', caseType: data.case_type || '', subject: data.subject || '', last_modified: data.last_modified }
-            : { text: '', isActionable: 'no', caseType: '', subject: '', last_modified: null };
+            ? { interviewer: data.interviewer || '', text: data.text || '', isActionable: data.is_actionable || 'no', caseType: data.case_type || '', subject: data.subject || '', last_modified: data.last_modified }
+            : { interviewer: '', text: '', isActionable: 'no', caseType: '', subject: '', last_modified: null };
 
         res.json({ success: true, data: recordRemarks });
     } catch (err) {
@@ -477,10 +497,11 @@ app.get('/api/records/:id/remarks', async (req, res) => {
 app.post('/api/records/:id/remarks', async (req, res) => {
     try {
         const id = req.params.id;
-        const { text, isActionable, caseType, subject } = req.body;
+        const { interviewer, text, isActionable, caseType, subject } = req.body;
 
         const payload = {
             record_id: id,
+            interviewer: interviewer || '',
             text: text || '',
             is_actionable: isActionable || 'no',
             case_type: caseType || '',
@@ -497,9 +518,10 @@ app.post('/api/records/:id/remarks', async (req, res) => {
         if (error) throw error;
 
         auditLog('Agent Remarks', `Updated remarks for ID ${id}`);
+        invalidateRecordsCache();
         res.json({
             success: true,
-            data: { text: data.text, isActionable: data.is_actionable, caseType: data.case_type, subject: data.subject, last_modified: data.last_modified }
+            data: { interviewer: data.interviewer, text: data.text, isActionable: data.is_actionable, caseType: data.case_type, subject: data.subject, last_modified: data.last_modified }
         });
     } catch (err) {
         console.error("Error saving remarks:", err);
@@ -511,12 +533,12 @@ app.delete('/api/records/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { data, error, count } = await supabase.from('registrations').delete({ count: 'exact' }).eq('id', id);
-        
+
         if (error) {
             console.error("Supabase DELETE Error Details:", JSON.stringify(error, null, 2));
             throw error;
         }
-        
+
         // Supabase succeeds without error if it deletes 0 rows (e.g. if RLS blocks it or ID missing)
         if (count === 0) {
             console.error("Supabase DELETE warning: 0 rows deleted. RLS may be blocking this, or ID is invalid. ID:", id);
@@ -536,7 +558,7 @@ app.put('/api/records/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
-        
+
         // Handle automatic timestamps for status changes
         if (updates.status === 'Serving') {
             updates.serving_start_timestamp = new Date().toISOString();
@@ -553,7 +575,7 @@ app.put('/api/records/:id', async (req, res) => {
 
         // MUST append .select() to get the row back to check ccd_no for the display!
         const { data, error, count } = await supabase.from('registrations').update(updates, { count: 'exact' }).eq('id', id).select();
-        
+
         if (error) {
             console.error("Supabase PUT Error Details:", JSON.stringify(error, null, 2));
             throw error;
@@ -594,9 +616,9 @@ app.put('/api/records/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        
+
         let updateData = { status };
-        
+
         if (status === 'Serving') {
             updateData.serving_start_timestamp = new Date().toISOString();
         } else if (status === 'Served') {
@@ -609,7 +631,7 @@ app.put('/api/records/:id/status', async (req, res) => {
                 updateData.serving_duration = `${mins}:${secs}`;
             }
         }
-        
+
         const { error } = await supabase.from('registrations').update(updateData).eq('id', id);
         if (error) throw error;
         auditLog('Change Status', `Changed status to ${status} for ID ${id}`);
@@ -630,9 +652,9 @@ app.post('/api/import', async (req, res) => {
         const { data, error } = await supabase
             .from('registrations')
             .insert(records);
-            
+
         if (error) throw error;
-        
+
         auditLog('Bulk Import', `Imported ${records.length} records`);
         broadcastStaffUpdate();
         res.json({ success: true, count: records.length });
@@ -648,7 +670,7 @@ app.post('/api/feedback', async (req, res) => {
         const payload = req.body;
         if (!payload.language) payload.language = 'en';
         if (payload.age) payload.age = parseInt(payload.age, 10);
-        
+
         // Strip any fields that might not exist in the table
         const cleanPayload = {
             language: payload.language || null,
@@ -673,22 +695,22 @@ app.post('/api/feedback', async (req, res) => {
             suggestions: payload.suggestions || null,
             email: payload.email || null
         };
-        
+
         console.log('[Feedback] Inserting:', JSON.stringify(cleanPayload));
-        
+
         const { data, error } = await supabase.from('feedbacks').insert([cleanPayload]).select();
-        
+
         if (error) {
             console.error('[Feedback] Supabase error:', JSON.stringify(error));
-            return res.status(500).json({ 
-                success: false, 
+            return res.status(500).json({
+                success: false,
                 error: error.message,
                 details: error.details,
                 hint: error.hint,
                 code: error.code
             });
         }
-        
+
         // RLS can silently block inserts (data comes back empty)
         if (!data || data.length === 0) {
             console.error('[Feedback] Insert returned no data - likely RLS blocking');
@@ -698,14 +720,14 @@ app.post('/api/feedback', async (req, res) => {
                 hint: 'Run in Supabase SQL: ALTER TABLE feedbacks DISABLE ROW LEVEL SECURITY;'
             });
         }
-        
+
         console.log('[Feedback] Success, inserted ID:', data[0].id);
         auditLog('Feedback Submit', `Received ${cleanPayload.language} feedback`);
         res.json({ success: true, id: data[0].id });
     } catch (err) {
         console.error('[Feedback] Exception:', err);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             error: String(err.message || err),
             stack: String(err.stack || '').split('\n').slice(0, 3)
         });
@@ -717,10 +739,10 @@ app.get('/api/feedbacks', async (req, res) => {
         const language = req.query.language;
         let query = supabase.from('feedbacks').select('*').order('created_at', { ascending: false });
         if (language) query = query.eq('language', language);
-        
+
         const { data, error } = await query;
         if (error) throw error;
-        
+
         res.json(data);
     } catch (err) {
         console.error("Feedback Fetch Error:", err);
@@ -730,8 +752,8 @@ app.get('/api/feedbacks', async (req, res) => {
 
 // Deployment Verification Endpoint
 app.get('/api/ping', (req, res) => {
-    res.json({ 
-        message: "Server is running!", 
+    res.json({
+        message: "Server is running!",
         status: "ok",
         last_updated: new Date().toISOString()
     });
@@ -750,7 +772,7 @@ app.get('/api/tts', async (req, res) => {
         text = text.replace(/counter one/gi, 'interview room');
 
         const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${lang}&client=tw-ob`;
-        
+
         // Use dynamic import for node-fetch if using Node 16+, or native fetch in Node 18+
         const response = await fetch(url, {
             headers: {
@@ -759,10 +781,10 @@ app.get('/api/tts', async (req, res) => {
         });
 
         if (!response.ok) throw new Error(`Google TTS returned ${response.status}`);
-        
+
         res.setHeader('Content-Type', 'audio/mpeg');
         res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-        
+
         const buffer = await response.arrayBuffer();
         res.send(Buffer.from(buffer));
     } catch (err) {
@@ -773,6 +795,7 @@ app.get('/api/tts', async (req, res) => {
 
 
 async function broadcastStaffUpdate() {
+    invalidateRecordsCache();
     const todayStr = getTodayDateStr();
     const { data: allRegistrations } = await supabase
         .from('registrations')
@@ -846,7 +869,7 @@ io.on('connection', async (socket) => {
     // Initial load for connecting client
     await broadcastStaffUpdate();
     broadcastDisplayUpdate(false);
-    
+
     // Sync voice state
     socket.emit('voice_settings_update', state.voiceSettings);
     socket.emit('available_voices_update', state.availableVoices);
@@ -951,9 +974,9 @@ io.on('connection', async (socket) => {
                     isPriority: state.currentlyServing.isPriority
                 });
                 if (state.recentServed.length > 4) state.recentServed.pop();
-                
+
                 state.currentlyServing = null;
-                
+
                 await broadcastStaffUpdate();
                 broadcastDisplayUpdate(false);
             }
@@ -1267,7 +1290,7 @@ io.on('connection', async (socket) => {
                     .update({ status: 'Serving' })
                     .eq('id', action.restoreToServing.id);
                 state.currentlyServing = action.restoreToServing;
-                
+
                 // Remove from recentServed if they were put there
                 if (action.action === 'next' || action.action === 'serve_specific' || action.action === 'call_skipped') {
                     if (state.recentServed.length > 0 && state.recentServed[0].ccdNo === action.restoreToServing.ccdNo) {
@@ -1282,7 +1305,7 @@ io.on('connection', async (socket) => {
             state.lastAction = null;
 
             await broadcastStaffUpdate();
-            broadcastDisplayUpdate(false); 
+            broadcastDisplayUpdate(false);
         } catch (err) {
             console.error("Error in 'undo':", err);
             socket.emit('action_error', { message: "Failed to undo action." });
@@ -1322,7 +1345,7 @@ io.on('connection', async (socket) => {
         if (settings.lang !== undefined) state.voiceSettings.lang = settings.lang;
         if (settings.rate !== undefined) state.voiceSettings.rate = settings.rate;
         if (settings.voiceURI !== undefined) state.voiceSettings.voiceURI = settings.voiceURI;
-        
+
         io.emit('voice_settings_update', state.voiceSettings);
     });
 
@@ -1343,7 +1366,7 @@ cron.schedule('0 18 * * *', async () => {
             .from('registrations')
             .update({ status: 'Served' })
             .in('status', ['Waiting', 'Serving']);
-        
+
         if (error) {
             console.error("❌ Error running 6:00 PM reset:", error);
         } else {
@@ -1362,6 +1385,7 @@ cron.schedule('0 18 * * *', async () => {
 });
 
 
+// Function to send queue confirmation email
 async function sendQueueEmail(toEmail, displayName, shortNo) {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping email send');
@@ -1375,17 +1399,143 @@ async function sendQueueEmail(toEmail, displayName, shortNo) {
         const info = await emailTransporter.sendMail({
             from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
             to: toEmail,
-            subject: `Your Queue Number: ${shortNo}`,
-            text: `Hello, ${displayName}!\n\nYour queue number is ${shortNo}.\n\nPlease wait to be called. Thank you for registering with the NBI Cybercrime Division.`,
-            html: `<p>Hello, <strong>${displayName}</strong>!</p><p>Your queue number is <strong style="font-size: 1.5em; color: #F0A500;">${shortNo}</strong>.</p><p>Please wait to be called. Thank you for registering with the NBI Cybercrime Division.</p>`
+            subject: `NBI Cybercrime Division — Your Queue Number: ${shortNo}`,
+            text:
+            `Hello, ${displayName}!
+
+Thank you for registering with the NBI Cybercrime Division.
+
+YOUR QUEUE NUMBER: ${shortNo}
+
+IMPORTANT REMINDERS:
+- Please keep the printed/issued queue slip with you at all times while waiting.
+- Listen carefully for the speaker announcement calling your queue number. Numbers are called only once per turn, so please stay within hearing distance of the waiting area.
+- If you miss your number when called, please proceed to the counter immediately to check if you may still be accommodated, or coordinate with staff for reassignment.
+- Keep this email and your queue slip until your transaction is fully completed, as it may be requested for verification.
+
+We appreciate your patience and cooperation.
+
+NBI Cybercrime Division
+This is an automated message. Please do not reply to this email.`,
+            html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBI Cybercrime Division — Queue Confirmation</title>
+</head>
+<body style="margin:0; padding:0; background-color:#eef0f3; font-family: Georgia, 'Times New Roman', serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef0f3; padding: 24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius: 8px; overflow:hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); max-width:600px; width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0b1f4d 0%, #142d6e 100%); padding: 28px 32px; border-bottom: 4px solid #f0a500;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <p style="margin:0; color:#f0a500; font-size:11px; letter-spacing: 2px; font-family: Arial, sans-serif; font-weight:bold; text-transform:uppercase;">
+                      Republic of the Philippines
+                    </p>
+                    <p style="margin:4px 0 0 0; color:#ffffff; font-size:20px; font-weight:bold; font-family: Arial, sans-serif;">
+                      National Bureau of Investigation
+                    </p>
+                    <p style="margin:2px 0 0 0; color:#c9d4ec; font-size:13px; font-family: Arial, sans-serif; letter-spacing: 1px;">
+                      Cybercrime Division
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 36px 32px 12px 32px; font-family: Arial, sans-serif; color:#1a1a1a;">
+              <p style="font-size:16px; margin:0 0 16px 0;">Hello, <strong>${displayName}</strong>,</p>
+              <p style="font-size:14.5px; line-height:1.6; margin:0 0 24px 0; color:#333333;">
+                Thank you for registering with the <strong>NBI Cybercrime Division</strong>. Your queue number has been successfully generated and is provided below.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Queue Number Card -->
+          <tr>
+            <td style="padding: 0 32px 28px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0b1f4d; border-radius:8px; border: 2px solid #f0a500;">
+                <tr>
+                  <td align="center" style="padding: 22px 20px;">
+                    <p style="margin:0; color:#c9d4ec; font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family: Arial, sans-serif;">
+                      Your Queue Number
+                    </p>
+                    <p style="margin:8px 0 0 0; color:#f0a500; font-size:42px; font-weight:bold; font-family: Arial, sans-serif; letter-spacing: 2px;">
+                      ${shortNo}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Reminders -->
+          <tr>
+            <td style="padding: 0 32px 8px 32px; font-family: Arial, sans-serif;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#fdf6e8; border-left: 4px solid #f0a500; border-radius: 4px;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <p style="margin:0 0 10px 0; color:#8a1f1f; font-size:13px; font-weight:bold; letter-spacing:0.5px;">
+                      ⚠ IMPORTANT REMINDERS
+                    </p>
+                    <ul style="margin:0; padding-left:18px; color:#333333; font-size:13.5px; line-height:1.8;">
+                      <li><strong>Keep your queue slip safe.</strong> Please hold on to the printed/issued queue slip at all times while waiting.</li>
+                      <li><strong>Listen for the announcement.</strong> Our speaker system calls queue numbers aloud — please stay within hearing distance of the waiting area and pay close attention when numbers are called.</li>
+                      <li><strong>If you miss your call,</strong> proceed to the counter immediately so staff can assist you or reassign your slot.</li>
+                      <li><strong>Retain this email</strong> until your transaction is complete, as it may be requested for verification purposes.</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 20px 32px 32px 32px; font-family: Arial, sans-serif;">
+              <p style="font-size:13.5px; line-height:1.6; color:#333333; margin:0;">
+                We appreciate your patience and cooperation. Should you have any concerns while waiting, please approach our staff on duty for assistance.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#0b1f4d; padding: 20px 32px; border-top: 4px solid #8a1f1f;">
+              <p style="margin:0; color:#ffffff; font-size:13px; font-family: Arial, sans-serif; font-weight:bold;">
+                NBI Cybercrime Division
+              </p>
+              <p style="margin:6px 0 0 0; color:#c9d4ec; font-size:11.5px; font-family: Arial, sans-serif;">
+                This is an automated message. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`
         });
 
-        console.log('[Email] Sent to', toEmail, '- message_id:', info.messageId);
-        return { success: true, info };
-    } catch (err) {
-        console.error('[Email] Exception:', err);
-        return { success: false, error: err.message };
-    }
+    console.log('[Email] ✓ Sent to', toEmail, '- message_id:', info.messageId);
+    return { success: true, info };
+} catch (err) {
+    console.error('[Email] Exception:', err.message);
+    return { success: false, error: err.message };
+}
 }
 
 
@@ -1393,4 +1543,30 @@ async function sendQueueEmail(toEmail, displayName, shortNo) {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
+    
+    // Run backup job after boot with a retry mechanism to handle network initialization delay
+    function runBackupWithRetry(delayMs = 60000, attempt = 1) {
+        setTimeout(async () => {
+            console.log(`[Backup] Executing startup catch-up trigger (Attempt ${attempt})...`);
+            const result = await runBackupAndCleanup();
+            if (result && !result.success) {
+                console.warn(`[Backup] Startup backup attempt ${attempt} failed. Internet or database connection might not be ready yet.`);
+                if (attempt < 5) {
+                    console.log(`[Backup] Scheduling retry ${attempt + 1} in 2 minutes (120000ms)...`);
+                    runBackupWithRetry(120000, attempt + 1);
+                } else {
+                    console.error(`[Backup] Startup backup failed after 5 attempts. Will wait for the hourly scheduler.`);
+                }
+            } else {
+                console.log(`[Backup] Startup backup execution completed successfully.`);
+            }
+        }, delayMs);
+    }
+
+    runBackupWithRetry(60000); // Wait 60 seconds after boot
+
+    // Also run it periodically every hour while the server is awake
+    cron.schedule('0 * * * *', () => {
+        runBackupAndCleanup();
+    });
 });

@@ -203,7 +203,7 @@ export default function Display() {
     sfxBeforeRef.current = new Audio('/assets/sound.mp3');
     const p = sfxBeforeRef.current.play();
     if (p !== undefined) {
-      p.then(() => { sfxBeforeRef.current.pause(); sfxBeforeRef.current.currentTime = 0; }).catch(() => {});
+      p.then(() => { sfxBeforeRef.current.pause(); sfxBeforeRef.current.currentTime = 0; }).catch(() => { });
     }
 
     if ('speechSynthesis' in window) {
@@ -232,7 +232,7 @@ export default function Display() {
     });
 
     socket.on('trigger_repeat', () => {
-      if (lastAnnouncementRef.current) {
+      if (lastAnnouncementRef.current && lastAnnouncementRef.current.number !== '---') {
         const a = lastAnnouncementRef.current;
         playVoiceAnnouncement(a.number, a.isPriority, true, a.name, true);
       }
@@ -248,13 +248,14 @@ export default function Display() {
         }, 3000);
       } else {
         setIsTextMode(false);
-        setQueueText(shortenCcd(data.currentlyServing));
+        const cleanNum = shortenCcd(data.currentlyServing);
+        setQueueText(cleanNum);
         setIsPriority(!!data.isPriority);
+
+        lastAnnouncementRef.current = { number: cleanNum, isPriority: data.isPriority, name: data.currentlyServingName };
 
         if (data.triggerChime) {
           playChimeSound(data.isPriority);
-          const cleanNum = shortenCcd(data.currentlyServing);
-          lastAnnouncementRef.current = { number: cleanNum, isPriority: data.isPriority, name: data.currentlyServingName };
           playVoiceAnnouncement(cleanNum, data.isPriority, false, data.currentlyServingName);
 
           setFlash(true);
@@ -352,9 +353,9 @@ export default function Display() {
           </div>
 
           {showTimer && (
-            <div style={{ marginTop: 25, fontSize: '1.8rem', color: 'var(--text-muted)', fontFamily: "'Google Sans Code', monospace", background: 'rgba(0,0,0,0.2)', padding: '12px 35px', borderRadius: 50, border: '1px solid var(--border-color)', display: 'inline-flex', alignItems: 'center', gap: 15 }}>
+            <div className="time-inside-pill">
               <span style={{ display: 'inline-block', width: 14, height: 14, background: '#28a745', borderRadius: '50%', boxShadow: '0 0 10px #28a745' }} />
-              Time Inside: <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{servingTimer}</span>
+              Time Inside: <span style={{ fontWeight: 700 }}>{servingTimer}</span>
             </div>
           )}
         </main>

@@ -24,6 +24,18 @@ const CASE_TYPE_OPTIONS = [
   { value: '__custom__', label: 'Other (specify)...' }
 ];
 
+const CAUSES_OPTIONS = [
+  { value: 'Inquire only', label: 'Inquire only' },
+  { value: 'for Direct filing', label: 'for Direct filing' },
+  { value: 'No Workable lead', label: 'No Workable lead' },
+  { value: 'Not The proper Person fo File the case', label: 'Not The proper Person fo File the case' },
+  { value: 'to return with Sufficient document', label: 'to return with Sufficient document' },
+  { value: 'Refered to SEC', label: 'Refered to SEC' },
+  { value: 'Reffered to BSP', label: 'Reffered to BSP' },
+  { value: 'For records Purposes only (Identity Theft)', label: 'For records Purposes only (Identity Theft)' },
+  { value: '__custom__', label: 'other (Specific)...' }
+];
+
 const DEFAULT_GLOBAL_COLORS = {
   Served: { bg: '#064e3b', txt: '#34d399' },
   Waiting: { bg: '#1e3a8a', txt: '#60a5fa' },
@@ -115,6 +127,7 @@ export default function Records() {
 
   const [modalRemarks, setModalRemarks] = useState(false);
   const [remarksForm, setRemarksForm] = useState(null);
+  const [remarksErrors, setRemarksErrors] = useState({});
 
   const [modalExport, setModalExport] = useState(false);
   const [exportRange, setExportRange] = useState({ start: '', end: '' });
@@ -181,7 +194,7 @@ export default function Records() {
 
   useEffect(() => {
     fetchRecords();
-    const interval = setInterval(() => fetchRecords(true), 15000);
+    const interval = setInterval(() => fetchRecords(true), 5000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentView]);
@@ -561,22 +574,25 @@ async function submitEdit(e) {
   // ---------- Agent remarks modal ----------
   async function openRemarks(id) {
     setRemarksForm({
-      id, text: '', isActionable: 'no', caseType: '', customCaseType: '',
+      id, interviewer: '', text: '', isActionable: 'no', caseType: '', customCaseType: '',
       subject: '', lastModified: null
     });
+    setRemarksErrors({});
     setModalRemarks(true);
 
     try {
       const res = await fetch(`/api/records/${id}/remarks`);
       const json = await res.json();
       if (json.success) {
-        const knownValues = CASE_TYPE_OPTIONS.map(o => o.value);
+        const isActionableVal = json.data.isActionable || 'no';
+        const knownValues = (isActionableVal === 'yes' ? CASE_TYPE_OPTIONS : CAUSES_OPTIONS).map(o => o.value);
         const savedCaseType = json.data.caseType || '';
         const isKnown = knownValues.includes(savedCaseType);
         setRemarksForm({
           id,
+          interviewer: json.data.interviewer || '',
           text: json.data.text || '',
-          isActionable: json.data.isActionable || 'no',
+          isActionable: isActionableVal,
           caseType: isKnown ? savedCaseType : (savedCaseType ? '__custom__' : ''),
           customCaseType: isKnown ? '' : savedCaseType,
           subject: json.data.subject || '',
@@ -590,10 +606,25 @@ async function submitEdit(e) {
 
   async function submitRemarks() {
     if (!remarksForm) return;
+
+    let hasErrors = false;
+    const newErrors = {};
+
+    if (!remarksForm.interviewer || !remarksForm.interviewer.trim()) {
+      newErrors.interviewer = true;
+      hasErrors = true;
+    }
+
     let caseType = remarksForm.caseType === '__custom__' ? remarksForm.customCaseType.trim() : remarksForm.caseType;
 
-    if (remarksForm.isActionable === 'yes' && !caseType) {
-      showToast('Please select or enter a case type if actionable.', true);
+    if (!caseType) {
+      newErrors.caseType = true;
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
+      setRemarksErrors(newErrors);
+      showToast('Please fill in all required fields.', true);
       return;
     }
 
@@ -601,7 +632,13 @@ async function submitEdit(e) {
       const response = await fetch(`/api/records/${remarksForm.id}/remarks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: remarksForm.text, isActionable: remarksForm.isActionable, caseType, subject: remarksForm.subject })
+        body: JSON.stringify({
+          interviewer: remarksForm.interviewer,
+          text: remarksForm.text,
+          isActionable: remarksForm.isActionable,
+          caseType,
+          subject: remarksForm.subject
+        })
       });
       const result = await response.json();
       if (result.success) {
@@ -1218,32 +1255,110 @@ async function doExport(type) {
             </div>
 
             <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label">Interviewer (Agent) <span style={{ color: '#e74c3c' }}>*</span></label>
+              <input type="text" className={`form-input ${remarksErrors.interviewer ? 'err' : ''}`}
+                placeholder="Enter interviewer name..."
+                style={{ 
+                  width: '100%', 
+                  boxSizing: 'border-box', 
+                  display: 'block', 
+                  padding: '10px 16px',
+                  borderColor: remarksErrors.interviewer ? '#e74c3c' : ''
+                }}
+                value={remarksForm.interviewer || ''}
+                onChange={e => {
+                  const val = e.target.value;
+                  setRemarksForm(f => ({ ...f, interviewer: val }));
+                  if (val.trim()) {
+                    setRemarksErrors(errs => ({ ...errs, interviewer: false }));
+                  }
+                }}
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Is Actionable?</label>
-              <select className="form-input" value={remarksForm.isActionable}
-                onChange={e => setRemarksForm(f => ({ ...f, isActionable: e.target.value }))}>
+              <select className="form-input" value={remarksForm.isActionable} 
+                onChange={e => {
+                  setRemarksForm(f => ({ ...f, isActionable: e.target.value, caseType: '', customCaseType: '' }));
+                  setRemarksErrors(errs => ({ ...errs, caseType: false }));
+                }}>
                 <option value="no">No (Remarks/Comment only)</option>
                 <option value="yes">Yes (Actionable)</option>
               </select>
             </div>
 
             {remarksForm.isActionable === 'no' && (
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label className="form-label">Case Notes & Remarks</label>
-                <textarea className="form-textarea" placeholder="Enter agent remarks or comment for this complainant..."
-                  style={{ minHeight: 140, fontSize: '1rem', lineHeight: 1.5, resize: 'none' }}
-                  value={remarksForm.text} onChange={e => handleRemarksTextChange(e.target.value)} />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                  <span>{remarksWordCount()}</span>&nbsp;/&nbsp;300 words
+              <>
+                <div className="form-group" style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Causes <span style={{ color: '#e74c3c' }}>*</span></label>
+                  <select className={`form-input ${remarksErrors.caseType ? 'err' : ''}`} 
+                    value={remarksForm.caseType}
+                    style={{ borderColor: remarksErrors.caseType ? '#e74c3c' : '' }}
+                    onChange={e => {
+                      setRemarksForm(f => ({ ...f, caseType: e.target.value }));
+                      setRemarksErrors(errs => ({ ...errs, caseType: false }));
+                    }}>
+                    <option value="" disabled>Select cause...</option>
+                    {CAUSES_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+
+                  {remarksForm.caseType && remarksForm.caseType !== '__custom__' && (
+                    <div style={{ marginTop: 8 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Full Cause (auto-filled)</label>
+                      <textarea className="form-input" readOnly rows={2}
+                        style={{ width: '100%', boxSizing: 'border-box', resize: 'none', background: 'var(--table-hover)', fontSize: '0.85rem', lineHeight: 1.4, cursor: 'default' }}
+                        value={remarksForm.caseType} />
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                {remarksForm.caseType === '__custom__' && (
+                  <div className="form-group" style={{ marginBottom: '1rem' }}>
+                    <label className="form-label" style={{ display: 'block', marginBottom: 6 }}>Custom Cause <span style={{ color: '#e74c3c' }}>*</span></label>
+                    <input type="text" className={`form-input ${remarksErrors.caseType ? 'err' : ''}`} 
+                      placeholder="Enter custom cause..."
+                      style={{ 
+                        width: '100%', 
+                        boxSizing: 'border-box', 
+                        display: 'block', 
+                        padding: '10px 16px',
+                        borderColor: remarksErrors.caseType ? '#e74c3c' : ''
+                      }}
+                      value={remarksForm.customCaseType} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        setRemarksForm(f => ({ ...f, customCaseType: val }));
+                        if (val.trim()) {
+                          setRemarksErrors(errs => ({ ...errs, caseType: false }));
+                        }
+                      }} 
+                    />
+                  </div>
+                )}
+
+                <div className="form-group" style={{ marginBottom: '1rem' }}>
+                  <label className="form-label">Case Notes & Remarks</label>
+                  <textarea className="form-textarea" placeholder="Enter agent remarks or comment for this complainant..."
+                    style={{ minHeight: 140, fontSize: '1rem', lineHeight: 1.5, resize: 'none' }}
+                    value={remarksForm.text} onChange={e => handleRemarksTextChange(e.target.value)} />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    <span>{remarksWordCount()}</span>&nbsp;/&nbsp;300 words
+                  </div>
+                </div>
+              </>
             )}
 
             {remarksForm.isActionable === 'yes' && (
               <>
                 <div className="form-group" style={{ marginBottom: '1rem' }}>
-                  <label className="form-label">Case Type</label>
-                  <select className="form-input" value={remarksForm.caseType}
-                    onChange={e => setRemarksForm(f => ({ ...f, caseType: e.target.value }))}>
+                  <label className="form-label">Case Type <span style={{ color: '#e74c3c' }}>*</span></label>
+                  <select className={`form-input ${remarksErrors.caseType ? 'err' : ''}`} 
+                    value={remarksForm.caseType}
+                    style={{ borderColor: remarksErrors.caseType ? '#e74c3c' : '' }}
+                    onChange={e => {
+                      setRemarksForm(f => ({ ...f, caseType: e.target.value }));
+                      setRemarksErrors(errs => ({ ...errs, caseType: false }));
+                    }}>
                     <option value="" disabled>Select case type...</option>
                     {CASE_TYPE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                   </select>
@@ -1260,10 +1375,25 @@ async function doExport(type) {
 
                 {remarksForm.caseType === '__custom__' && (
                   <div className="form-group" style={{ marginBottom: '1rem' }}>
-                    <label className="form-label" style={{ display: 'block', marginBottom: 6 }}>Custom Case Type</label>
-                    <input type="text" className="form-input" placeholder="Enter custom case type..."
-                      style={{ width: '100%', boxSizing: 'border-box', display: 'block', padding: '10px 16px' }}
-                      value={remarksForm.customCaseType} onChange={e => setRemarksForm(f => ({ ...f, customCaseType: e.target.value }))} />
+                    <label className="form-label" style={{ display: 'block', marginBottom: 6 }}>Custom Case Type <span style={{ color: '#e74c3c' }}>*</span></label>
+                    <input type="text" className={`form-input ${remarksErrors.caseType ? 'err' : ''}`} 
+                      placeholder="Enter custom case type..."
+                      style={{ 
+                        width: '100%', 
+                        boxSizing: 'border-box', 
+                        display: 'block', 
+                        padding: '10px 16px',
+                        borderColor: remarksErrors.caseType ? '#e74c3c' : ''
+                      }}
+                      value={remarksForm.customCaseType} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        setRemarksForm(f => ({ ...f, customCaseType: val }));
+                        if (val.trim()) {
+                          setRemarksErrors(errs => ({ ...errs, caseType: false }));
+                        }
+                      }} 
+                    />
                   </div>
                 )}
 

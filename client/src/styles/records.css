@@ -130,6 +130,9 @@ body, html {
     border-color: var(--focus-border);
     box-shadow: 0 0 0 3px var(--focus-ring);
 }
+.form-input.err, .form-select.err, .form-textarea.err {
+    border-color: #e74c3c !important;
+}
 .form-textarea {
     width: 100%;
     min-height: 120px;
