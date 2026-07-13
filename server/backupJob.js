@@ -131,8 +131,9 @@ async function runBackupAndCleanup() {
         body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 20px; background-color: #f8f9fa; color: #333; }
         h2 { text-align: center; color: #2c3e50; }
         .date-info { text-align: center; margin-bottom: 20px; color: #7f8c8d; font-size: 0.9em; }
-        table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; margin-top: 20px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        table { width: 100%; min-width: 700px; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; margin-top: 20px; }
+        .table-wrapper { overflow-x: auto; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e0e0e0; word-wrap: break-word; }
         th { background-color: #34495e; color: #fff; font-weight: 600; text-transform: uppercase; font-size: 0.85em; }
         tr:hover { background-color: #f1f2f6; }
         .sig-container { background: #fff; border: 1px solid #ddd; padding: 5px; border-radius: 4px; display: inline-block; }
@@ -143,17 +144,18 @@ async function runBackupAndCleanup() {
 <body>
     <h2>NBI Queue System - Complainant Signatures Backup</h2>
     <div class="date-info">Generated on ${new Date().toLocaleString()} (Records older than ${cutoffDate.toLocaleDateString()})</div>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 15%">Date & Time</th>
-                <th style="width: 10%">CCD No</th>
-                <th style="width: 25%">Full Name</th>
-                <th style="width: 20%">Remarks / Subject</th>
-                <th style="width: 30%">E-Signature</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%; min-width: 120px;">Date & Time</th>
+                    <th style="width: 15%; min-width: 100px;">CCD No</th>
+                    <th style="width: 25%; min-width: 150px;">Full Name</th>
+                    <th style="width: 20%; min-width: 150px;">Remarks / Subject</th>
+                    <th style="width: 25%; min-width: 180px;">E-Signature</th>
+                </tr>
+            </thead>
+            <tbody>
 `;
 
         records.forEach(r => {
@@ -179,7 +181,8 @@ async function runBackupAndCleanup() {
 
         htmlContent += `
         </tbody>
-    </table>
+        </table>
+    </div>
 </body>
 </html>
 `;
