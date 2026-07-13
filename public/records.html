@@ -1188,10 +1188,10 @@
                             <option value="No-show" ${r.status === 'No-show' ? 'selected' : ''}>No-show</option>
                         </select>
                     <td style="text-align: center;">
-                        <input type="text" value="${r.registration_duration || ''}" onchange="updateCell(this, 'registration_duration', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="-">
+                        <input type="text" value="${normalizeDurationValue(r.registration_duration)}" onchange="validateDurationCell(this, 'registration_duration', '${r.id}')" pattern="[0-9]{1,2}:[0-9]{2}" maxlength="5" style="width: 90px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="00:00">
                     </td>
                     <td style="text-align: center;">
-                        <input type="text" value="${r.serving_duration || ''}" onchange="updateCell(this, 'serving_duration', '${r.id}')" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="-">
+                        <input type="text" value="${normalizeDurationValue(r.serving_duration)}" onchange="validateDurationCell(this, 'serving_duration', '${r.id}')" pattern="[0-9]{1,2}:[0-9]{2}" maxlength="5" style="width: 90px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; background: transparent; color: var(--text-main); font-family: monospace;" placeholder="00:00">
                     </td>
                     <td style="text-align: center; white-space: nowrap;">
                         <button class="btn-icon" onclick="viewDetails('${r.id}')" title="View Details">
@@ -1212,6 +1212,40 @@
             });
 
             document.getElementById('recordCount').textContent = `Showing ${filteredRecords.length} records`;
+        }
+
+        function normalizeDurationValue(val) {
+    if (!val) return '';
+    const str = val.toString().trim();
+
+    // Already correct MM:SS
+    let m = str.match(/^(\d{1,2}):([0-5]\d)$/);
+    if (m) return `${m[1].padStart(2, '0')}:${m[2]}`;
+
+    // Supabase TIME column always returns HH:MM:SS — but the original
+    // intent was MM:SS, so just drop the trailing ":00" segment.
+    m = str.match(/^(\d{1,2}):([0-5]\d):([0-5]\d)$/);
+    if (m) {
+        return `${m[1].padStart(2, '0')}:${m[2]}`;
+    }
+
+    // Unrecognized format — show as-is so it's still visible
+    return str;
+}
+
+
+        function validateDurationCell(element, field, id) {
+            const val = element.value.trim();
+            const durationPattern = /^([0-9]{1,2}):([0-5][0-9])$/;
+
+            if (val !== '' && !durationPattern.test(val)) {
+                showToast('Invalid format. Use MM:SS (e.g. 05:30)', true);
+                const oldRecord = allRecords.find(x => x.id === id);
+                element.value = (oldRecord && oldRecord[field]) ? oldRecord[field] : '';
+                return;
+            }
+
+            updateCell(element, field, id);
         }
 
         async function updateCell(element, field, id) {
