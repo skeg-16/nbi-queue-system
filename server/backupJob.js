@@ -46,7 +46,16 @@ async function runBackupAndCleanup() {
     // 2. Fetch records older than cutoffDate
     const { data: records, error } = await supabase
         .from('registrations')
-        .select('*')
+        .select(`
+            *,
+            agent_remarks (
+                interviewer,
+                text,
+                is_actionable,
+                case_type,
+                subject
+            )
+        `)
         .lt('created_at', cutoffDate.toISOString())
         .order('created_at', { ascending: true });
 
@@ -81,7 +90,12 @@ async function runBackupAndCleanup() {
         { header: 'Region', key: 'region', width: 15 },
         { header: 'Serving Duration', key: 'serving_duration', width: 20 },
         { header: 'Registration Duration', key: 'registration_duration', width: 20 },
-        { header: 'E-Signature', key: 'e_signature', width: 15 }
+        { header: 'E-Signature', key: 'e_signature', width: 15 },
+        { header: 'Interviewer', key: 'interviewer', width: 20 },
+        { header: 'Agent Remarks', key: 'agent_remarks_text', width: 40 },
+        { header: 'Actionable', key: 'is_actionable', width: 15 },
+        { header: 'Case Type', key: 'case_type', width: 20 },
+        { header: 'Subject', key: 'subject', width: 20 }
     ];
 
     try {
@@ -91,11 +105,18 @@ async function runBackupAndCleanup() {
         worksheet.columns = columns;
 
         records.forEach(r => {
+            const remarkObj = Array.isArray(r.agent_remarks) ? r.agent_remarks[0] : r.agent_remarks;
+            
             worksheet.addRow({
                 ...r,
                 is_priority: r.is_priority ? 'Yes' : 'No',
                 created_at: new Date(r.created_at).toLocaleString(),
-                e_signature: r.e_signature ? 'Signed' : 'None'
+                e_signature: r.e_signature ? 'Signed' : 'None',
+                interviewer: remarkObj?.interviewer || 'None',
+                agent_remarks_text: remarkObj?.text || 'None',
+                is_actionable: remarkObj?.is_actionable || 'None',
+                case_type: remarkObj?.case_type || 'None',
+                subject: remarkObj?.subject || 'None'
             });
         });
 
@@ -126,9 +147,10 @@ async function runBackupAndCleanup() {
         <thead>
             <tr>
                 <th style="width: 15%">Date & Time</th>
-                <th style="width: 15%">CCD No</th>
-                <th style="width: 30%">Full Name</th>
-                <th style="width: 40%">E-Signature</th>
+                <th style="width: 10%">CCD No</th>
+                <th style="width: 25%">Full Name</th>
+                <th style="width: 20%">Remarks / Subject</th>
+                <th style="width: 30%">E-Signature</th>
             </tr>
         </thead>
         <tbody>
@@ -140,11 +162,17 @@ async function runBackupAndCleanup() {
                 ? `<div class="sig-container"><img class="sig-img" src="${r.e_signature}" alt="Signature"></div>`
                 : '<span class="no-sig">No signature provided</span>';
             
+            const remarkObj = Array.isArray(r.agent_remarks) ? r.agent_remarks[0] : r.agent_remarks;
+            const remarksHtml = remarkObj?.text 
+                ? `<strong>${remarkObj.subject || 'No Subject'}</strong><br><small>${remarkObj.text}</small>`
+                : '<span class="no-sig">No remarks</span>';
+            
             htmlContent += `
             <tr>
                 <td>${formattedDate}</td>
                 <td><strong>${r.ccd_no || 'N/A'}</strong></td>
                 <td>${r.full_name || 'N/A'}</td>
+                <td>${remarksHtml}</td>
                 <td>${sigCell}</td>
             </tr>\n`;
         });
@@ -206,26 +234,34 @@ async function runBackupAndCleanup() {
             }
 
             // Map records to match header names
-            const sheetRows = records.map(r => ({
-                'ID': r.id,
-                'CCD No': r.ccd_no,
-                'Full Name': r.full_name,
-                'Contact': r.contact,
-                'Age': r.age,
-                'Email': r.email,
-                'Civil Status': r.civil_status,
-                'Gender': r.gender,
-                'Is Priority': r.is_priority ? 'Yes' : 'No',
-                'Status': r.status,
-                'Created At': new Date(r.created_at).toLocaleString(),
-                'Address': r.address,
-                'Purpose': r.purpose,
-                'Referred By': r.referred_by,
-                'Region': r.region,
-                'Serving Duration': r.serving_duration,
-                'Registration Duration': r.registration_duration,
-                'E-Signature': r.e_signature ? 'Signed' : 'None'
-            }));
+            const sheetRows = records.map(r => {
+                const remarkObj = Array.isArray(r.agent_remarks) ? r.agent_remarks[0] : r.agent_remarks;
+                return {
+                    'ID': r.id,
+                    'CCD No': r.ccd_no,
+                    'Full Name': r.full_name,
+                    'Contact': r.contact,
+                    'Age': r.age,
+                    'Email': r.email,
+                    'Civil Status': r.civil_status,
+                    'Gender': r.gender,
+                    'Is Priority': r.is_priority ? 'Yes' : 'No',
+                    'Status': r.status,
+                    'Created At': new Date(r.created_at).toLocaleString(),
+                    'Address': r.address,
+                    'Purpose': r.purpose,
+                    'Referred By': r.referred_by,
+                    'Region': r.region,
+                    'Serving Duration': r.serving_duration,
+                    'Registration Duration': r.registration_duration,
+                    'E-Signature': r.e_signature ? 'Signed' : 'None',
+                    'Interviewer': remarkObj?.interviewer || 'None',
+                    'Agent Remarks': remarkObj?.text || 'None',
+                    'Actionable': remarkObj?.is_actionable || 'None',
+                    'Case Type': remarkObj?.case_type || 'None',
+                    'Subject': remarkObj?.subject || 'None'
+                };
+            });
 
             await sheet.addRows(sheetRows);
             console.log('[Backup] Synced successfully to Google Sheets.');
