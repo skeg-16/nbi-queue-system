@@ -193,9 +193,13 @@ export default function Records() {
   }
 
   useEffect(() => {
+    document.body.classList.add('zoom-layout');
     fetchRecords();
     const interval = setInterval(() => fetchRecords(true), 5000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      document.body.classList.remove('zoom-layout');
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentView]);
 

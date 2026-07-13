@@ -26,6 +26,11 @@ export default function StaffController() {
   const [loading, setLoading] = useState({});
 
   useEffect(() => {
+    document.body.classList.add('zoom-layout');
+    return () => document.body.classList.remove('zoom-layout');
+  }, []);
+
+  useEffect(() => {
     if (!socket) return;
     setConnected(socket.connected);
     

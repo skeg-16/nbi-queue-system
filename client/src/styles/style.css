@@ -1067,3 +1067,10 @@ html, body {
     align-items: center;
     justify-content: center;
 }
+
+/* Layout Scaling for Laptops (Default to 80% zoom on desktop layouts to fit screen better) */
+@media screen and (min-width: 1024px) {
+    body.zoom-layout {
+        zoom: 0.8;
+    }
+}
