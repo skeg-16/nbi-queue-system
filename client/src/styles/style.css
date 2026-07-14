@@ -905,12 +905,12 @@ body.staff-body {
 }
 .settings-btn.secondary:hover { background: #c0392b; }
 html, body {
-    height: 100%;
+    min-height: 100vh;
     background-color: #050d1a;
 }
 
 #root {
-    height: 100%;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
