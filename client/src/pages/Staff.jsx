@@ -305,8 +305,19 @@ export default function StaffController() {
         .mobile-queue-toggle { display: none; background: rgba(243, 156, 18, 0.1); border: 1px solid rgba(243, 156, 18, 0.3); color: #f39c12; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; align-items: center; gap: 0.5rem; margin-right: auto; }
         .mobile-queue-close { display: none; }
 
-        @media (max-width: 1024px) {
-          .dashboard-layout { gap: 1.5rem; }
+        @media (max-width: 1200px) {
+          .staff-container { padding: 1.5rem; }
+          .dashboard-layout { grid-template-columns: 55% 45%; gap: 1rem; }
+          .status-number { font-size: 4rem; }
+        }
+
+        @media (max-width: 900px) {
+          .dashboard-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+          .right-column { height: auto; min-height: 400px; }
+          .waiting-list { max-height: 450px; }
+          .stats-row { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+          .status-number { font-size: 4.5rem; }
+          .secondary-controls { gap: 0.8rem; }
         }
 
         @media (max-width: 640px) {
