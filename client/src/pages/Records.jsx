@@ -128,6 +128,7 @@ function DurationInput({ defaultValue, field, recordId, updateCell, showToast })
 }
 
 export default function Records() {
+  useEffect(() => { document.title = "Complaint Registry | NBI QMS"; }, []);
   const socket = useSocket();
 
   // --- Core data state ---

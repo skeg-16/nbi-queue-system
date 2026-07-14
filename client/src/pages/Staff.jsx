@@ -9,6 +9,7 @@ function shortenCcd(ccd) {
 }
 
 export default function StaffController() {
+  useEffect(() => { document.title = "Staff Controller | NBI QMS"; }, []);
   const socket = useSocket();
   const [connected, setConnected] = useState(false);
   const [currentlyServing, setCurrentlyServing] = useState(null);

@@ -36,6 +36,7 @@ const RULES = {
 };
 
 export default function Register() {
+  useEffect(() => { document.title = "Registration | NBI Cybercrime Division"; }, []);
   const socket = useSocket();
 
   // ---------- Screens ----------

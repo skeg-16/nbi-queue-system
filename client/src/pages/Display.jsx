@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 
 export default function Display() {
+  useEffect(() => { document.title = "NBI Queue Display"; }, []);
   const socket = useSocket();
   const [unlocked, setUnlocked] = useState(false);
   const [time, setTime] = useState('00:00:00');
