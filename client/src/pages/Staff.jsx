@@ -151,7 +151,7 @@ export default function StaffController() {
   return (
     <div className="staff-body">
       <style>{`
-        body { background-color: #050e1d !important; }
+        html, body { background-color: #050e1d !important; }
         .staff-body {
           background: radial-gradient(circle at top, #11284d 0%, #050e1d 100%);
           min-height: 100vh;
