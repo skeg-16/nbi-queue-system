@@ -338,7 +338,8 @@ export default function Display() {
           <button className="fullscreen-btn" onClick={toggleFullscreen} title="Toggle Fullscreen">⛶</button>
         </header>
 
-        <main className="main-content">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '4rem', paddingBottom: '2rem' }}>
+        <main className="main-content" style={{ flex: 'none', paddingBottom: 0 }}>
           <div className="serving-label">Now Serving</div>
           {isPriority && <div className="serving-priority-badge">PRIORITY</div>}
           <div
@@ -361,7 +362,7 @@ export default function Display() {
           )}
         </main>
 
-        <div className="recent-container">
+        <div className="recent-container" style={{ margin: 0, flex: 'none' }}>
           <div className="recent-label">Previously Served</div>
           <ul className="recent-list">
             {recentNumbers.length === 0 ? (
@@ -372,6 +373,7 @@ export default function Display() {
               ))
             )}
           </ul>
+        </div>
         </div>
       </div>
     </>
