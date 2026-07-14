@@ -152,6 +152,14 @@ export default function Records() {
   const [sortColumn, setSortColumn] = useState('created_at');
   const [sortAsc, setSortAsc] = useState(false);
 
+  // --- Pagination ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterPriority, currentView, viewDateObj]);
+
   // --- Theme ---
   const [theme, setTheme] = useState(() => (localStorage.getItem('nbi_theme') === 'dark' ? 'dark' : 'light'));
 
@@ -344,6 +352,9 @@ export default function Records() {
 
     return list;
   }, [allRecords, viewDateStr, currentView, filterStatus, filterPriority, searchTerm, sortColumn, sortAsc]);
+
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const currentFilteredRecords = filteredRecords.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const viewRecordsForStats = useMemo(
     () => allRecords.filter(r => r.created_at && r.created_at.startsWith(viewDateStr)),
@@ -1019,9 +1030,10 @@ async function doExport(type) {
       )}
 
       {/* Main table */}
-      <div className="grid-workspace" style={{ padding: 20 }}>
-        <div style={{ background: 'var(--panel-bg)', borderRadius: 8, border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-          <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="grid-workspace" style={{ padding: 20, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--panel-bg)', borderRadius: 8, border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+          <div style={{ flex: 1, overflow: 'auto' }}>
+            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               {currentView === 'complaints' ? (
                 <tr className="column-titles">
@@ -1053,12 +1065,12 @@ async function doExport(type) {
               )}
             </thead>
             <tbody>
-              {filteredRecords.length === 0 ? (
+              {currentFilteredRecords.length === 0 ? (
                 <tr><td colSpan={12} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                   {currentView === 'complaints' ? 'No records found.' : 'No feedbacks found.'}
                 </td></tr>
               ) : currentView === 'complaints' ? (
-                filteredRecords.map(r => {
+                currentFilteredRecords.map(r => {
                   const dateObj = new Date(r.created_at);
                   const dateStr = dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
                   const timeStr = dateObj.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
@@ -1121,7 +1133,7 @@ async function doExport(type) {
                   );
                 })
               ) : (
-                filteredRecords.map((r, idx) => {
+                currentFilteredRecords.map((r, idx) => {
                   const dateObj = new Date(r.created_at);
                   const dateStr = dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
                   const timeStr = dateObj.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
@@ -1149,6 +1161,35 @@ async function doExport(type) {
               )}
             </tbody>
           </table>
+          </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', background: 'var(--panel-bg)', color: 'var(--text-main)', fontSize: '0.9rem' }}>
+              <div>
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredRecords.length)} of {filteredRecords.length} entries
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                  disabled={currentPage === 1}
+                  style={{ padding: '5px 15px', borderRadius: 4, background: currentPage === 1 ? 'transparent' : 'var(--accent-color)', color: currentPage === 1 ? 'var(--text-muted)' : 'white', border: '1px solid var(--border-color)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                >
+                  Previous
+                </button>
+                <span style={{ padding: '5px 10px', background: 'var(--bg-color)', borderRadius: 4, border: '1px solid var(--border-color)' }}>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                  disabled={currentPage === totalPages}
+                  style={{ padding: '5px 15px', borderRadius: 4, background: currentPage === totalPages ? 'transparent' : 'var(--accent-color)', color: currentPage === totalPages ? 'var(--text-muted)' : 'white', border: '1px solid var(--border-color)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
