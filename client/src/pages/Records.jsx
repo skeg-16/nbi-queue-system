@@ -131,6 +131,7 @@ export default function Records() {
 
   const [modalExport, setModalExport] = useState(false);
   const [exportRange, setExportRange] = useState({ start: '', end: '' });
+  const [downloadConfirm, setDownloadConfirm] = useState(null);
 
   const [modalDelete, setModalDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -756,14 +757,16 @@ async function doExport(type) {
       showToast('Some assessments failed to load, exporting with available data.', true);
     }
 
-    const typeLabels = { excel: 'Excel', csv: 'CSV', pdf: 'PDF', word: 'Word' };
+    const typeLabels = { csv: 'CSV', pdf: 'PDF' };
 
     try {
-      if (type === 'excel') await exportToExcel(recordsToExport);
-      else if (type === 'csv') await exportToCSV(recordsToExport);
-      else if (type === 'pdf') await exportToPDF(recordsToExport);
-      else if (type === 'word') exportToWord(recordsToExport);
+      let exportResult = null;
+      if (type === 'csv') exportResult = await exportToCSV(recordsToExport);
+      else if (type === 'pdf') exportResult = await exportToPDF(recordsToExport);
 
+      if (exportResult) {
+        setDownloadConfirm(exportResult);
+      }
       showToast(`${typeLabels[type]} export downloaded successfully!`, false, 'success');
     } catch (err) {
       console.error(err);
@@ -771,13 +774,23 @@ async function doExport(type) {
     }
   }
 
-  async function exportToExcel(recordsList) {
-    const XLSX = await import('xlsx');
-    const ws = XLSX.utils.json_to_sheet(getExportData(recordsList));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Records');
-    XLSX.writeFile(wb, 'NBI_Records.xlsx');
-  }
+  const getExportFilename = (ext) => {
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const yy = String(d.getFullYear()).slice(-2);
+      return `${mm}_${dd}_${yy}`;
+    };
+    const s = formatDate(exportRange.start);
+    const e = formatDate(exportRange.end);
+    let fname = 'REPORT';
+    if (s && e && s !== e) fname += ` ${s}-${e}`;
+    else if (s) fname += ` ${s}`;
+    else fname += ` ${formatDate(new Date().toISOString())}`;
+    return `${fname}.${ext}`;
+  };
 
   async function exportToCSV(recordsList) {
     const XLSX = await import('xlsx');
@@ -785,9 +798,12 @@ async function doExport(type) {
     const csv = XLSX.utils.sheet_to_csv(ws);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'NBI_Records.csv';
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    const filename = getExportFilename('csv');
+    link.download = filename;
     link.click();
+    return { url, filename };
   }
 
   async function exportToPDF(recordsList) {
@@ -812,28 +828,11 @@ async function doExport(type) {
     startY: 28,
     styles: { fontSize: 8 }
   });
-  doc.save('NBI_Records.pdf');
+  const filename = getExportFilename('pdf');
+  doc.save(filename);
+  const url = doc.output('bloburl');
+  return { url, filename };
 }
-
-  function exportToWord(recordsList) {
-    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-    <head><meta charset='utf-8'><title>NBI Records</title></head><body>
-    <h1>NBI Cybercrime Division - Official Records</h1>
-    <p><strong>Generated on:</strong> ${new Date().toLocaleString('en-PH')}</p>
-    <p><strong>Date Range:</strong> ${exportRange.start} to ${exportRange.end}</p>
-    <table><tr><th>Date & Time</th><th>CCD No.</th><th>Full Name</th><th>Age</th><th>Region</th><th>Address</th><th>Contact</th><th>Priority</th><th>Agent Assessment</th><th>Reg. Time</th><th>Interview Time</th></tr>`;
-
-    recordsList.forEach(r => {
-      html += `<tr><td>${new Date(r.created_at).toLocaleString('en-PH')}</td><td>${r.ccd_no ? r.ccd_no.split('-').pop() : ''}</td><td>${r.full_name}</td><td>${r.age}</td><td>${r.region || ''}</td><td>${r.address || ''}</td><td>${r.contact}</td><td>${r.is_priority ? 'YES' : 'NO'}</td><td>${getAssessmentText(r)}</td><td>${r.registration_duration || ''}</td><td>${r.serving_duration || ''}</td></tr>`;
-    });
-    html += '</table></body></html>';
-
-    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'NBI_Records.doc';
-    link.click();
-  }
 
   // ---------- Voice settings ----------
   function saveVoiceSetting() {
@@ -1437,12 +1436,29 @@ async function doExport(type) {
               <input type="date" className="form-input" value={exportRange.end} onChange={e => setExportRange(r => ({ ...r, end: e.target.value }))} />
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', marginBottom: 10 }}>
-              <button className="btn-formal btn-primary" style={{ flex: 1 }} onClick={() => doExport('excel')}>Excel</button>
               <button className="btn-formal btn-primary" style={{ flex: 1 }} onClick={() => doExport('csv')}>CSV</button>
-            </div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between' }}>
               <button className="btn-formal btn-primary" style={{ flex: 1 }} onClick={() => doExport('pdf')}>PDF</button>
-              <button className="btn-formal btn-primary" style={{ flex: 1 }} onClick={() => doExport('word')}>Word</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {downloadConfirm && (
+        <div className="modal-overlay" style={{ display: 'flex' }}>
+          <div className="modal" style={{ maxWidth: 450, textAlign: 'center' }}>
+            <div className="modal-header">
+              <div className="modal-title">Download Complete</div>
+              <button className="modal-close" onClick={() => setDownloadConfirm(null)}>&times;</button>
+            </div>
+            <div style={{ padding: '20px 0', color: 'var(--text-main)' }}>
+              <p style={{ marginBottom: 15 }}>Your report has been downloaded successfully.</p>
+              <p style={{ fontWeight: 'bold', wordBreak: 'break-all' }}>{downloadConfirm.filename}</p>
+            </div>
+            <div className="modal-footer" style={{ justifyContent: 'center' }}>
+              <a href={downloadConfirm.url} target="_blank" rel="noreferrer" className="btn-formal btn-primary" style={{ textDecoration: 'none', display: 'inline-block', lineHeight: 'normal' }} onClick={() => setDownloadConfirm(null)}>
+                Open File
+              </a>
+              <button className="btn-formal" onClick={() => setDownloadConfirm(null)}>Close</button>
             </div>
           </div>
         </div>
