@@ -85,6 +85,48 @@ function getGlobalColors() {
   return JSON.parse(JSON.stringify(DEFAULT_GLOBAL_COLORS));
 }
 
+function DurationInput({ defaultValue, field, recordId, updateCell, showToast }) {
+  const [val, setVal] = useState(defaultValue || '');
+
+  useEffect(() => {
+    setVal(defaultValue || '');
+  }, [defaultValue]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      const trimmed = val.trim();
+      if (trimmed !== '' && !/^\d{2}:\d{2}$/.test(trimmed)) {
+        showToast('Invalid format. Please use MM:SS (e.g. 02:26)', true);
+        return;
+      }
+      updateCell(recordId, field, trimmed);
+      e.target.blur();
+    } else if (e.key === 'Escape') {
+      setVal(defaultValue || '');
+      e.target.blur();
+    }
+  };
+
+  const handleBlur = (e) => {
+    if (val.trim() !== (defaultValue || '').trim()) {
+      showToast('Press Enter to save the time', false, 'info');
+      setVal(defaultValue || '');
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      value={val}
+      onChange={e => setVal(e.target.value)}
+      onKeyDown={handleKeyDown}
+      onBlur={handleBlur}
+      placeholder="-"
+      style={{ width: 50, textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: 4, padding: 4, background: 'transparent', color: 'var(--text-main)', fontFamily: 'monospace' }}
+    />
+  );
+}
+
 export default function Records() {
   const socket = useSocket();
 
@@ -1053,15 +1095,11 @@ async function doExport(type) {
                         </select>
                       </td>
                       <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        <input type="text" defaultValue={r.registration_duration || ''} placeholder="-"
-                          onBlur={e => updateCell(r.id, 'registration_duration', e.target.value)}
-                          style={{ width: 50, textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: 4, padding: 4, background: 'transparent', color: 'var(--text-main)', fontFamily: 'monospace' }} />
+                        <DurationInput defaultValue={r.registration_duration} field="registration_duration" recordId={r.id} updateCell={updateCell} showToast={showToast} />
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 4 }}>mins</span>
                       </td>
                       <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        <input type="text" defaultValue={r.serving_duration || ''} placeholder="-"
-                          onBlur={e => updateCell(r.id, 'serving_duration', e.target.value)}
-                          style={{ width: 50, textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: 4, padding: 4, background: 'transparent', color: 'var(--text-main)', fontFamily: 'monospace' }} />
+                        <DurationInput defaultValue={r.serving_duration} field="serving_duration" recordId={r.id} updateCell={updateCell} showToast={showToast} />
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 4 }}>mins</span>
                       </td>
                       <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
