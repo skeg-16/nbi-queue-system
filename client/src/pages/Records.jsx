@@ -118,7 +118,7 @@ function DurationInput({ defaultValue, field, recordId, updateCell, showToast })
     <input
       type="text"
       value={val}
-      onChange={e => setVal(e.target.value)}
+      onChange={e => setVal(e.target.value.replace(/[^0-9:]/g, ''))}
       onKeyDown={handleKeyDown}
       onBlur={handleBlur}
       placeholder="-"
