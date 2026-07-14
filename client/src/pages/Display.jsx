@@ -338,7 +338,7 @@ export default function Display() {
           <button className="fullscreen-btn" onClick={toggleFullscreen} title="Toggle Fullscreen">⛶</button>
         </header>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '4rem', paddingBottom: '2rem' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 'clamp(1rem, 5vh, 4rem)', paddingBottom: 'clamp(0.5rem, 3vh, 2rem)' }}>
         <main className="main-content" style={{ flex: 'none', paddingBottom: 0 }}>
           <div className="serving-label">Now Serving</div>
           {isPriority && <div className="serving-priority-badge">PRIORITY</div>}
