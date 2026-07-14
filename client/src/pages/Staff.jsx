@@ -151,6 +151,7 @@ export default function StaffController() {
   return (
     <div className="staff-body">
       <style>{`
+        body { background-color: #050e1d !important; }
         .staff-body {
           background: radial-gradient(circle at top, #11284d 0%, #050e1d 100%);
           min-height: 100vh;
@@ -345,6 +346,21 @@ export default function StaffController() {
             overflow-y: auto; box-shadow: -5px 0 30px rgba(0,0,0,0.8);
           }
           .mobile-queue-close { display: flex; align-self: flex-end; background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); font-size: 1.2rem; cursor: pointer; margin-bottom: 1rem; padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; align-items: center; justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+          .staff-container { padding: 1rem 0.5rem; }
+          .dashboard-card { padding: 1rem; }
+          .status-number { font-size: 3.5rem; }
+          .status-name { font-size: 1.5rem; }
+          .btn-next { min-height: 80px; padding: 0.8rem; font-size: 1.2rem; }
+          .btn-secondary { min-height: 50px; font-size: 1rem; padding: 0.8rem; }
+          .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+          .stat-value { font-size: 1.2rem; }
+          .stat-card { padding: 0.6rem 0.4rem; }
+          .staff-nav { padding: 0.5rem; }
+          .mobile-queue-toggle { font-size: 0.9rem; padding: 0.4rem 0.8rem; }
+          .nav-links-container { gap: 0.5rem; }
         }
       `}</style>
 
