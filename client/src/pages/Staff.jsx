@@ -158,6 +158,8 @@ export default function StaffController() {
           padding: 0;
           display: flex;
           flex-direction: column;
+          flex: 1;
+          width: 100%;
           font-family: 'Inter', sans-serif;
           color: white;
           box-sizing: border-box;
