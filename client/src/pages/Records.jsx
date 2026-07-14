@@ -737,7 +737,7 @@ async function submitEdit(e) {
       Purpose: r.purpose,
       Priority: r.is_priority ? 'YES' : 'NO',
       'Agent Assessment': getAssessmentText(r),
-      'Registration Time': new Date(r.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+      'Registration Duration (mins)': r.registration_duration || '',
       'Interview Duration (mins)': r.serving_duration || ''
     }));
   }
@@ -819,11 +819,11 @@ async function doExport(type) {
 
   const tableData = recordsList.map(r => [
     new Date(r.created_at).toLocaleString('en-PH'), r.ccd_no ? r.ccd_no.split('-').pop() : '', r.full_name, r.age,
-    r.region, r.address, r.contact, getAssessmentText(r), new Date(r.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }), r.serving_duration || ''
+    r.region, r.address, r.contact, getAssessmentText(r), r.registration_duration || '', r.serving_duration || ''
   ]);
 
   autoTable(doc, {
-    head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Address', 'Contact', "Agent's Remarks / Nature of Case", 'Reg. Time', 'Interview (mins)']],
+    head: [['Date & Time', 'CCD No.', 'Full Name', 'Age', 'Region', 'Address', 'Contact', "Agent's Remarks / Nature of Case", 'Reg. Duration (mins)', 'Interview (mins)']],
     body: tableData,
     startY: 28,
     styles: { fontSize: 8 }
@@ -991,7 +991,7 @@ async function doExport(type) {
                   <th className="col-title" onClick={() => handleSort('contact')}>Contact{sortIndicator('contact')}</th>
                   <th className="col-title" onClick={() => handleSort('is_priority')}>Priority{sortIndicator('is_priority')}</th>
                   <th className="col-title" onClick={() => handleSort('status')}>Status{sortIndicator('status')}</th>
-                  <th className="col-title" style={{ textAlign: 'center' }}>Registration Time</th>
+                  <th className="col-title" style={{ textAlign: 'center' }}>Registration Duration (mins)</th>
                   <th className="col-title" style={{ textAlign: 'center' }}>Interview Duration (mins)</th>
                   <th className="col-title" style={{ textAlign: 'center' }}>Actions</th>
                 </tr>
@@ -1052,8 +1052,11 @@ async function doExport(type) {
                           <option value="No-show">No-show</option>
                         </select>
                       </td>
-                      <td style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                        {new Date(r.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <input type="text" defaultValue={r.registration_duration || ''} placeholder="-"
+                          onBlur={e => updateCell(r.id, 'registration_duration', e.target.value)}
+                          style={{ width: 50, textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: 4, padding: 4, background: 'transparent', color: 'var(--text-main)', fontFamily: 'monospace' }} />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 4 }}>mins</span>
                       </td>
                       <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                         <input type="text" defaultValue={r.serving_duration || ''} placeholder="-"
@@ -1611,7 +1614,7 @@ function ViewDetailsBody({ data }) {
       <div className="detail-row"><div className="detail-label">Address</div><div className="detail-value">{r.address}</div></div>
       <div className="detail-row"><div className="detail-label">Purpose</div><div className="detail-value">{r.purpose}</div></div>
       <div className="detail-row"><div className="detail-label">Referred By</div><div className="detail-value">{r.referred_by || 'N/A'}</div></div>
-      <div className="detail-row"><div className="detail-label">Registration Time</div><div className="detail-value">{new Date(r.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</div></div>
+      <div className="detail-row"><div className="detail-label">Registration Duration</div><div className="detail-value">{r.registration_duration ? `${r.registration_duration} mins` : 'N/A'}</div></div>
       <div className="detail-row"><div className="detail-label">Interview Duration</div><div className="detail-value">{r.serving_duration ? `${r.serving_duration} mins` : 'N/A'}</div></div>
       {remarks && (
         <div className="detail-row">
