@@ -320,7 +320,20 @@ export default function Display() {
         </div>
       )}
 
-      <div className="display-container">
+      <div
+        className="display-container"
+        style={{
+          width: '100vw',
+          height: '100vh',
+          margin: 'auto',
+          overflow: 'hidden',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          background: 'radial-gradient(circle at 50% 40%, #1a365d 0%, var(--background-color, #050e1d) 80%)'
+        }}
+      >
         <header className="header">
           <div className="brand">
             <img src="/assets/nbi.png" alt="NBI Logo" style={{ height: 60, objectFit: 'contain' }} />
