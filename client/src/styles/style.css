@@ -91,7 +91,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2.5rem 5rem;
+    padding: 2vh 4vw;
     background: linear-gradient(180deg, rgba(11,29,58,0.9) 0%, rgba(5,14,29,0) 100%);
     border-bottom: 2px solid transparent;
     border-image: linear-gradient(to right, transparent, rgba(241, 196, 15, 0.3), transparent) 1;
@@ -109,7 +109,7 @@ body {
 }
 
 .brand-title {
-    font-size: 2.2rem;
+    font-size: 3.2vh;
     font-weight: 800;
     letter-spacing: 2px;
     color: var(--secondary-color);
@@ -118,7 +118,7 @@ body {
 }
 
 .brand-subtitle {
-    font-size: 1.2rem;
+    font-size: 1.8vh;
     font-weight: 500;
     color: #a0aec0;
     letter-spacing: 2px;
@@ -130,7 +130,7 @@ body {
 }
 
 .time {
-    font-size: 2.8rem;
+    font-size: 4vh;
     font-weight: 800;
     color: #ffffff;
     letter-spacing: 2px;
@@ -138,7 +138,7 @@ body {
 }
 
 .date {
-    font-size: 1.2rem;
+    font-size: 1.8vh;
     color: #a0aec0;
     font-weight: 500;
     letter-spacing: 1px;
@@ -170,29 +170,29 @@ body {
     justify-content: center;
     text-align: center;
     z-index: 10;
-    padding-bottom: 2rem; /* Was 15rem, which caused cutoff */
+    padding-bottom: 1vh;
 }
 
 .serving-label {
-    font-size: 3.5rem;
+    font-size: 4.5vh;
     font-weight: 800;
     background: linear-gradient(to bottom, #ffffff, #a0aec0);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-transform: uppercase;
     letter-spacing: 10px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1vh;
 }
 
 .serving-priority-badge {
     background: #CC2222;
     color: white;
-    padding: 0.6rem 2.5rem;
+    padding: 0.8vh 3vh;
     border-radius: 50px;
-    font-size: 1.8rem;
+    font-size: 2.2vh;
     font-weight: 900;
     letter-spacing: 4px;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5vh;
     box-shadow: 0 5px 20px rgba(204, 34, 34, 0.5);
     text-shadow: none;
     display: inline-block;
@@ -212,8 +212,8 @@ body {
 .queue-number-box {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 40px;
-    padding: 3rem 6rem;
+    border-radius: 3vh;
+    padding: 2.5vh 5vw;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(255,255,255,0.05);
     backdrop-filter: blur(30px);
     transition: all 0.3s ease;
@@ -222,7 +222,7 @@ body {
 }
 
 .queue-number {
-    font-size: 11rem;
+    font-size: 15vh;
     font-weight: 800;
     color: var(--secondary-color);
     line-height: 1;
@@ -232,7 +232,7 @@ body {
 }
 
 .queue-number.is-text {
-    font-size: 4rem;
+    font-size: 6vh;
     color: #e74c3c;
     text-shadow: none;
 }
@@ -275,18 +275,18 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.8vh;
     background: rgba(5, 14, 29, 0.85);
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 30px;
-    padding: 1.5rem 0;
+    border-radius: 2vh;
+    padding: 1.2vh 0;
     box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-    margin: 2rem auto; /* Instead of fixed absolute positioning */
+    margin: 1.5vh auto; /* Instead of fixed absolute positioning */
 }
 
 .recent-label {
-    font-size: 1.2rem;
+    font-size: 1.8vh;
     color: rgba(255,255,255,0.7);
     text-transform: uppercase;
     letter-spacing: 4px;
@@ -295,7 +295,7 @@ body {
 
 .recent-list {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.2vw;
     justify-content: center;
     list-style: none;
     align-items: center;
@@ -304,12 +304,12 @@ body {
 }
 
 .recent-item {
-    font-size: 2rem;
+    font-size: 2.8vh;
     font-weight: 600;
     color: rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0.05);
-    padding: 0.8rem 1.5rem;
-    border-radius: 12px;
+    padding: 0.6vh 1.5vw;
+    border-radius: 1vh;
     border: 1px solid rgba(255,255,255,0.05);
     line-height: 1;
     display: flex;

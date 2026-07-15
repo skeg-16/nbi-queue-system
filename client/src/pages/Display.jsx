@@ -336,7 +336,7 @@ export default function Display() {
       >
         <header className="header">
           <div className="brand">
-            <img src="/assets/nbi.png" alt="NBI Logo" style={{ height: 60, objectFit: 'contain' }} />
+            <img src="/assets/nbi.png" alt="NBI Logo" style={{ height: '6vh', objectFit: 'contain' }} />
             <div className="brand-text">
               <div className="brand-title">NBI Cybercrime Division</div>
               <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: '0.5px', fontWeight: 'normal' }}>
