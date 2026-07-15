@@ -139,7 +139,7 @@ body, html {
 
 /* ---- Buttons ---- */
 .btn-formal {
-    padding: 7px 14px;
+    padding: 9px 18px;
     border: 1px solid var(--btn-border);
     border-radius: 6px;
     background: var(--btn-bg);
@@ -150,7 +150,7 @@ body, html {
     transition: background 0.15s, border-color 0.15s, transform 0.1s;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     white-space: nowrap;
 }
 .btn-formal:hover {
@@ -191,6 +191,7 @@ body, html {
     justify-content: center;
     transition: all 0.2s ease;
     margin-right: 4px;
+    position: relative;
 }
 .btn-icon:hover {
     background: var(--table-hover);
@@ -661,3 +662,43 @@ select.status-badge option {
     transition: background 0.2s;
 }
 .menu-btn:hover { background: var(--table-hover); }
+
+/* ---- Custom Tooltips ---- */
+.btn-icon[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 135%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    color: #f8fafc;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1010;
+}
+
+.btn-icon[data-tooltip]::before {
+    content: '';
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #0f172a transparent transparent transparent;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1010;
+}
+
+.btn-icon[data-tooltip]:hover::after,
+.btn-icon[data-tooltip]:hover::before {
+    opacity: 1;
+}
