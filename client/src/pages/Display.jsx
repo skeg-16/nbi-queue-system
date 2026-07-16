@@ -385,13 +385,7 @@ export default function Display() {
           </ul>
         </div>
       </div>
-        <div className="bottom-scroll-container">
-        <div className="bottom-scroll">
-          {[...Array(5)].map((_, i) => (
-            <span key={i} className="scroll-text">WELCOME TO NBI CYBERCRIME DIVISION • PLEASE WAIT FOR YOUR NUMBER TO BE CALLED • FOR INQUIRIES, PLEASE CONTACT: ccd@nbi.gov.ph / +63 929 660 7861 • THANK YOU • </span>
-          ))}
-        </div>
-      </div>
+
       <audio ref={sfxPlayerRef} src="/assets/sound.mp3" preload="auto" style={{ display: 'none' }} />
       <audio ref={voicePlayerRef} preload="auto" style={{ display: 'none' }} />
     </div>
