@@ -177,7 +177,12 @@ export default function Display() {
             .then(decoded => {
               const source = audioCtx.createBufferSource();
               source.buffer = decoded;
-              source.connect(audioCtx.destination);
+              
+              const gainNode = audioCtx.createGain();
+              gainNode.gain.value = 0.8;
+              
+              source.connect(gainNode);
+              gainNode.connect(audioCtx.destination);
               source.start();
             })
             .catch(e => console.error('Cloud TTS AudioContext Play Error:', e));
@@ -189,7 +194,12 @@ export default function Display() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const source = audioCtx.createBufferSource();
         source.buffer = sfxBufferRef.current;
-        source.connect(audioCtx.destination);
+        
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.value = 0.8;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
         source.start();
         setTimeout(triggerSpeech, 1200);
       } else {
@@ -265,7 +275,6 @@ export default function Display() {
         lastAnnouncementRef.current = { number: cleanNum, isPriority: data.isPriority, name: data.currentlyServingName };
 
         if (data.triggerChime) {
-          playChimeSound(data.isPriority);
           playVoiceAnnouncement(cleanNum, data.isPriority, false, data.currentlyServingName);
 
           setFlash(true);
