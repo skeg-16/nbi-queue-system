@@ -336,7 +336,7 @@ export default function Display() {
             <img src="/assets/nbi.png" alt="NBI Logo" style={{ height: '6vh', objectFit: 'contain' }} />
             <div className="brand-text">
               <div className="brand-title">NBI Cybercrime Division</div>
-              <div style={{ fontSize: '1.1rem', color: '#f1c40f', marginTop: 4, letterSpacing: '1px', fontWeight: '600', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.9)', marginTop: 4, letterSpacing: '1.5px', fontWeight: '700', textTransform: 'uppercase', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                 Powered by: PLM Computer Science Interns '27
               </div>
             </div>

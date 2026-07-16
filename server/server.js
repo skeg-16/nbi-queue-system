@@ -103,7 +103,17 @@ async function withRetry(fn, retries = 3, delayMs = 400) {
 
 function getTodayDateStr() {
     const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    if (typeof state !== 'undefined' && state.dateStr && state.dateStr !== todayStr) {
+        state.dateStr = todayStr;
+        state.dailyCounter = 0;
+        state.recentServed = [];
+        state.currentlyServing = null;
+        state.regularServedCount = 0;
+    }
+    
+    return todayStr;
 }
 
 // Initialize server state from Supabase
@@ -1380,6 +1390,25 @@ cron.schedule('0 18 * * *', async () => {
     } catch (err) {
         console.error("❌ Exception in 6:00 PM reset:", err);
     }
+}, {
+    timezone: "Asia/Manila"
+});
+
+cron.schedule('0 0 * * *', async () => {
+    console.log(`\n\n========== MIDNIGHT DAILY RESET ==========`);
+    state.currentlyServing = null;
+    state.recentServed = [];
+    state.regularServedCount = 0;
+    state.priorityServedCount = 0;
+    
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    state.dateStr = todayStr;
+    state.dailyCounter = 0;
+
+    await broadcastStaffUpdate();
+    broadcastDisplayUpdate(false);
+    console.log(`========== MIDNIGHT DAILY RESET COMPLETE ==========\n\n`);
 }, {
     timezone: "Asia/Manila"
 });
