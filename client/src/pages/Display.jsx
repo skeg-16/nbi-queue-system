@@ -16,7 +16,8 @@ export default function Display() {
   const [flash, setFlash] = useState(false);
 
   const audioCtxRef = useRef(null);
-  const sfxBeforeRef = useRef(null);
+  const sfxBufferRef = useRef(null);
+  const keepAliveOscillatorRef = useRef(null);
   const voicesRef = useRef([]);
   const selectedVoiceRef = useRef(null);
   const currentRateRef = useRef(0.85);
@@ -121,6 +122,8 @@ export default function Display() {
       if (customVoicesList.length === 0) customVoicesList = englishVoices.slice(0, 15);
       else customVoicesList = customVoicesList.slice(0, 15);
 
+      customVoicesList.push({ name: 'Cloud TTS (Fallback)', lang: 'en-US', voiceURI: 'cloud_tts' });
+
       voicesRef.current = customVoicesList;
       selectedVoiceRef.current =
         customVoicesList.find(v => v.name.toLowerCase().includes('natasha')) ||
@@ -151,46 +154,46 @@ export default function Display() {
   }
 
   function playVoiceAnnouncement(numberStr, priority = false, skipDelay = false, complainantName = '', isRepeat = false) {
-    if (!unlocked || !('speechSynthesis' in window) || !selectedVoiceRef.current) return;
+    if (!unlocked) return;
 
     let num = numberStr.replace('#', '').trim().replace(/^0+/, '');
     if (num === '') num = '0';
 
-    const allVoices = window.speechSynthesis.getVoices();
-    const natasha = allVoices.find(v => v.name.toLowerCase().includes('natasha'));
-    const voiceToUse = natasha || selectedVoiceRef.current;
-    const baseRate = parseFloat(currentRateRef.current) || 0.85;
     const delay = skipDelay ? 0 : 600;
 
     setTimeout(() => {
-      if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-        window.speechSynthesis.cancel();
-      }
-      const sfx = sfxBeforeRef.current;
-      sfx.pause();
-      sfx.currentTime = 0;
-      sfx.onended = null;
-
       const fullText = priority
         ? (isRepeat ? 'Calling again. Priority number ' : 'Calling Priority number ') + num + ', please proceed to interview room.'
         : (isRepeat ? 'Calling again. Number ' : 'Calling Number ') + num + ', please proceed to interview room.';
-      const parts = [{ text: fullText, rate: baseRate, pitch: 1.0, volume: 1.0, voice: voiceToUse }];
 
       function triggerSpeech() {
-        if (voiceToUse && voiceToUse.voiceURI === 'cloud_tts') {
-          const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=en`;
-          new Audio(audioUrl).play().catch(e => console.error('Cloud TTS Play Error:', e));
-        } else {
-          speakParts(parts, 0);
+        const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=en`;
+        const audioCtx = audioCtxRef.current;
+        if (audioCtx) {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          fetch(audioUrl)
+            .then(res => res.arrayBuffer())
+            .then(buf => audioCtx.decodeAudioData(buf))
+            .then(decoded => {
+              const source = audioCtx.createBufferSource();
+              source.buffer = decoded;
+              source.connect(audioCtx.destination);
+              source.start();
+            })
+            .catch(e => console.error('Cloud TTS AudioContext Play Error:', e));
         }
       }
 
-      const playPromise = sfx.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => setTimeout(triggerSpeech, 1200))
-          .catch(() => setTimeout(triggerSpeech, 50));
-      } else {
+      const audioCtx = audioCtxRef.current;
+      if (audioCtx && sfxBufferRef.current) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const source = audioCtx.createBufferSource();
+        source.buffer = sfxBufferRef.current;
+        source.connect(audioCtx.destination);
+        source.start();
         setTimeout(triggerSpeech, 1200);
+      } else {
+        setTimeout(triggerSpeech, 50);
       }
     }, delay);
   }
@@ -201,17 +204,23 @@ export default function Display() {
     audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
 
-    sfxBeforeRef.current = new Audio('/assets/sound.mp3');
-    const p = sfxBeforeRef.current.play();
-    if (p !== undefined) {
-      p.then(() => { sfxBeforeRef.current.pause(); sfxBeforeRef.current.currentTime = 0; }).catch(() => { });
+    // Start a continuous silent oscillator to keep the AudioContext awake FOREVER
+    if (!keepAliveOscillatorRef.current) {
+      const osc = audioCtxRef.current.createOscillator();
+      const gain = audioCtxRef.current.createGain();
+      gain.gain.value = 0.0001; // nearly absolute silence
+      osc.connect(gain);
+      gain.connect(audioCtxRef.current.destination);
+      osc.start();
+      keepAliveOscillatorRef.current = osc;
     }
 
-    if ('speechSynthesis' in window) {
-      const dummy = new SpeechSynthesisUtterance('');
-      dummy.volume = 0;
-      window.speechSynthesis.speak(dummy);
-    }
+    // Preload SFX Buffer
+    fetch('/assets/sound.mp3')
+      .then(res => res.arrayBuffer())
+      .then(arrayBuffer => audioCtxRef.current.decodeAudioData(arrayBuffer))
+      .then(buffer => { sfxBufferRef.current = buffer; })
+      .catch(e => console.error('Failed to load sfx buffer:', e));
   }
 
   // Socket listeners + voice init + heartbeat
@@ -387,8 +396,15 @@ export default function Display() {
             )}
           </ul>
         </div>
+      </div>
+        <div className="bottom-scroll-container">
+        <div className="bottom-scroll">
+          {[...Array(5)].map((_, i) => (
+            <span key={i} className="scroll-text">NBI CLEARANCE SYSTEM • PLEASE PREPARE YOUR REQUIREMENTS • THANK YOU • </span>
+          ))}
         </div>
       </div>
+    </div>
     </>
   );
 }
