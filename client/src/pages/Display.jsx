@@ -179,7 +179,7 @@ export default function Display() {
               source.buffer = decoded;
               
               const gainNode = audioCtx.createGain();
-              gainNode.gain.value = 0.8;
+              gainNode.gain.value = 0.5;
               
               source.connect(gainNode);
               gainNode.connect(audioCtx.destination);
@@ -196,7 +196,7 @@ export default function Display() {
         source.buffer = sfxBufferRef.current;
         
         const gainNode = audioCtx.createGain();
-        gainNode.gain.value = 0.8;
+        gainNode.gain.value = 0.5;
         
         source.connect(gainNode);
         gainNode.connect(audioCtx.destination);
@@ -214,15 +214,15 @@ export default function Display() {
     audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
 
-    // Start a continuous silent oscillator to keep the AudioContext awake FOREVER
+    // Start a continuous silent audio buffer to keep the AudioContext awake FOREVER
     if (!keepAliveOscillatorRef.current) {
-      const osc = audioCtxRef.current.createOscillator();
-      const gain = audioCtxRef.current.createGain();
-      gain.gain.value = 0.0001; // nearly absolute silence
-      osc.connect(gain);
-      gain.connect(audioCtxRef.current.destination);
-      osc.start();
-      keepAliveOscillatorRef.current = osc;
+      const buffer = audioCtxRef.current.createBuffer(1, audioCtxRef.current.sampleRate, audioCtxRef.current.sampleRate);
+      const source = audioCtxRef.current.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(audioCtxRef.current.destination);
+      source.start();
+      keepAliveOscillatorRef.current = source;
     }
 
     // Preload SFX Buffer
