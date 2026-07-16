@@ -336,7 +336,7 @@ export default function Display() {
             <img src="/assets/nbi.png" alt="NBI Logo" style={{ height: '6vh', objectFit: 'contain' }} />
             <div className="brand-text">
               <div className="brand-title">NBI Cybercrime Division</div>
-              <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: '0.5px', fontWeight: 'normal' }}>
+              <div style={{ fontSize: '1.1rem', color: '#f1c40f', marginTop: 4, letterSpacing: '1px', fontWeight: '600', textTransform: 'uppercase' }}>
                 Powered by: PLM Computer Science Interns '27
               </div>
             </div>
@@ -388,7 +388,7 @@ export default function Display() {
         <div className="bottom-scroll-container">
         <div className="bottom-scroll">
           {[...Array(5)].map((_, i) => (
-            <span key={i} className="scroll-text">NBI CLEARANCE SYSTEM • PLEASE PREPARE YOUR REQUIREMENTS • THANK YOU • </span>
+            <span key={i} className="scroll-text">NBI CLEARANCE SYSTEM • PLEASE PREPARE YOUR REQUIREMENTS • FOR INQUIRIES, PLEASE CONTACT: ccd@nbi.gov.ph / +63 929 660 7861 • THANK YOU • </span>
           ))}
         </div>
       </div>
