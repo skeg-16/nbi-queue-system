@@ -15,9 +15,8 @@ export default function Display() {
   const [showTimer, setShowTimer] = useState(false);
   const [flash, setFlash] = useState(false);
 
-  const audioCtxRef = useRef(null);
-  const sfxBufferRef = useRef(null);
-  const keepAliveOscillatorRef = useRef(null);
+  const sfxPlayerRef = useRef(null);
+  const voicePlayerRef = useRef(null);
   const voicesRef = useRef([]);
   const selectedVoiceRef = useRef(null);
   const currentRateRef = useRef(0.85);
@@ -167,41 +166,23 @@ export default function Display() {
         : (isRepeat ? 'Calling again. Number ' : 'Calling Number ') + num + ', please proceed to interview room.';
 
       function triggerSpeech() {
-        const audioUrl = `/api/tts?text=${encodeURIComponent(fullText)}&lang=en`;
-        const audioCtx = audioCtxRef.current;
-        if (audioCtx) {
-          if (audioCtx.state === 'suspended') audioCtx.resume();
-          fetch(audioUrl)
-            .then(res => res.arrayBuffer())
-            .then(buf => audioCtx.decodeAudioData(buf))
-            .then(decoded => {
-              const source = audioCtx.createBufferSource();
-              source.buffer = decoded;
-              
-              const gainNode = audioCtx.createGain();
-              gainNode.gain.value = 0.5;
-              
-              source.connect(gainNode);
-              gainNode.connect(audioCtx.destination);
-              source.start();
-            })
-            .catch(e => console.error('Cloud TTS AudioContext Play Error:', e));
+        if (voicePlayerRef.current) {
+          voicePlayerRef.current.src = `/api/tts?text=${encodeURIComponent(fullText)}&lang=en`;
+          voicePlayerRef.current.volume = 0.8;
+          voicePlayerRef.current.play().catch(e => console.error('Cloud TTS Audio Tag Play Error:', e));
         }
       }
 
-      const audioCtx = audioCtxRef.current;
-      if (audioCtx && sfxBufferRef.current) {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const source = audioCtx.createBufferSource();
-        source.buffer = sfxBufferRef.current;
-        
-        const gainNode = audioCtx.createGain();
-        gainNode.gain.value = 0.5;
-        
-        source.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        source.start();
-        setTimeout(triggerSpeech, 1200);
+      if (sfxPlayerRef.current) {
+        sfxPlayerRef.current.currentTime = 0;
+        sfxPlayerRef.current.volume = 0.8;
+        const playPromise = sfxPlayerRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => setTimeout(triggerSpeech, 1200))
+            .catch(() => setTimeout(triggerSpeech, 50));
+        } else {
+          setTimeout(triggerSpeech, 1200);
+        }
       } else {
         setTimeout(triggerSpeech, 50);
       }
@@ -211,26 +192,24 @@ export default function Display() {
   // Unlock overlay tap
   function handleUnlock() {
     setUnlocked(true);
-    audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
-
-    // Start a continuous silent audio buffer to keep the AudioContext awake FOREVER
-    if (!keepAliveOscillatorRef.current) {
-      const buffer = audioCtxRef.current.createBuffer(1, audioCtxRef.current.sampleRate, audioCtxRef.current.sampleRate);
-      const source = audioCtxRef.current.createBufferSource();
-      source.buffer = buffer;
-      source.loop = true;
-      source.connect(audioCtxRef.current.destination);
-      source.start();
-      keepAliveOscillatorRef.current = source;
+    
+    if (sfxPlayerRef.current) {
+      sfxPlayerRef.current.volume = 0.8;
+      const p = sfxPlayerRef.current.play();
+      if (p !== undefined) {
+        p.then(() => { sfxPlayerRef.current.pause(); sfxPlayerRef.current.currentTime = 0; }).catch(() => { });
+      }
     }
 
-    // Preload SFX Buffer
-    fetch('/assets/sound.mp3')
-      .then(res => res.arrayBuffer())
-      .then(arrayBuffer => audioCtxRef.current.decodeAudioData(arrayBuffer))
-      .then(buffer => { sfxBufferRef.current = buffer; })
-      .catch(e => console.error('Failed to load sfx buffer:', e));
+    if (voicePlayerRef.current) {
+      voicePlayerRef.current.volume = 0.8;
+      // Play a tiny 1-second silent MP3 to officially unlock the element without a network request
+      voicePlayerRef.current.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojo6Ojw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8AAAAAATGF2YzU5LjM3AAAAAAAAAAAAAAAAJAAAAAAAAAAAASO5w1MAAAAAAAAAAAAAAAAAAAAA//MUZAAAAAGkAAAAAAAAAABKRAwEAA/EygABAEAD5QAAACwAAAACgAD6hAAA//MUZAMAAAGkAAAAAAAAAABKRAwEAA/EygABAEAD5QAAACwAAAACgAD6hAAA//MUZAYAAAGkAAAAAAAAAABKRAwEAA/EygABAEAD5QAAACwAAAACgAD6hAAA//MUZAoAAAGkAAAAAAAAAABKRAwEAA/EygABAEAD5QAAACwAAAACgAD6hAAA";
+      const p = voicePlayerRef.current.play();
+      if (p !== undefined) {
+        p.then(() => { voicePlayerRef.current.pause(); voicePlayerRef.current.currentTime = 0; }).catch(() => { });
+      }
+    }
   }
 
   // Socket listeners + voice init + heartbeat
@@ -413,6 +392,8 @@ export default function Display() {
           ))}
         </div>
       </div>
+      <audio ref={sfxPlayerRef} src="/assets/sound.mp3" preload="auto" style={{ display: 'none' }} />
+      <audio ref={voicePlayerRef} preload="auto" style={{ display: 'none' }} />
     </div>
     </>
   );
