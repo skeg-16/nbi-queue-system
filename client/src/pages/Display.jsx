@@ -352,9 +352,6 @@ export default function Display() {
             <img src="/assets/nbi.png" alt="NBI Logo" className="header-logo" />
             <div className="brand-text">
               <div className="brand-title">NBI Cybercrime Division</div>
-              <div className="brand-subtitle-tv" style={{ color: '#ffffff', marginTop: 4, letterSpacing: '1.5px', fontWeight: '700', textTransform: 'uppercase', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                Powered by: PLM Computer Science Interns '27
-              </div>
             </div>
           </div>
           <div className="header-right">
@@ -408,7 +405,7 @@ export default function Display() {
         <div className="bottom-scroll">
           {Array.from({ length: 5 }).map((_, i) => (
             <span className="scroll-text" key={i}>
-              PLEASE PREPARE YOUR REQUIREMENTS &nbsp;•&nbsp; FOR INQUIRIES, PLEASE CONTACT: ccd@nbi.gov.ph / +63 929 660 7861 &nbsp;•&nbsp; THANK YOU &nbsp;•&nbsp; NBI CLEARANCE SYSTEM &nbsp;•&nbsp;
+              FOR INQUIRIES, PLEASE CONTACT: ccd@nbi.gov.ph / +63 929 660 7861 &nbsp;•&nbsp; PLEASE WAIT FOR YOUR QUEUE NUMBER TO BE CALLED &nbsp;•&nbsp; KEEP YOUR COMPLAINANT'S REGISTRATION FORM AT ALL TIMES &nbsp;•&nbsp; POWERED BY: PLM COMPUTER SCIENCE INTERNS '27 &nbsp;•&nbsp;
             </span>
           ))}
         </div>

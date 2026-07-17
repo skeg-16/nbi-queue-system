@@ -960,7 +960,7 @@ body:has(.display-container) {
 .display-container .header-left {
     display: flex;
     align-items: center;
-    gap: clamp(0.5rem, 1.5vw, 1.2rem);
+    gap: clamp(0.6rem, 1.5vw, 1.4rem);
     min-width: 0;
     flex: 1 1 auto;
     overflow: hidden;
@@ -969,16 +969,17 @@ body:has(.display-container) {
 .display-container .header-right {
     display: flex;
     align-items: center;
-    gap: clamp(0.6rem, 1.5vw, 1.5rem);
+    gap: clamp(2rem, 5vw, 4.5rem);
     flex-shrink: 0;
 }
 
 .display-container .datetime-container {
     text-align: right !important;
+    padding-right: clamp(0.5rem, 1.5vw, 1.5rem);
 }
 
 .display-container .header-logo {
-    height: clamp(38px, 5.5vh, 72px);
+    height: clamp(80px, 13vh, 180px);
     width: auto;
     object-fit: contain;
     flex-shrink: 0;
@@ -991,16 +992,16 @@ body:has(.display-container) {
 }
 
 .display-container .brand-subtitle-tv {
-    font-size: clamp(0.55rem, 1vw, 0.85rem);
+    font-size: clamp(0.7rem, 1.25vw, 1.05rem);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .display-container .brand-title {
-    font-size: clamp(0.85rem, 1.7vw, 1.5rem);
+    font-size: clamp(1.3rem, 2.6vw, 2.3rem);
     font-weight: 800;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
     color: #eab308 !important;
     text-transform: uppercase;
     text-shadow: none !important;
@@ -1010,7 +1011,7 @@ body:has(.display-container) {
 }
 
 .display-container .time {
-    font-size: clamp(1rem, 1.8vw, 1.7rem);
+    font-size: clamp(1.6rem, 3vw, 2.8rem);
     font-weight: 800;
     color: #ffffff !important;
     letter-spacing: 1px;
@@ -1019,7 +1020,7 @@ body:has(.display-container) {
 }
 
 .display-container .date {
-    font-size: clamp(0.6rem, 1vw, 0.85rem);
+    font-size: clamp(0.85rem, 1.4vw, 1.15rem);
     color: rgba(255, 255, 255, 0.5) !important;
     font-weight: 500;
     letter-spacing: 1px;
@@ -1033,7 +1034,7 @@ body:has(.display-container) {
     border: none;
     color: rgba(255, 255, 255, 0.3);
     cursor: pointer;
-    font-size: clamp(1rem, 1.8vw, 1.5rem);
+    font-size: clamp(1.3rem, 2.2vw, 1.9rem);
     z-index: 30;
     transition: color 0.3s ease;
     flex-shrink: 0;
@@ -1045,7 +1046,7 @@ body:has(.display-container) {
 }
 
 .display-container .serving-label {
-    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
     font-weight: 800;
     background: none !important;
     -webkit-background-clip: unset !important;
@@ -1061,18 +1062,18 @@ body:has(.display-container) {
 .display-container .queue-number-box {
     background: rgba(255, 255, 255, 0.02) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: clamp(20px, 4vw, 40px);
-    padding: clamp(1rem, 4vh, 3rem) clamp(1.2rem, 6vw, 6rem);
+    border-radius: clamp(24px, 4.5vw, 46px);
+    padding: clamp(1.3rem, 5vh, 3.5rem) clamp(1.5rem, 7vw, 7rem);
     box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.02) !important;
     backdrop-filter: blur(20px) !important;
     transition: all 0.3s ease;
     width: fit-content;
-    max-width: min(90vw, 100%);
+    max-width: min(92vw, 100%);
     box-sizing: border-box;
 }
 
 .display-container .queue-number {
-    font-size: clamp(4rem, 18vw, 12rem);
+    font-size: clamp(4.5rem, 20vw, 14rem);
     font-weight: 800;
     color: #f1c40f !important;
     line-height: 1;
@@ -1129,7 +1130,7 @@ body:has(.display-container) {
 }
 
 .display-container .recent-label {
-    font-size: clamp(0.8rem, 2vw, 1.2rem);
+    font-size: clamp(1rem, 2.3vw, 1.4rem);
     color: rgba(255, 255, 255, 0.6) !important;
     text-transform: uppercase;
     letter-spacing: 4px;
@@ -1138,11 +1139,11 @@ body:has(.display-container) {
 }
 
 .display-container .recent-item {
-    font-size: clamp(0.9rem, 3vw, 2rem);
+    font-size: clamp(1.1rem, 3.3vw, 2.3rem);
     font-weight: 600;
     color: rgba(255, 255, 255, 0.35) !important;
     background: rgba(255, 255, 255, 0.03) !important;
-    padding: clamp(0.3rem, 1vh, 0.8rem) clamp(0.6rem, 2vw, 1.5rem);
+    padding: clamp(0.35rem, 1.2vh, 0.9rem) clamp(0.7rem, 2.2vw, 1.7rem);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.03) !important;
     line-height: 1;
@@ -1154,7 +1155,7 @@ body:has(.display-container) {
 
 /* Bottom Scrolling Ticker */
 .display-container {
-    --ticker-h: clamp(26px, 4.2vh, 38px);
+    --ticker-h: clamp(30px, 4.6vh, 44px);
 }
 
 .display-container .bottom-scroll-container {
@@ -1184,7 +1185,7 @@ body:has(.display-container) {
 .display-container .scroll-text {
     white-space: nowrap;
     padding-right: 0.5rem;
-    font-size: clamp(0.8rem, 1.3vw, 1.1rem);
+    font-size: clamp(0.95rem, 1.5vw, 1.3rem);
     font-weight: 700;
     letter-spacing: 1px;
     color: #f1c40f; /* High contrast yellow/gold */
@@ -1212,7 +1213,7 @@ body:has(.display-container) {
         padding: 0.75rem 1rem;
     }
     .display-container .header-logo {
-        height: clamp(32px, 8vh, 56px);
+        height: clamp(46px, 10vh, 72px);
     }
     .display-container .brand-title {
         font-size: 1rem;
@@ -1253,7 +1254,7 @@ body:has(.display-container) {
 /* Tablets / small laptops */
 @media screen and (min-width: 641px) and (max-width: 1024px) {
     .display-container .header-logo {
-        height: clamp(44px, 6.5vh, 80px);
+        height: clamp(64px, 9vh, 110px);
     }
     .display-container .queue-number {
         font-size: clamp(4rem, 16vw, 8rem);
@@ -1266,22 +1267,25 @@ body:has(.display-container) {
 /* Large TVs / 4K displays */
 @media screen and (min-width: 1920px) {
     .display-container .header-logo {
-        height: clamp(90px, 8vh, 150px);
+        height: clamp(140px, 11vh, 210px);
     }
     .display-container .brand-title {
-        font-size: clamp(1.5rem, 2vw, 2.2rem);
+        font-size: clamp(1.9rem, 2.6vw, 2.8rem);
+    }
+    .display-container .header-right {
+        gap: clamp(3rem, 5vw, 5.5rem);
     }
     .display-container .time {
-        font-size: clamp(1.8rem, 2.5vw, 3rem);
+        font-size: clamp(2.2rem, 3vw, 3.4rem);
     }
     .display-container .queue-number {
-        font-size: clamp(10rem, 16vw, 16rem);
+        font-size: clamp(11rem, 17vw, 17rem);
     }
     .display-container .recent-item {
-        font-size: clamp(1.5rem, 2vw, 2.5rem);
+        font-size: clamp(1.7rem, 2.2vw, 2.7rem);
     }
     .display-container .scroll-text {
-        font-size: clamp(1.1rem, 1.2vw, 1.5rem);
+        font-size: clamp(1.25rem, 1.35vw, 1.6rem);
     }
 }
 
@@ -1295,7 +1299,7 @@ body:has(.display-container) {
         padding-bottom: 0.5rem;
     }
     .display-container .header-logo {
-        height: clamp(28px, 6vh, 44px);
+        height: clamp(40px, 9vh, 60px);
     }
     .display-container .serving-label {
         margin-bottom: 0.4rem;

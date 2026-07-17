@@ -57,6 +57,7 @@ export default function Register() {
 
   // ---------- Validation ----------
   const [errors, setErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false); // becomes true after first submit attempt
 
   // ---------- Signature (draw-only) ----------
   const [signatureError, setSignatureError] = useState(false);
@@ -137,6 +138,7 @@ export default function Register() {
   }
 
   function handleBlur(fieldId) {
+    if (!submitted) return; // don't flag anything until the user has tried to submit at least once
     validateField(fieldId);
   }
 
@@ -165,12 +167,16 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault();
     setServerError('');
+    setSubmitted(true); // from now on, blur/change events are allowed to show validation errors
 
     let isFormValid = true;
     let firstInvalidId = null;
     Object.keys(RULES).forEach(fieldId => {
       const valid = validateField(fieldId);
-      if (!valid && !firstInvalidId) firstInvalidId = fieldId;
+      if (!valid) {
+        isFormValid = false;
+        if (!firstInvalidId) firstInvalidId = fieldId;
+      }
     });
 
     const sigValid = validateSignature();
@@ -241,6 +247,7 @@ export default function Register() {
     setCivilStatus('Single'); setGender('Prefer not to say'); setReferredBy('');
     setIsPriority(false);
     setErrors({});
+    setSubmitted(false);
     setSignatureError(false);
     padRef.current?.clear();
     setSubmitting(false);
@@ -480,7 +487,7 @@ export default function Register() {
                   <select
                     id="region" className={`reg-input ${errors.region ? 'err' : ''}`}
                     value={region}
-                    onChange={e => { setRegion(e.target.value); validateField('region'); }}
+                    onChange={e => { setRegion(e.target.value); if (submitted) validateField('region'); }}
                   >
                     <option value="" disabled hidden>Select Region</option>
                     {REGIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
@@ -505,7 +512,7 @@ export default function Register() {
                   <select
                     id="purpose" className={`reg-input ${errors.purpose ? 'err' : ''}`}
                     value={purpose}
-                    onChange={e => { setPurpose(e.target.value); validateField('purpose'); }}
+                    onChange={e => { setPurpose(e.target.value); if (submitted) validateField('purpose'); }}
                   >
                     <option value="" disabled hidden>Select a purpose</option>
                     <option value="File a Complaint">File a Complaint</option>
