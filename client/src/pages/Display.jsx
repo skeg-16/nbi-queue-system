@@ -366,7 +366,7 @@ export default function Display() {
           </div>
         </header>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', paddingBottom: 'clamp(1rem, 4vh, 3rem)', minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', paddingBottom: 'calc(var(--ticker-h) + 4px)', minHeight: 0, overflow: 'hidden' }}>
         <main className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', paddingBottom: 0, minHeight: 0 }}>
           <div className="serving-label">Now Serving</div>
           {isPriority && <div className="serving-priority-badge">PRIORITY</div>}

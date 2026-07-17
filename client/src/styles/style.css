@@ -1153,21 +1153,30 @@ body:has(.display-container) {
 }
 
 /* Bottom Scrolling Ticker */
+.display-container {
+    --ticker-h: clamp(26px, 4.2vh, 38px);
+}
+
 .display-container .bottom-scroll-container {
     width: 100%;
-    background: #002b80; /* Deep blue background for the ticker */
+    height: var(--ticker-h);
+    background: #060e1d; /* Deep blue background for the ticker */
     color: white;
     overflow: hidden;
     position: absolute;
     bottom: 0;
     left: 0;
-    padding: 6px 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 100;
+    box-sizing: border-box;
 }
 
 .display-container .bottom-scroll {
     display: flex;
+    align-items: center;
     width: max-content;
     animation: marquee 40s linear infinite;
 }
@@ -1278,6 +1287,9 @@ body:has(.display-container) {
 
 /* Short / landscape TV screens where height is limited (avoid vertical overflow) */
 @media screen and (max-height: 600px) {
+    .display-container {
+        --ticker-h: clamp(18px, 5vh, 26px);
+    }
     .display-container .header {
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
