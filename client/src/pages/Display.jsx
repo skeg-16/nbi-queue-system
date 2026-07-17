@@ -3,6 +3,22 @@ import { useSocket } from '../context/SocketContext';
 
 export default function Display() {
   useEffect(() => { document.title = "NBI Queue Display"; }, []);
+
+  // Hard-disable page scrolling while this page is mounted (fallback for browsers
+  // that don't support the CSS :has() selector used in style.css)
+  useEffect(() => {
+    const html = document.documentElement;
+    html.classList.add('no-page-scroll');
+    html.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.body.style.height = '100vh';
+    return () => {
+      html.classList.remove('no-page-scroll');
+      html.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+    };
+  }, []);
   const socket = useSocket();
   const [unlocked, setUnlocked] = useState(false);
   const [time, setTime] = useState('00:00:00');
@@ -332,24 +348,26 @@ export default function Display() {
         }}
       >
         <header className="header">
-          <div className="brand">
-            <img src="/assets/nbi.png" alt="NBI Logo" style={{ height: '6vh', objectFit: 'contain' }} />
+          <div className="header-left">
+            <img src="/assets/nbi.png" alt="NBI Logo" className="header-logo" />
             <div className="brand-text">
               <div className="brand-title">NBI Cybercrime Division</div>
-              <div style={{ fontSize: '1.1rem', color: '#ffffff', marginTop: 4, letterSpacing: '1.5px', fontWeight: '700', textTransform: 'uppercase', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+              <div className="brand-subtitle-tv" style={{ color: '#ffffff', marginTop: 4, letterSpacing: '1.5px', fontWeight: '700', textTransform: 'uppercase', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                 Powered by: PLM Computer Science Interns '27
               </div>
             </div>
           </div>
-          <div className="datetime-container">
-            <div className="time">{time}</div>
-            <div className="date">{date}</div>
+          <div className="header-right">
+            <div className="datetime-container">
+              <div className="time">{time}</div>
+              <div className="date">{date}</div>
+            </div>
+            <button className="fullscreen-btn" onClick={toggleFullscreen} title="Toggle Fullscreen">⛶</button>
           </div>
-          <button className="fullscreen-btn" onClick={toggleFullscreen} title="Toggle Fullscreen">⛶</button>
         </header>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', paddingBottom: 'clamp(1rem, 4vh, 3rem)' }}>
-        <main className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', paddingBottom: 0 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', paddingBottom: 'clamp(1rem, 4vh, 3rem)', minHeight: 0, overflow: 'hidden' }}>
+        <main className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', paddingBottom: 0, minHeight: 0 }}>
           <div className="serving-label">Now Serving</div>
           {isPriority && <div className="serving-priority-badge">PRIORITY</div>}
           <div
@@ -383,6 +401,16 @@ export default function Display() {
               ))
             )}
           </ul>
+        </div>
+      </div>
+
+<div className="bottom-scroll-container">
+        <div className="bottom-scroll">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span className="scroll-text" key={i}>
+              PLEASE PREPARE YOUR REQUIREMENTS &nbsp;•&nbsp; FOR INQUIRIES, PLEASE CONTACT: ccd@nbi.gov.ph / +63 929 660 7861 &nbsp;•&nbsp; THANK YOU &nbsp;•&nbsp; NBI CLEARANCE SYSTEM &nbsp;•&nbsp;
+            </span>
+          ))}
         </div>
       </div>
 

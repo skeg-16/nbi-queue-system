@@ -1,4 +1,4 @@
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap');
 
 :root {
     --primary-color: #0b1d3a; /* Deep Navy Blue */
@@ -30,6 +30,11 @@ html, body {
     padding: 0;
     width: 100%;
     overflow-x: hidden;
+}
+
+html.no-page-scroll, html.no-page-scroll body {
+    height: 100%;
+    overflow: hidden;
 }
 
 img, video, svg {
@@ -915,6 +920,16 @@ html, body {
     flex-direction: column;
 }
 
+body:has(.display-container) {
+    overflow: hidden;
+    height: 100vh;
+}
+
+#root:has(.display-container) {
+    height: 100vh;
+    overflow: hidden;
+}
+
 /* Dark Theme overrides for the Queue TV Display page (.display-container) to match Pic 2 */
 .display-container {
     flex: 1;
@@ -922,44 +937,111 @@ html, body {
     flex-direction: column;
     position: relative;
     background: radial-gradient(circle at 50% 50%, #152b52 0%, #050d1a 100%) !important;
-    min-height: 100vh !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
 }
 
 .display-container .header {
     width: 100%;
-    display: flex;
+    display: flex !important;
+    flex-direction: row !important;
     justify-content: space-between;
     align-items: center;
-    padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 5vw, 5rem);
+    padding: clamp(0.6rem, 2vh, 1.6rem) clamp(1rem, 5vw, 5rem);
     background: rgba(5, 14, 29, 0.3) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
     z-index: 20;
     backdrop-filter: blur(10px);
+    gap: clamp(0.5rem, 2vw, 1.5rem);
+    flex-wrap: nowrap !important;
+}
+
+.display-container .header-left {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.5rem, 1.5vw, 1.2rem);
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.display-container .header-right {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.6rem, 1.5vw, 1.5rem);
+    flex-shrink: 0;
+}
+
+.display-container .datetime-container {
+    text-align: right !important;
+}
+
+.display-container .header-logo {
+    height: clamp(38px, 5.5vh, 72px);
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+    transition: height 0.25s ease;
+}
+
+.display-container .brand-text {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.display-container .brand-subtitle-tv {
+    font-size: clamp(0.55rem, 1vw, 0.85rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .display-container .brand-title {
-    font-size: clamp(1.2rem, 3vw, 2.2rem);
+    font-size: clamp(0.85rem, 1.7vw, 1.5rem);
     font-weight: 800;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     color: #eab308 !important;
     text-transform: uppercase;
     text-shadow: none !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .display-container .time {
-    font-size: clamp(1.5rem, 4vw, 2.8rem);
+    font-size: clamp(1rem, 1.8vw, 1.7rem);
     font-weight: 800;
     color: #ffffff !important;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.4) !important;
+    white-space: nowrap;
 }
 
 .display-container .date {
-    font-size: clamp(0.8rem, 1.5vw, 1.2rem);
+    font-size: clamp(0.6rem, 1vw, 0.85rem);
     color: rgba(255, 255, 255, 0.5) !important;
     font-weight: 500;
     letter-spacing: 1px;
     text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.display-container .fullscreen-btn {
+    position: static;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    font-size: clamp(1rem, 1.8vw, 1.5rem);
+    z-index: 30;
+    transition: color 0.3s ease;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.display-container .fullscreen-btn:hover {
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .display-container .serving-label {
@@ -980,12 +1062,13 @@ html, body {
     background: rgba(255, 255, 255, 0.02) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: clamp(20px, 4vw, 40px);
-    padding: clamp(1.5rem, 4vh, 3rem) clamp(2rem, 6vw, 6rem);
+    padding: clamp(1rem, 4vh, 3rem) clamp(1.2rem, 6vw, 6rem);
     box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.02) !important;
     backdrop-filter: blur(20px) !important;
     transition: all 0.3s ease;
-    min-width: 65vw;
-    max-width: 90vw;
+    width: fit-content;
+    max-width: min(90vw, 100%);
+    box-sizing: border-box;
 }
 
 .display-container .queue-number {
@@ -1055,17 +1138,18 @@ html, body {
 }
 
 .display-container .recent-item {
-    font-size: clamp(1.2rem, 3vw, 2rem);
+    font-size: clamp(0.9rem, 3vw, 2rem);
     font-weight: 600;
     color: rgba(255, 255, 255, 0.35) !important;
     background: rgba(255, 255, 255, 0.03) !important;
-    padding: clamp(0.4rem, 1vh, 0.8rem) clamp(0.8rem, 2vw, 1.5rem);
+    padding: clamp(0.3rem, 1vh, 0.8rem) clamp(0.6rem, 2vw, 1.5rem);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.03) !important;
     line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 0;
 }
 
 /* Bottom Scrolling Ticker */
@@ -1107,5 +1191,107 @@ html, body {
 @media screen and (min-width: 1024px) {
     body.zoom-layout {
         zoom: 0.8;
+    }
+}
+
+/* ===== Display Page: Screen-size media queries ===== */
+/* Nothing below removes any element — only resizes/adjusts spacing so everything keeps fitting. */
+
+/* Small screens / phones / narrow preview windows */
+@media screen and (max-width: 640px) {
+    .display-container .header {
+        padding: 0.75rem 1rem;
+    }
+    .display-container .header-logo {
+        height: clamp(32px, 8vh, 56px);
+    }
+    .display-container .brand-title {
+        font-size: 1rem;
+        letter-spacing: 1px;
+    }
+    .display-container .brand-subtitle-tv {
+        font-size: 0.65rem;
+    }
+    .display-container .time {
+        font-size: 1.4rem;
+    }
+    .display-container .date {
+        font-size: 0.65rem;
+    }
+    .display-container .serving-label {
+        font-size: 1.4rem;
+        letter-spacing: 2px;
+    }
+    .display-container .queue-number-box {
+        padding: 1rem 1.2rem;
+    }
+    .display-container .queue-number {
+        font-size: clamp(3rem, 20vw, 6rem);
+    }
+    .display-container .recent-label {
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+    }
+    .display-container .recent-item {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .display-container .scroll-text {
+        font-size: 0.7rem;
+    }
+}
+
+/* Tablets / small laptops */
+@media screen and (min-width: 641px) and (max-width: 1024px) {
+    .display-container .header-logo {
+        height: clamp(44px, 6.5vh, 80px);
+    }
+    .display-container .queue-number {
+        font-size: clamp(4rem, 16vw, 8rem);
+    }
+    .display-container .recent-item {
+        font-size: 1rem;
+    }
+}
+
+/* Large TVs / 4K displays */
+@media screen and (min-width: 1920px) {
+    .display-container .header-logo {
+        height: clamp(90px, 8vh, 150px);
+    }
+    .display-container .brand-title {
+        font-size: clamp(1.5rem, 2vw, 2.2rem);
+    }
+    .display-container .time {
+        font-size: clamp(1.8rem, 2.5vw, 3rem);
+    }
+    .display-container .queue-number {
+        font-size: clamp(10rem, 16vw, 16rem);
+    }
+    .display-container .recent-item {
+        font-size: clamp(1.5rem, 2vw, 2.5rem);
+    }
+    .display-container .scroll-text {
+        font-size: clamp(1.1rem, 1.2vw, 1.5rem);
+    }
+}
+
+/* Short / landscape TV screens where height is limited (avoid vertical overflow) */
+@media screen and (max-height: 600px) {
+    .display-container .header {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+    .display-container .header-logo {
+        height: clamp(28px, 6vh, 44px);
+    }
+    .display-container .serving-label {
+        margin-bottom: 0.4rem;
+    }
+    .display-container .queue-number-box {
+        padding: 0.6rem 1.5rem;
+    }
+    .display-container .recent-container {
+        padding: 0.4rem 0;
     }
 }

@@ -14,6 +14,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
+
+
 // Server-side cache for /api/records to limit Supabase API rate usage
 let cachedRecords = null;
 let lastRecordsFetch = 0;
@@ -34,8 +36,13 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Application State (in-memory caching for speed)
+function computeDateStr() {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+
 let state = {
-    dateStr: getTodayDateStr(),
+    dateStr: computeDateStr(),
     dailyCounter: 0,
     currentlyServing: null,
     recentServed: [],
