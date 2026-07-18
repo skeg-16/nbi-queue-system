@@ -470,7 +470,6 @@ export default function StaffController() {
               </ul>
             </div>
 
-            {skippedList.length > 0 && (
               <div className="dashboard-card skipped-card" style={{ background: "rgba(231, 76, 60, 0.1)", border: "1px solid rgba(231, 76, 60, 0.3)" }}>
                 <div className="card-label" style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.5rem" }}>
                   <span style={{ color: "#ffb8b8" }}>Skipped Complainants</span>
@@ -479,24 +478,30 @@ export default function StaffController() {
                   </span>
                 </div>
                 <ul className="waiting-list">
-                  {skippedList.map((person) => (
-                    <li key={person.id} className={`waiting-item${person.isPriority ? " is-priority" : ""}`}>
-                      <div className="waiting-info">
-                        <span className="waiting-ccd" style={{ color: "#ffb8b8" }}>{shortenCcd(person.ccdNo)}</span>
-                        <span className="waiting-name">{person.fullName}</span>
-                        <span className="wait-time" style={{ color: "#e74c3c" }}>Skipped</span>
-                      </div>
-                      <div style={{ display: "flex", gap: "1rem", alignItems: "center", width: "auto" }}>
-                        <div className="waiting-badge" style={person.isPriority ? { background: "rgba(243, 156, 18, 0.2)", color: "#f39c12" } : { background: "rgba(255,255,255,0.1)", color: "white" }}>
-                          {person.isPriority ? "[PRIORITY] PWD/Senior" : "[REGULAR] Lane"}
+                  {skippedList.length === 0 ? (
+                    <div className="empty-state">
+                      <div className="empty-icon">✓</div>
+                      <div>No skipped complainants.</div>
+                    </div>
+                  ) : (
+                    skippedList.map((person) => (
+                      <li key={person.id} className={`waiting-item${person.isPriority ? " is-priority" : ""}`}>
+                        <div className="waiting-info">
+                          <span className="waiting-ccd" style={{ color: "#ffb8b8" }}>{shortenCcd(person.ccdNo)}</span>
+                          <span className="waiting-name">{person.fullName}</span>
+                          <span className="wait-time" style={{ color: "#e74c3c" }}>Skipped</span>
                         </div>
-                        <button className="btn-serve-now danger" disabled={onBreak} onClick={() => openServeModal(person.id)}>Serve Now</button>
-                      </div>
-                    </li>
-                  ))}
+                        <div style={{ display: "flex", gap: "1rem", alignItems: "center", width: "auto" }}>
+                          <div className="waiting-badge" style={person.isPriority ? { background: "rgba(243, 156, 18, 0.2)", color: "#f39c12" } : { background: "rgba(255,255,255,0.1)", color: "white" }}>
+                            {person.isPriority ? "[PRIORITY] PWD/Senior" : "[REGULAR] Lane"}
+                          </div>
+                          <button className="btn-serve-now danger" disabled={onBreak} onClick={() => openServeModal(person.id)}>Serve Now</button>
+                        </div>
+                      </li>
+                    ))
+                  )}
                 </ul>
               </div>
-            )}
           </div>
         </div>
       </div>
