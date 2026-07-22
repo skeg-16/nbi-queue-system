@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 // ---------- Static data ----------
 const CASE_TYPE_OPTIONS = [
   { value: 'Alleged Violation of Sec. 4 (a)(3) "Data Interference" under R.A. 10175 otherwise known as "Cybercrime Prevention Act of 2012".', label: 'Data Interference (Sec. 4a3, R.A. 10175)' },
@@ -220,10 +222,10 @@ export default function Records() {
     try {
       let url;
       if (currentView === 'complaints') {
-        url = `/api/records?t=${Date.now()}`;
+        url = `${API_URL}/api/records?t=${Date.now()}`;
       } else {
         const lang = currentView === 'feedback_en' ? 'en' : 'tl';
-        url = `/api/feedbacks?language=${lang}&t=${Date.now()}`;
+        url = `${API_URL}/api/feedbacks?language=${lang}&t=${Date.now()}`;
       }
       const response = await fetch(url);
       if (!response.ok) throw new Error('Network response was not ok');
@@ -464,7 +466,7 @@ export default function Records() {
     setAllRecords(recs => recs.map(r => (r.id === id ? { ...r, [field]: payloadValue } : r)));
 
     try {
-      const response = await fetch('/api/records/' + id, {
+      const response = await fetch(API_URL + '/api/records/' + id, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: payloadValue })
@@ -501,7 +503,7 @@ export default function Records() {
 
     let remarksData = null;
     try {
-      const res = await fetch(`/api/records/${id}/remarks`);
+      const res = await fetch(`${API_URL}/api/records/${id}/remarks`);
       const json = await res.json();
       if (json.success) remarksData = json.data;
     } catch (e) { /* ignore */ }
@@ -564,7 +566,7 @@ async function submitEdit(e) {
     try {
       let res;
       if (id) {
-        res = await fetch('/api/records/' + id, {
+        res = await fetch(API_URL + '/api/records/' + id, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -575,7 +577,7 @@ async function submitEdit(e) {
         const seq = String(sameDateCount + 1).padStart(4, '0');
         payload.ccd_no = `CCD-${dateForSeq}-${seq}`;
         payload.status = 'Waiting';
-        res = await fetch('/api/import', {
+        res = await fetch(API_URL + '/api/import', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ records: [payload] })
@@ -612,7 +614,7 @@ async function submitEdit(e) {
       return;
     }
     try {
-      const response = await fetch(`/api/records/${statusForm.id}/status`, {
+      const response = await fetch(`${API_URL}/api/records/${statusForm.id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: statusForm.status })
@@ -640,7 +642,7 @@ async function submitEdit(e) {
     setModalRemarks(true);
 
     try {
-      const res = await fetch(`/api/records/${id}/remarks`);
+      const res = await fetch(`${API_URL}/api/records/${id}/remarks`);
       const json = await res.json();
       if (json.success) {
         const isActionableVal = json.data.isActionable || 'no';
@@ -688,7 +690,7 @@ async function submitEdit(e) {
     }
 
     try {
-      const response = await fetch(`/api/records/${remarksForm.id}/remarks`, {
+      const response = await fetch(`${API_URL}/api/records/${remarksForm.id}/remarks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -733,7 +735,7 @@ async function submitEdit(e) {
 
   async function submitDelete() {
     try {
-      const response = await fetch(`/api/records/${deleteId}`, { method: 'DELETE' });
+      const response = await fetch(`${API_URL}/api/records/${deleteId}`, { method: 'DELETE' });
       const result = await response.json();
       if (result.success) {
         showToast('Record deleted successfully', false, 'success');
@@ -765,7 +767,7 @@ async function submitEdit(e) {
     await Promise.allSettled(
       recordsList.map(async r => {
         try {
-          const res = await fetch(`/api/records/${r.id}/remarks`);
+          const res = await fetch(`${API_URL}/api/records/${r.id}/remarks`);
           if (!res.ok) throw new Error('Fetch failed: ' + res.status);
           const json = await res.json();
           r._remarksData = json.success ? json.data : null;

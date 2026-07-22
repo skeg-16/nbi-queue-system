@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+
 export default function Display() {
   useEffect(() => { document.title = "NBI Queue Display"; }, []);
 
@@ -183,7 +186,7 @@ export default function Display() {
 
       function triggerSpeech() {
         if (voicePlayerRef.current) {
-          voicePlayerRef.current.src = `/api/tts?text=${encodeURIComponent(fullText)}&lang=en`;
+          voicePlayerRef.current.src = `${API_URL}/api/tts?text=${encodeURIComponent(fullText)}&lang=en`;
           voicePlayerRef.current.volume = 0.8;
           voicePlayerRef.current.play().catch(e => console.error('Cloud TTS Audio Tag Play Error:', e));
         }
@@ -299,7 +302,7 @@ export default function Display() {
     });
 
     const heartbeat = setInterval(() => {
-      fetch('/api/ping').catch(err => console.log('Heartbeat failed', err));
+      fetch(`${API_URL}/api/ping`).catch(err => console.log('Heartbeat failed', err));
     }, 5 * 60 * 1000);
 
     return () => {
