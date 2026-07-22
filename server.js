@@ -8,6 +8,12 @@ const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 const nodemailer = require('nodemailer');
+<<<<<<< Updated upstream:server.js
+=======
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { runBackupAndCleanup } = require('./backupJob');
+>>>>>>> Stashed changes:server/server.js
 
 const app = express();
 const server = http.createServer(app);
@@ -595,6 +601,324 @@ app.get('/api/feedbacks', async (req, res) => {
     } catch (err) {
         console.error("Feedback Fetch Error:", err);
         res.status(500).json({ error: err.message });
+    }
+});
+
+// === Auth Middleware ===
+function verifyToken(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ success: false, error: 'No token provided' });
+    }
+    const token = authHeader.split(' ')[1];
+    try {
+        req.user = jwt.verify(token, process.env.JWT_SECRET);
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, error: 'Invalid or expired token' });
+    }
+}
+
+function requireAdmin(req, res, next) {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+    next();
+}
+
+// === Auth Endpoints ===
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .maybeSingle();
+
+        if (error || !user) {
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        const match = await bcrypt.compare(password, user.password_hash);
+        if (!match) {
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, username: user.username, role: user.role, full_name: user.full_name },
+            process.env.JWT_SECRET,
+            { expiresIn: '8h' }
+        );
+
+        auditLog('Login', `${user.username} logged in`);
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                full_name: user.full_name,
+                is_first_login: user.is_first_login
+            }
+        });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ success: false, error: 'Login failed' });
+    }
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+        const { username } = req.body;
+        if (!username) {
+            return res.status(400).json({ success: false, error: 'Username is required' });
+        }
+
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, email, full_name')
+            .eq('username', username)
+            .maybeSingle();
+
+        if (error || !user || !user.email) {
+            // Wag i-reveal kung existing ba yung username o wala, para di ma-enumerate
+            return res.status(400).json({ success: false, error: 'Unable to send reset code. Please contact your administrator.' });
+        }
+
+        const otp = generateOtp();
+        const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
+
+        const { error: updateErr } = await supabase
+            .from('users')
+            .update({ reset_otp: otp, reset_otp_expires: expires })
+            .eq('id', user.id);
+        if (updateErr) throw updateErr;
+
+        await sendOtpEmail(user.email, user.full_name, otp);
+        auditLog('Forgot Password', `OTP requested for username ${username}`);
+
+        res.json({ success: true, maskedEmail: maskEmail(user.email) });
+    } catch (err) {
+        console.error('Forgot password error:', err);
+        res.status(500).json({ success: false, error: 'Failed to process request' });
+    }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { username, otp, newPassword } = req.body;
+        if (!username || !otp || !newPassword) {
+            return res.status(400).json({ success: false, error: 'All fields are required' });
+        }
+
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, reset_otp, reset_otp_expires')
+            .eq('username', username)
+            .maybeSingle();
+
+        if (error || !user || !user.reset_otp) {
+            return res.status(400).json({ success: false, error: 'Invalid or expired code' });
+        }
+
+        if (user.reset_otp !== otp) {
+            return res.status(400).json({ success: false, error: 'Invalid or expired code' });
+        }
+
+        if (new Date(user.reset_otp_expires) < new Date()) {
+            return res.status(400).json({ success: false, error: 'Code has expired. Please request a new one.' });
+        }
+
+        const hash = await bcrypt.hash(newPassword, 10);
+        const { error: updateErr } = await supabase
+            .from('users')
+            .update({ password_hash: hash, is_first_login: false, reset_otp: null, reset_otp_expires: null })
+            .eq('id', user.id);
+        if (updateErr) throw updateErr;
+
+        auditLog('Reset Password', `Password reset via OTP for username ${username}`);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Reset password error:', err);
+        res.status(500).json({ success: false, error: 'Failed to reset password' });
+    }
+});
+
+app.post('/api/auth/change-password', verifyToken, async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+        const hash = await bcrypt.hash(newPassword, 10);
+
+        const { error } = await supabase
+            .from('users')
+            .update({ password_hash: hash, is_first_login: false })
+            .eq('id', req.user.id);
+
+        if (error) throw error;
+        auditLog('Change Password', `${req.user.email} changed password`);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Failed to change password' });
+    }
+});
+
+async function sendAccountCredentialsEmail(toEmail, displayName, username, password, role) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping account email');
+        return { success: false, error: 'Email not configured' };
+    }
+    if (!toEmail) {
+        return { success: false, error: 'No email provided' };
+    }
+
+    try {
+        const info = await emailTransporter.sendMail({
+            from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
+            to: toEmail,
+            subject: `NBI Cybercrime Division — Your Account Credentials`,
+            text: `Hello, ${displayName}!\n\nAn account has been created for you on the NBI Cybercrime Division Queue System.\n\nRole: ${role}\nUsername: ${username}\nDefault Password: ${password}\n\nYou will be required to change this password on your first login.\n\nNBI Cybercrime Division\nThis is an automated message. Please do not reply to this email.`,
+            html: `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /></head>
+<body style="margin:0; padding:0; background-color:#eef0f3; font-family: Arial, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef0f3; padding: 24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="500" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius: 8px; overflow:hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); max-width:500px; width:100%;">
+          <tr>
+            <td style="background: linear-gradient(135deg, #0b1f4d 0%, #142d6e 100%); padding: 24px 32px; border-bottom: 4px solid #f0a500;">
+              <p style="margin:0; color:#ffffff; font-size:18px; font-weight:bold;">NBI Cybercrime Division</p>
+              <p style="margin:2px 0 0 0; color:#c9d4ec; font-size:13px;">Account Created</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px;">
+              <p style="font-size:14.5px; color:#333;">Hello, <strong>${displayName}</strong>,</p>
+              <p style="font-size:14px; color:#333; line-height:1.6;">An account has been created for you on the Queue System. Use the credentials below to log in.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0b1f4d; border-radius:8px; border: 2px solid #f0a500; margin: 20px 0;">
+                <tr>
+                  <td style="padding: 18px 22px;">
+                    <p style="margin:0 0 8px 0; color:#c9d4ec; font-size:12px;">Role: <strong style="color:#f0a500;">${role}</strong></p>
+                    <p style="margin:0 0 8px 0; color:#c9d4ec; font-size:12px;">Username: <strong style="color:#ffffff;">${username}</strong></p>
+                    <p style="margin:0; color:#c9d4ec; font-size:12px;">Default Password: <strong style="color:#ffffff;">${password}</strong></p>
+                  </td>
+                </tr>
+              </table>
+              <p style="font-size:12.5px; color:#888;">You will be required to change this password on your first login.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+        });
+        console.log('[Email] ✓ Account credentials sent to', toEmail, '- message_id:', info.messageId);
+        return { success: true };
+    } catch (err) {
+        console.error('[Email] Account email exception:', err.message);
+        return { success: false, error: err.message };
+    }
+}
+
+// === User Management (Admin Only) ===
+   app.get('/api/users', verifyToken, requireAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, username, email, role, full_name, is_first_login, created_at')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json({ success: true, data });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Failed to fetch users' });
+    }
+});
+
+app.post('/api/users', verifyToken, requireAdmin, async (req, res) => {
+    try {
+        const { username, email, full_name, role } = req.body;
+
+        if (!username || !full_name || !role) {
+            return res.status(400).json({ success: false, error: 'Username, full name, and role are required' });
+        }
+
+        const defaultPassword = 'NBIagent123';
+        const hash = await bcrypt.hash(defaultPassword, 10);
+
+        const { data, error } = await supabase
+            .from('users')
+            .insert([{ username, email: email || null, full_name, role, password_hash: hash, is_first_login: true }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Create user DB error:', error);
+
+            if (error.code === '23505') {
+                if (error.message && error.message.includes('email')) {
+                    return res.status(400).json({ success: false, error: 'That email is already used by another account.' });
+                }
+                return res.status(400).json({ success: false, error: 'That username is already taken. Please choose another.' });
+            }
+            if (error.code === '23502') {
+                const missingField = error.message && error.message.match(/column "(\w+)"/)?.[1];
+                const fieldLabels = { email: 'Email', username: 'Username', full_name: 'Full name', role: 'Role' };
+                const label = fieldLabels[missingField] || 'A required field';
+                return res.status(400).json({ success: false, error: `${label} is required.` });
+            }
+
+            return res.status(500).json({ success: false, error: 'Something went wrong while creating the account. Please try again.' });
+        }
+
+        auditLog('Create User', `${req.user.username} created account for ${username}`);
+
+        let emailSent = false;
+        if (email) {
+            const emailResult = await sendAccountCredentialsEmail(email, full_name, username, defaultPassword, role);
+            emailSent = emailResult.success;
+        }
+
+        res.json({ success: true, data, defaultPassword, emailSent });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/users/:id', verifyToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('users').delete().eq('id', id);
+        if (error) throw error;
+        auditLog('Delete User', `${req.user.username} deleted user ${id}`);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Failed to delete user' });
+    }
+});
+
+app.post('/api/users/admin-reset', verifyToken, requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const defaultPassword = 'NBIagent123';
+        const hash = await bcrypt.hash(defaultPassword, 10);
+
+        const { error } = await supabase
+            .from('users')
+            .update({ password_hash: hash, is_first_login: true })
+            .eq('id', userId);
+
+        if (error) throw error;
+        auditLog('Admin Reset Password', `${req.user.email} reset password for user ${userId}`);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Reset failed' });
     }
 });
 
@@ -1232,6 +1556,86 @@ cron.schedule('0 18 * * *', async () => {
 });
 
 
+<<<<<<< Updated upstream:server.js
+=======
+    await broadcastStaffUpdate();
+    broadcastDisplayUpdate(false);
+    console.log(`========== MIDNIGHT DAILY RESET COMPLETE ==========\n\n`);
+}, {
+    timezone: "Asia/Manila"
+});
+
+// Masks an email for display, e.g. angelcruz23@gmail.com -> a**********3@gmail.com
+function maskEmail(email) {
+    if (!email || !email.includes('@')) return '';
+    const [local, domain] = email.split('@');
+    if (local.length <= 2) {
+        return `${local[0]}***@${domain}`;
+    }
+    const first = local[0];
+    const last = local[local.length - 1];
+    const stars = '*'.repeat(Math.max(3, local.length - 2));
+    return `${first}${stars}${last}@${domain}`;
+}
+
+function generateOtp() {
+    return String(Math.floor(100000 + Math.random() * 900000)); // 6-digit
+}
+
+async function sendOtpEmail(toEmail, displayName, otp) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping OTP email');
+        return { success: false, error: 'Email not configured' };
+    }
+
+    try {
+        const info = await emailTransporter.sendMail({
+            from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
+            to: toEmail,
+            subject: `NBI Cybercrime Division — Password Reset Code: ${otp}`,
+            text: `Hello, ${displayName}!\n\nYour password reset code is: ${otp}\n\nThis code will expire in 10 minutes. If you did not request this, please ignore this email or contact your administrator.\n\nNBI Cybercrime Division\nThis is an automated message. Please do not reply to this email.`,
+            html: `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /></head>
+<body style="margin:0; padding:0; background-color:#eef0f3; font-family: Arial, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef0f3; padding: 24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="500" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius: 8px; overflow:hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); max-width:500px; width:100%;">
+          <tr>
+            <td style="background: linear-gradient(135deg, #0b1f4d 0%, #142d6e 100%); padding: 24px 32px; border-bottom: 4px solid #f0a500;">
+              <p style="margin:0; color:#ffffff; font-size:18px; font-weight:bold;">NBI Cybercrime Division</p>
+              <p style="margin:2px 0 0 0; color:#c9d4ec; font-size:13px;">Password Reset Request</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px;">
+              <p style="font-size:14.5px; color:#333;">Hello, <strong>${displayName}</strong>,</p>
+              <p style="font-size:14px; color:#333; line-height:1.6;">Use the code below to reset your password. This code expires in 10 minutes.</p>
+              <div style="text-align:center; margin: 24px 0;">
+                <span style="display:inline-block; background:#0b1f4d; color:#f0a500; font-size:32px; font-weight:bold; letter-spacing:6px; padding: 16px 24px; border-radius:8px; border: 2px solid #f0a500;">${otp}</span>
+              </div>
+              <p style="font-size:12.5px; color:#888;">If you did not request a password reset, please ignore this email or contact your administrator immediately.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+        });
+        console.log('[Email] ✓ OTP sent to', toEmail, '- message_id:', info.messageId);
+        return { success: true };
+    } catch (err) {
+        console.error('[Email] OTP send exception:', err.message);
+        return { success: false, error: err.message };
+    }
+}
+
+// Function to send queue confirmation email
+>>>>>>> Stashed changes:server/server.js
 async function sendQueueEmail(toEmail, displayName, shortNo) {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping email send');

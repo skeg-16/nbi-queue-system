@@ -13,9 +13,17 @@
   "type": "commonjs",
   "dependencies": {
     "@supabase/supabase-js": "^2.108.0",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+<<<<<<< Updated upstream
     "node-cron": "^4.5.0",
+=======
+    "google-auth-library": "^10.9.0",
+    "google-spreadsheet": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "node-cron": "^4.6.0",
+>>>>>>> Stashed changes
     "nodemailer": "^9.0.3",
     "socket.io": "^4.8.3"
   }
