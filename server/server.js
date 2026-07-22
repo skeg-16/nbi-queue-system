@@ -21,7 +21,7 @@ const io = new Server(server, { cors: { origin: '*' } });
 // Server-side cache for /api/records to limit Supabase API rate usage
 let cachedRecords = null;
 let lastRecordsFetch = 0;
-const CACHE_DURATION = 5000; // 5 seconds cache
+const CACHE_DURATION = 3600000; // 1 hour cache
 
 function invalidateRecordsCache() {
     cachedRecords = null;
