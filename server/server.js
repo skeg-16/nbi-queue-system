@@ -5,12 +5,14 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 const nodemailer = require('nodemailer');
 const { runBackupAndCleanup } = require('./backupJob');
 
 const app = express();
+app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
