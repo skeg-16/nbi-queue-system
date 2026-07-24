@@ -1,5 +1,170 @@
 [
   {
+    "timestamp": "2026-07-24T06:20:26.825Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-24T06:14:49.076Z",
+    "action": "Agent Remarks",
+    "details": "Updated remarks for ID ff7c5320-33f0-457e-92f2-229f7b3ebe7a by cache"
+  },
+  {
+    "timestamp": "2026-07-24T06:14:20.415Z",
+    "action": "Login",
+    "details": "cache logged in"
+  },
+  {
+    "timestamp": "2026-07-24T05:16:27.138Z",
+    "action": "Login",
+    "details": "zero logged in"
+  },
+  {
+    "timestamp": "2026-07-24T05:16:11.998Z",
+    "action": "Edit Username",
+    "details": "admin changed username of 777013c6-262f-43e6-b241-6a9d039b75d9 to zero"
+  },
+  {
+    "timestamp": "2026-07-24T04:50:25.543Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-24T03:03:02.727Z",
+    "action": "Reactivate User",
+    "details": "admin reactivated user 4712c8f6-b73a-412b-bc18-743990f2a4e5"
+  },
+  {
+    "timestamp": "2026-07-24T03:02:48.267Z",
+    "action": "Deactivate User",
+    "details": "admin deactivated user 4712c8f6-b73a-412b-bc18-743990f2a4e5"
+  },
+  {
+    "timestamp": "2026-07-24T02:43:53.948Z",
+    "action": "Create User",
+    "details": "admin created account for vite"
+  },
+  {
+    "timestamp": "2026-07-24T01:52:03.678Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-24T01:29:18.678Z",
+    "action": "Login",
+    "details": "zeru logged in"
+  },
+  {
+    "timestamp": "2026-07-24T01:28:58.691Z",
+    "action": "Agent Remarks",
+    "details": "Updated remarks for ID ff7c5320-33f0-457e-92f2-229f7b3ebe7a by Railey Miguel Frias"
+  },
+  {
+    "timestamp": "2026-07-24T01:28:41.603Z",
+    "action": "Agent Remarks",
+    "details": "Updated remarks for ID 23785d31-4512-4bcc-aa60-1299aadf4204 by Railey Miguel Frias"
+  },
+  {
+    "timestamp": "2026-07-24T01:14:59.070Z",
+    "action": "Login",
+    "details": "cache logged in"
+  },
+  {
+    "timestamp": "2026-07-24T01:14:40.893Z",
+    "action": "Agent Remarks",
+    "details": "Updated remarks for ID 23785d31-4512-4bcc-aa60-1299aadf4204"
+  },
+  {
+    "timestamp": "2026-07-24T01:14:13.910Z",
+    "action": "Login",
+    "details": "zeru logged in"
+  },
+  {
+    "timestamp": "2026-07-24T01:13:56.225Z",
+    "action": "Agent Remarks",
+    "details": "Updated remarks for ID 23785d31-4512-4bcc-aa60-1299aadf4204"
+  },
+  {
+    "timestamp": "2026-07-24T01:06:55.017Z",
+    "action": "Login",
+    "details": "cache logged in"
+  },
+  {
+    "timestamp": "2026-07-24T01:06:38.223Z",
+    "action": "Agent Remarks",
+    "details": "Updated remarks for ID 23785d31-4512-4bcc-aa60-1299aadf4204"
+  },
+  {
+    "timestamp": "2026-07-24T01:05:40.238Z",
+    "action": "Login",
+    "details": "zeru logged in"
+  },
+  {
+    "timestamp": "2026-07-24T01:02:42.136Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-23T16:51:18.532Z",
+    "action": "Edit Record",
+    "details": "Edited record ID ff7c5320-33f0-457e-92f2-229f7b3ebe7a"
+  },
+  {
+    "timestamp": "2026-07-23T16:51:06.159Z",
+    "action": "Login",
+    "details": "zeru logged in"
+  },
+  {
+    "timestamp": "2026-07-23T16:48:09.132Z",
+    "action": "Login",
+    "details": "zeru logged in"
+  },
+  {
+    "timestamp": "2026-07-23T16:48:00.974Z",
+    "action": "Reset Password",
+    "details": "Password reset via OTP for username zeru"
+  },
+  {
+    "timestamp": "2026-07-23T16:47:37.832Z",
+    "action": "Forgot Password",
+    "details": "OTP requested for username zeru"
+  },
+  {
+    "timestamp": "2026-07-23T16:46:07.210Z",
+    "action": "Forgot Password",
+    "details": "OTP requested for username zeru"
+  },
+  {
+    "timestamp": "2026-07-23T16:44:55.529Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-23T16:44:37.302Z",
+    "action": "Agent Remarks",
+    "details": "Updated remarks for ID ff7c5320-33f0-457e-92f2-229f7b3ebe7a"
+  },
+  {
+    "timestamp": "2026-07-23T16:43:57.441Z",
+    "action": "Login",
+    "details": "cache logged in"
+  },
+  {
+    "timestamp": "2026-07-23T15:50:18.866Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-22T05:13:35.479Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-22T03:14:59.471Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
     "timestamp": "2026-07-22T00:31:17.184Z",
     "action": "Login",
     "details": "admin logged in"
