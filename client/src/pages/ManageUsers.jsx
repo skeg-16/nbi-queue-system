@@ -2,20 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
-import { Plus, MoreHorizontal, Mail, X, Trash2, AlertTriangle } from 'lucide-react';
-
-function initials(name) {
-  if (!name) return '?';
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase();
-}
-
-function avatarColor(name) {
-  const colors = ['#F0A500', '#3a5a99', '#7c5cbf', '#c2593f', '#3f9e6d', '#c23f6f'];
-  let hash = 0;
-  for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
-}
+import { Plus, MoreHorizontal, Mail, X, UserX, UserCheck, AlertTriangle, User, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -23,7 +10,13 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
 }
 
-function UserCard({ u, onDelete }) {
+function daysSince(dateStr) {
+  if (!dateStr) return 0;
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+}
+
+function UserCard({ u, onDeactivate, onReactivate, onEdit }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -35,16 +28,19 @@ function UserCard({ u, onDelete }) {
     return () => document.removeEventListener('click', handler);
   }, []);
 
-  return (
-    <div className="uc-card">
+  const isActive = u.is_active !== false;
+  const daysDeactivated = !isActive ? daysSince(u.deactivated_at) : 0;
+  const daysLeft = Math.max(0, 30 - daysDeactivated);
+
+ return (
+    <div className={`uc-card ${!isActive ? 'uc-card-inactive' : ''} ${u.is_locked ? 'uc-card-locked' : ''}`}>
       <div className="uc-top">
-        <div className="uc-avatar" style={{ background: avatarColor(u.full_name) }}>
-          {initials(u.full_name)}
-          <span className={`uc-status-dot ${u.is_first_login ? 'pending' : 'active'}`} />
+        <div className="uc-avatar">
+          <User size={20} strokeWidth={2.2} />
         </div>
-        <div className="uc-name-block">
-          <p className="uc-name">{u.full_name}</p>
-          <p className="uc-role">{u.role}</p>
+         <div className="uc-name-block">
+          <p className="uc-name">{u.username}</p>
+          <p className="uc-role">{u.role}{u.is_locked ? ' · LOCKED' : ''}</p>
         </div>
         <div className="uc-menu-wrap" ref={menuRef}>
           <button className="uc-menu-btn" onClick={() => setMenuOpen(m => !m)}>
@@ -52,9 +48,18 @@ function UserCard({ u, onDelete }) {
           </button>
           {menuOpen && (
             <div className="uc-menu-dropdown">
-              <button className="uc-menu-item danger" onClick={() => { setMenuOpen(false); onDelete(u.id, u.full_name); }}>
-                <Trash2 size={14} /> Remove
+              <button className="uc-menu-item" onClick={() => { setMenuOpen(false); onEdit(u); }}>
+                <User size={14} /> Edit Username
               </button>
+              {isActive ? (
+                <button className="uc-menu-item danger" onClick={() => { setMenuOpen(false); onDeactivate(u.id, u.username); }}>
+                  <UserX size={14} /> Deactivate
+                </button>
+              ) : (
+                <button className="uc-menu-item" onClick={() => { setMenuOpen(false); onReactivate(u.id, u.username); }}>
+                  <UserCheck size={14} /> Reactivate
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -62,8 +67,8 @@ function UserCard({ u, onDelete }) {
 
       <div className="uc-meta-row">
         <div>
-          <p className="uc-meta-label">Username</p>
-          <p className="uc-meta-value">{u.username}</p>
+          <p className="uc-meta-label">Full Name</p>
+          <p className="uc-meta-value">{u.full_name}</p>
         </div>
         <div style={{ textAlign: 'right' }}>
           <p className="uc-meta-label">Date Added</p>
@@ -78,9 +83,15 @@ function UserCard({ u, onDelete }) {
         <span>{u.email || 'No email on file'}</span>
       </div>
       <div className="uc-detail-row">
-        <span className={`uc-status-text ${u.is_first_login ? 'pending' : 'active'}`}>
-          {u.is_first_login ? 'Password not set' : 'Active'}
-        </span>
+        {isActive ? (
+          <span className="uc-status-text active">
+            {u.is_first_login ? 'Password not set' : 'Active'}
+          </span>
+        ) : (
+          <span className="uc-status-text inactive">
+            Deactivated {daysDeactivated}d ago · auto-deletes in {daysLeft}d
+          </span>
+        )}
       </div>
     </div>
   );
@@ -103,10 +114,29 @@ export default function ManageUsers() {
   const [creating, setCreating] = useState(false);
   const [createdInfo, setCreatedInfo] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [confirmDelete, setConfirmDelete] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(null);
+  const [deactivating, setDeactivating] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editUsername, setEditUsername] = useState('');
+  const [editError, setEditError] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
   const [toasts, setToasts] = useState([]);
   const toastIdRef = useRef(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 12;
+
+  const [requests, setRequests] = useState([]);
+  const [acceptingRequest, setAcceptingRequest] = useState(null);
+  const [acceptEmail, setAcceptEmail] = useState('');
+  const [accepting, setAccepting] = useState(false);
+
+  const fetchRequests = async () => {
+    try {
+      const res = await fetch('/api/account-requests', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) setRequests(data.data);
+    } catch (err) { /* ignore */ }
+  };
 
   function showToast(msg, type = 'success') {
     const id = ++toastIdRef.current;
@@ -137,20 +167,59 @@ export default function ManageUsers() {
 
   useEffect(() => {
     fetchUsers();
+    fetchRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const sortedUsers = [...users].sort((a, b) => (b.is_locked ? 1 : 0) - (a.is_locked ? 1 : 0));
+  const totalPages = Math.ceil(sortedUsers.length / usersPerPage);
+  const paginatedUsers = sortedUsers.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
+  const openAcceptModal = (r) => {
+    setAcceptingRequest(r);
+    setAcceptEmail(r.users?.email || '');
+  };
+
+  const submitAccept = async () => {
+    if (!acceptingRequest) return;
+    if (acceptingRequest.type === 'forgot_password' && !acceptEmail.trim()) {
+      showToast("Please enter the agent's email.");
+      return;
+    }
+    setAccepting(true);
+    try {
+      const res = await fetch(`/api/account-requests/${acceptingRequest.id}/accept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ email: acceptEmail })
+      });
+     const data = await res.json();
+      if (data.success) {
+        showToast(acceptingRequest.type === 'forgot_password' ? 'Reset code sent to agent.' : 'Account unlocked.');
+        setAcceptingRequest(null);
+        setAcceptEmail('');
+        fetchRequests();
+      } else {
+        showToast(data.error || 'Failed to process request.');
+      }
+    } catch (err) {
+      showToast('Network error.');
+    }
+    setAccepting(false);
+  };
   const handleCreate = async (e) => {
     e.preventDefault();
     setError('');
     setFieldErrors({});
     setCreatedInfo(null);
 
-    // Client-side required-field check first
     const newFieldErrors = {};
     if (!username.trim()) newFieldErrors.username = true;
     if (!fullName.trim()) newFieldErrors.fullName = true;
-    if (!email.trim()) newFieldErrors.email = true;
+    if (role === 'admin' && !email.trim()) newFieldErrors.email = true;
     if (Object.keys(newFieldErrors).length > 0) {
       setFieldErrors(newFieldErrors);
       setError('Please fill in all required fields.');
@@ -177,7 +246,6 @@ export default function ManageUsers() {
           : rawMsg;
         setError(friendlyMsg);
 
-        // Highlight the specific field the backend flagged, if we can tell
         if (/username/i.test(rawMsg)) setFieldErrors({ username: true });
         else if (/email/i.test(rawMsg)) setFieldErrors({ email: true });
         else if (/full name/i.test(rawMsg)) setFieldErrors({ fullName: true });
@@ -186,12 +254,15 @@ export default function ManageUsers() {
         return;
       }
 
-setCreatedInfo({ username: data.data.username, password: data.defaultPassword, emailSent: data.emailSent });
+      setCreatedInfo({ username: data.data.username, password: data.defaultPassword, emailSent: data.emailSent, role });
       showToast(
         data.emailSent
           ? "Account created! Login credentials were sent to the user's email."
-          : 'Account created! Email could not be sent — check the credentials below.'
-      );      setUsername('');
+          : role === 'admin'
+            ? 'Account created! Email could not be sent — check the credentials below.'
+            : 'Account created! Share these credentials with the agent directly.'
+      );
+      setUsername('');
       setFullName('');
       setEmail('');
       setRole('agent');
@@ -205,26 +276,82 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
     }
   };
 
-  const handleDelete = (id, name) => {
-    setConfirmDelete({ id, name });
+  const handleDeactivate = (id, name) => {
+    setConfirmDeactivate({ id, name });
   };
 
-  const confirmDeleteUser = async () => {
-    if (!confirmDelete) return;
-    setDeleting(true);
+  const confirmDeactivateUser = async () => {
+    if (!confirmDeactivate) return;
+    setDeactivating(true);
     try {
-      const res = await fetch(`/api/users/${confirmDelete.id}`, {
-        method: 'DELETE',
+      const res = await fetch(`/api/users/${confirmDeactivate.id}/deactivate`, {
+        method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      if (data.success) fetchUsers();
-      else setError(data.error || 'Failed to delete user.');
+      if (data.success) {
+        showToast('Account deactivated. It will be permanently deleted after 30 days.');
+        fetchUsers();
+      } else {
+        setError(data.error || 'Failed to deactivate user.');
+      }
     } catch (err) {
       setError('Network error. Please try again.');
     }
-    setDeleting(false);
-    setConfirmDelete(null);
+    setDeactivating(false);
+    setConfirmDeactivate(null);
+  };
+
+  const handleReactivate = async (id, name) => {
+    try {
+      const res = await fetch(`/api/users/${id}/reactivate`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`${name} has been reactivated.`);
+        fetchUsers();
+      } else {
+        showToast(data.error || 'Failed to reactivate user.');
+      }
+    } catch (err) {
+      showToast('Network error.');
+    }
+  };
+
+
+  const openEditModal = (u) => {
+    setEditingUser(u);
+    setEditUsername(u.username);
+    setEditError('');
+  };
+
+  const submitEditUsername = async () => {
+    if (!editUsername.trim()) {
+      setEditError('Please enter a username.');
+      return;
+    }
+    setSavingEdit(true);
+    setEditError('');
+    try {
+      const res = await fetch(`/api/users/${editingUser.id}/username`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ username: editUsername.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Username updated.');
+        setEditingUser(null);
+        fetchUsers();
+      } else {
+        setEditError(data.error || 'Failed to update username.');
+      }
+    } catch (err) {
+      setEditError('Network error.');
+    }
+    setSavingEdit(false);
   };
 
   if (!user) return null;
@@ -255,6 +382,27 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
         }
         .mu-btn-primary:hover { background: #ffb800; }
 
+        .mu-page-nav {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(240,165,0,0.2);
+          border-radius: 8px;
+          padding: 4px;
+        }
+        .mu-page-arrow {
+          width: 28px; height: 28px;
+          display: flex; align-items: center; justify-content: center;
+          background: transparent;
+          border: none;
+          border-radius: 5px;
+          color: #c9d4ec;
+          cursor: pointer;
+        }
+        .mu-page-arrow:hover:not(:disabled) { background: rgba(240,165,0,0.15); color: #F0A500; }
+        .mu-page-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
         .mu-alert-error {
           background: rgba(138,31,31,0.2);
           border: 1px solid rgba(138,31,31,0.5);
@@ -264,16 +412,6 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
           margin-bottom: 18px;
           font-size: 13.5px;
         }
-        .mu-alert-success {
-          background: rgba(30,122,60,0.18);
-          border: 1px solid rgba(30,122,60,0.5);
-          color: #8fe0a8;
-          padding: 14px 16px;
-          border-radius: 8px;
-          margin-bottom: 18px;
-          font-size: 13.5px;
-        }
-        .mu-alert-success strong { color: #b9f2cb; }
         .mu-cred-box {
           margin-top: 10px;
           font-family: monospace;
@@ -316,11 +454,13 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
           outline: none;
         }
         .mu-select option { background: #0b1f4d; color: #fff; }
-.mu-input.error, .mu-select.error { border-color: #e04b4b; background: rgba(224,75,75,0.08); }
-        .mu-field-error { margin: 6px 0 0 0; color: #ff8a8a; font-size: 11.5px; }        /* ---- Card grid ---- */
+        .mu-input.error, .mu-select.error { border-color: #e04b4b; background: rgba(224,75,75,0.08); }
+        .mu-field-error { margin: 6px 0 0 0; color: #ff8a8a; font-size: 11.5px; }
+
+        /* ---- Card grid ---- */
         .uc-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          grid-template-columns: repeat(4, 1fr);
           gap: 16px;
         }
         .uc-card {
@@ -329,23 +469,24 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
           border-radius: 14px;
           padding: 18px;
         }
+        .uc-card-inactive {
+          border-color: rgba(224,75,75,0.35);
+          opacity: 0.75;
+        }
+        .uc-card-locked {
+          border-color: rgba(240,165,0,0.6);
+          box-shadow: 0 0 0 1px rgba(240,165,0,0.3);
+        }
         .uc-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
         .uc-avatar {
           position: relative;
           width: 42px; height: 42px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          color: #0b1f4d; font-weight: 800; font-size: 14px;
+          color: #0b1f4d; background: #F0A500;
           flex-shrink: 0;
         }
-        .uc-status-dot {
-          position: absolute; bottom: -1px; right: -1px;
-          width: 11px; height: 11px; border-radius: 50%;
-          border: 2px solid #0d234f;
-        }
-        .uc-status-dot.active { background: #4ade80; }
-        .uc-status-dot.pending { background: #f0b000; }
         .uc-name-block { flex: 1; min-width: 0; }
-        .uc-name { margin: 0; color: #fff; font-size: 14.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .uc-name { margin: 0; color: #fff; font-size: 15.5px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .uc-role { margin: 2px 0 0 0; color: #F0A500; font-size: 10.5px; letter-spacing: 0.6px; text-transform: uppercase; font-weight: 600; }
 
         .uc-menu-wrap { position: relative; }
@@ -354,13 +495,15 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
         .uc-menu-dropdown {
           position: absolute; right: 0; top: 28px; z-index: 10;
           background: #142d6e; border: 1px solid rgba(240,165,0,0.25); border-radius: 8px;
-          min-width: 130px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+          min-width: 140px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
         .uc-menu-item {
           display: flex; align-items: center; gap: 8px; width: 100%;
-          padding: 9px 12px; background: none; border: none; color: #ff8a8a; font-size: 12.5px; cursor: pointer; text-align: left;
+          padding: 9px 12px; background: none; border: none; color: #c9d4ec; font-size: 12.5px; cursor: pointer; text-align: left;
         }
-        .uc-menu-item:hover { background: rgba(138,31,31,0.2); }
+        .uc-menu-item.danger { color: #ff8a8a; }
+        .uc-menu-item:hover { background: rgba(255,255,255,0.06); }
+        .uc-menu-item.danger:hover { background: rgba(138,31,31,0.2); }
 
         .uc-meta-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
         .uc-meta-label { margin: 0; color: #5c6f94; font-size: 10px; letter-spacing: 0.4px; text-transform: uppercase; }
@@ -371,11 +514,11 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
         .uc-detail-row { display: flex; align-items: center; gap: 8px; color: #c9d4ec; font-size: 12.5px; margin-bottom: 6px; }
         .uc-detail-row:last-child { margin-bottom: 0; }
         .uc-status-text.active { color: #4ade80; font-weight: 600; }
-        .uc-status-text.pending { color: #f0b000; font-weight: 600; }
+        .uc-status-text.inactive { color: #ff8a8a; font-weight: 600; }
 
-.uc-empty { color: #8092b8; font-size: 13.5px; padding: 40px; text-align: center; grid-column: 1 / -1; }
+        .uc-empty { color: #8092b8; font-size: 13.5px; padding: 40px; text-align: center; grid-column: 1 / -1; }
 
-        /* ---- Confirm delete modal ---- */
+        /* ---- Confirm modal ---- */
         .mu-confirm-modal {
           background: #0d234f;
           border: 1px solid rgba(224,75,75,0.35);
@@ -436,19 +579,53 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
         <main className="mu-main">
           <div className="mu-header">
             <h2>Manage User Accounts</h2>
-            <button className="mu-btn-primary" onClick={() => { setShowForm(true); setCreatedInfo(null); setError(''); setFieldErrors({}); }}>              <Plus size={16} />
-              Add Agent / Admin
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              {!loading && totalPages > 1 && (
+                <div className="mu-page-nav">
+                  <button
+                    className="mu-page-arrow"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    className="mu-page-arrow"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+              <button className="mu-btn-primary" onClick={() => { setShowForm(true); setCreatedInfo(null); setError(''); setFieldErrors({}); }}>
+                <Plus size={16} />
+                Add Agent / Admin
+              </button>
+            </div>
           </div>
 
           {!showForm && error && <div className="mu-alert-error">{error}</div>}
 
-          {createdInfo && !createdInfo.emailSent && (
-            <div className="mu-alert-error" style={{ background: 'rgba(240,165,0,0.12)', borderColor: 'rgba(240,165,0,0.4)', color: '#f0c674' }}>
-              Email could not be sent — give these credentials to the user manually:
-              <div className="mu-cred-box">
-                Username: <strong>{createdInfo.username}</strong><br />
-                Default Password: <strong>{createdInfo.password}</strong>
+          {requests.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <h3 style={{ color: '#fff', fontSize: 15, marginBottom: 10 }}>Pending Requests ({requests.length})</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {requests.map(r => (
+                  <div key={r.id} style={{ background: '#0d234f', border: '1px solid rgba(240,165,0,0.25)', borderRadius: 10, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                    <div>
+                      <p style={{ margin: 0, color: '#fff', fontWeight: 600, fontSize: 13.5 }}>
+                        {r.users?.full_name} ({r.users?.username})
+                      </p>
+                      <p style={{ margin: '3px 0 0 0', color: '#c9d4ec', fontSize: 12 }}>
+                        {r.type === 'forgot_password' ? 'Requested a password reset' : 'Account locked after 3 failed login attempts'}
+                      </p>
+                    </div>
+                    <button className="mu-btn-primary" onClick={() => openAcceptModal(r)}>
+                      {r.type === 'forgot_password' ? 'Send Reset Link' : 'Unlock Account'}
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -459,134 +636,109 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
             ) : users.length === 0 ? (
               <div className="uc-empty">No accounts yet.</div>
             ) : (
-              users.map(u => (
-                <UserCard key={u.id} u={u} onDelete={handleDelete} />
+              paginatedUsers.map(u => (
+                <UserCard key={u.id} u={u} onDeactivate={handleDeactivate} onReactivate={handleReactivate} onEdit={openEditModal} />
               ))
             )}
           </div>
-        </main>
+        
+          </main>
       </div>
 
-{confirmDelete && (
-        <div className="mu-modal-overlay" onClick={() => !deleting && setConfirmDelete(null)}>
+      {acceptingRequest && (
+        <div className="mu-modal-overlay" onClick={() => !accepting && setAcceptingRequest(null)}>
+          <div className="mu-modal" onClick={e => e.stopPropagation()}>
+            <div className="mu-modal-header">
+              <h3>{acceptingRequest.type === 'forgot_password' ? 'Send Reset Code' : 'Unlock Account'}</h3>
+              <button className="mu-modal-close" onClick={() => setAcceptingRequest(null)}><X size={18} /></button>
+            </div>
+            <p style={{ color: '#c9d4ec', fontSize: 13, margin: '0 0 16px 0' }}>
+              {acceptingRequest.type === 'forgot_password'
+                ? `Enter the email of ${acceptingRequest.users?.full_name} (${acceptingRequest.users?.username}) to send the reset code.`
+                : `Unlock the account of ${acceptingRequest.users?.full_name} (${acceptingRequest.users?.username})?`}
+            </p>
+            {acceptingRequest.type === 'forgot_password' && (
+              <div className="mu-form-grid">
+                <label>
+                  <span>Agent's Email *</span>
+                  <input type="email" className="mu-input" value={acceptEmail} onChange={(e) => setAcceptEmail(e.target.value)} autoFocus />
+                </label>
+              </div>
+            )}
+            <button className="mu-btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={submitAccept} disabled={accepting}>
+              {accepting ? 'Processing...' : (acceptingRequest.type === 'forgot_password' ? 'Send Reset Code' : 'Unlock Account')}
+            </button>
+          </div>
+        </div>
+      )}
+
+{editingUser && (
+        <div className="mu-modal-overlay" onClick={() => !savingEdit && setEditingUser(null)}>
+          <div className="mu-modal" onClick={e => e.stopPropagation()} style={{ width: 380 }}>
+            <div className="mu-modal-header">
+              <h3>Edit Username</h3>
+              <button className="mu-modal-close" onClick={() => setEditingUser(null)}><X size={18} /></button>
+            </div>
+            {editError && <div className="mu-alert-error">{editError}</div>}
+            <div className="mu-form-grid">
+              <label>
+                <span>Username</span>
+                <input
+                  type="text"
+                  className="mu-input"
+                  value={editUsername}
+                  onChange={(e) => setEditUsername(e.target.value)}
+                  autoFocus
+                  maxLength={30}
+                />
+              </label>
+            </div>
+            <button className="mu-btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={submitEditUsername} disabled={savingEdit}>
+              {savingEdit ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {confirmDeactivate && (
+        <div className="mu-modal-overlay" onClick={() => !deactivating && setConfirmDeactivate(null)}>
           <div className="mu-confirm-modal" onClick={e => e.stopPropagation()}>
             <div className="mu-confirm-icon">
               <AlertTriangle size={22} />
             </div>
-            <h3>Remove Account</h3>
-            <p>Are you sure you want to remove the account for <strong>{confirmDelete.name}</strong>? This action cannot be undone.</p>
+            <h3>Deactivate Account</h3>
+            <p>Are you sure you want to deactivate <strong>{confirmDeactivate.name}</strong>? They won't be able to log in. The account will be permanently deleted after 30 days unless reactivated.</p>
             <div className="mu-confirm-actions">
-              <button className="mu-btn-cancel" onClick={() => setConfirmDelete(null)} disabled={deleting}>Cancel</button>
-              <button className="mu-btn-danger" onClick={confirmDeleteUser} disabled={deleting}>{deleting ? 'Removing...' : 'Remove'}</button>
+              <button className="mu-btn-cancel" onClick={() => setConfirmDeactivate(null)} disabled={deactivating}>Cancel</button>
+              <button className="mu-btn-danger" onClick={confirmDeactivateUser} disabled={deactivating}>{deactivating ? 'Deactivating...' : 'Deactivate'}</button>
             </div>
           </div>
         </div>
       )}
-
-      {toasts.length > 0 && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(5, 14, 29, 0.6)',
-          backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-          pointerEvents: 'none'
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, pointerEvents: 'auto' }}>
-            {toasts.map(t => (
-              <div key={t.id} style={{
-                width: 380,
-                background: '#0d234f',
-                border: '1px solid rgba(30,122,60,0.5)',
-                borderRadius: 20,
-                padding: '40px 32px 32px',
-                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.45)',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 20
-              }}>
-                <div style={{
-                  width: 80, height: 80, borderRadius: '50%',
-                  background: 'rgba(30,122,60,0.18)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  <span style={{ fontSize: '2.5rem', color: '#4ade80', fontWeight: 700, lineHeight: 1 }}>✓</span>
-                </div>
-                <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#e6ecf7', lineHeight: 1.5 }}>
-                  {t.msg}
-                </div>
-              </div>
-            ))}
+      
+      {createdInfo && !createdInfo.emailSent && (
+        <div className="mu-modal-overlay" onClick={() => setCreatedInfo(null)}>
+          <div className="mu-modal" onClick={e => e.stopPropagation()} style={{ width: 380 }}>
+            <div className="mu-modal-header">
+              <h3>Account Created</h3>
+              <button className="mu-modal-close" onClick={() => setCreatedInfo(null)}><X size={18} /></button>
+            </div>
+            <p style={{ color: '#c9d4ec', fontSize: 13, margin: '0 0 14px 0' }}>
+              {createdInfo.role === 'admin'
+                ? 'Email could not be sent — give these credentials to the user manually:'
+                : 'Give these credentials to the agent directly (no email needed):'}
+            </p>
+            <div className="mu-cred-box">
+              Username: <strong>{createdInfo.username}</strong><br />
+              Default Password: <strong>{createdInfo.password}</strong>
+            </div>
+            <button className="mu-btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 16 }} onClick={() => setCreatedInfo(null)}>
+              Got it
+            </button>
           </div>
         </div>
       )}
 
-      {toasts.length > 0 && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(5, 14, 29, 0.6)',
-          backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-          pointerEvents: 'none'
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, pointerEvents: 'auto' }}>
-            {toasts.map(t => (
-              <div key={t.id} style={{
-                width: 380,
-                background: '#0d234f',
-                border: '1px solid rgba(30,122,60,0.5)',
-                borderRadius: 20,
-                padding: '40px 32px 32px',
-                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.45)',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 20
-              }}>
-                <div style={{
-                  width: 80, height: 80, borderRadius: '50%',
-                  background: 'rgba(30,122,60,0.18)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  <span style={{ fontSize: '2.5rem', color: '#4ade80', fontWeight: 700, lineHeight: 1 }}>✓</span>
-                </div>
-                <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#e6ecf7', lineHeight: 1.5 }}>
-                  {t.msg}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {toasts.length > 0 && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(5, 14, 29, 0.6)',
-          backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-          pointerEvents: 'none'
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, pointerEvents: 'auto' }}>
-            {toasts.map(t => (
-              <div key={t.id} style={{
-                width: 380,
-                background: '#0d234f',
-                border: '1px solid rgba(30,122,60,0.5)',
-                borderRadius: 20,
-                padding: '40px 32px 32px',
-                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.45)',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 20
-              }}>
-                <div style={{
-                  width: 80, height: 80, borderRadius: '50%',
-                  background: 'rgba(30,122,60,0.18)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-                }}>
-                  <span style={{ fontSize: '2.5rem', color: '#4ade80', fontWeight: 700, lineHeight: 1 }}>✓</span>
-                </div>
-                <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#e6ecf7', lineHeight: 1.5 }}>
-                  {t.msg}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {toasts.length > 0 && (
         <div style={{
@@ -628,27 +780,31 @@ setCreatedInfo({ username: data.data.username, password: data.defaultPassword, e
           <div className="mu-modal" onClick={e => e.stopPropagation()}>
             <div className="mu-modal-header">
               <h3>Add Agent / Admin</h3>
-            <button className="mu-modal-close" onClick={() => { setShowForm(false); setError(''); setFieldErrors({}); }}><X size={18} /></button>            </div>
+              <button className="mu-modal-close" onClick={() => { setShowForm(false); setError(''); setFieldErrors({}); }}><X size={18} /></button>
+            </div>
+            {error && <div className="mu-alert-error">{error}</div>}
             <form onSubmit={handleCreate} noValidate>
-                  <div className="mu-form-grid">
+              <div className="mu-form-grid">
                 <label>
                   <span>Username *</span>
-                  <input type="text" className={`mu-input ${fieldErrors.username ? 'error' : ''}`} value={username} onChange={(e) => setUsername(e.target.value.trim())} autoFocus />
+                  <input type="text" className={`mu-input ${fieldErrors.username ? 'error' : ''}`} value={username} onChange={(e) => setUsername(e.target.value.trim())} autoFocus maxLength={30} />
                   {fieldErrors.username && <p className="mu-field-error">Please enter a username</p>}
                 </label>
                 <label>
                   <span>Full Name *</span>
-                  <input type="text" className={`mu-input ${fieldErrors.fullName ? 'error' : ''}`} value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                  <input type="text" className={`mu-input ${fieldErrors.fullName ? 'error' : ''}`} value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={30} />
                   {fieldErrors.fullName && <p className="mu-field-error">Please enter a full name</p>}
                 </label>
-                <label>
-                  <span>Email *</span>
-                  <input type="email" className={`mu-input ${fieldErrors.email ? 'error' : ''}`} value={email} onChange={(e) => setEmail(e.target.value)} />
-                  {fieldErrors.email && <p className="mu-field-error">Please enter a valid email</p>}
-                </label>
+                {role === 'admin' && (
+                  <label>
+                    <span>Email *</span>
+                    <input type="email" className={`mu-input ${fieldErrors.email ? 'error' : ''}`} value={email} onChange={(e) => setEmail(e.target.value)} maxLength={50} />
+                    {fieldErrors.email && <p className="mu-field-error">Please enter a valid email</p>}
+                  </label>
+                )}
                 <label>
                   <span>Role *</span>
-                  <select className="mu-select" value={role} onChange={(e) => setRole(e.target.value)}>
+                    <select className="mu-select" value={role} onChange={(e) => { setRole(e.target.value); if (e.target.value === 'agent') setEmail(''); }}>
                     <option value="agent">Agent</option>
                     <option value="admin">Admin</option>
                   </select>
