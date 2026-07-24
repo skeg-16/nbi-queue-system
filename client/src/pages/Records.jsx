@@ -134,9 +134,11 @@ export default function Records() {
   useEffect(() => { document.title = "Complaint Registry | NBI QMS"; }, []);
   const socket = useSocket();
   const { user, logout } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const navigate = useNavigate();
   const location = useLocation();
 
+  
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -164,7 +166,7 @@ export default function Records() {
 
   // --- Pagination ---
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -642,10 +644,11 @@ async function submitEdit(e) {
   }
 
   // ---------- Agent remarks modal ----------
-  async function openRemarks(id) {
+async function openRemarks(id) {
     setRemarksForm({
-      id, interviewer: '', text: '', isActionable: 'no', caseType: '', customCaseType: '',
-      subject: '', lastModified: null
+
+      id, interviewer: isAdmin ? '' : (user.username || ''), text: '', isActionable: 'no', caseType: '', customCaseType: '',
+      subject: '', lastModified: null, readOnly: isAdmin, lockedBy: ''
     });
     setRemarksErrors({});
     setModalRemarks(true);
@@ -658,24 +661,82 @@ async function submitEdit(e) {
         const knownValues = (isActionableVal === 'yes' ? CASE_TYPE_OPTIONS : CAUSES_OPTIONS).map(o => o.value);
         const savedCaseType = json.data.caseType || '';
         const isKnown = knownValues.includes(savedCaseType);
+        const existingInterviewer = json.data.interviewer || '';
+        const isLockedByOtherAgent = !isAdmin && existingInterviewer.trim() !== '' &&
+          existingInterviewer.trim().toLowerCase() !== (user.username || '').trim().toLowerCase();
+
         setRemarksForm({
           id,
-          interviewer: json.data.interviewer || '',
+          interviewer: existingInterviewer || (isAdmin ? '' : (user.username || '')),
           text: json.data.text || '',
           isActionable: isActionableVal,
           caseType: isKnown ? savedCaseType : (savedCaseType ? '__custom__' : ''),
           customCaseType: isKnown ? '' : savedCaseType,
           subject: json.data.subject || '',
-          lastModified: json.data.last_modified || null
+          lastModified: json.data.last_modified || null,
+          readOnly: isAdmin || isLockedByOtherAgent,
+          lockedBy: existingInterviewer,
+          loading: false
         });
+      } else {
+        setRemarksForm(f => ({ ...f, readOnly: true, loading: false }));
+        showToast('Failed to verify assessment ownership. Please try again.', true);
       }
     } catch (e) {
+      setRemarksForm(f => ({ ...f, readOnly: true, loading: false }));
       showToast('Failed to load existing assessment', true);
     }
   }
 
+  async function clearRemarksAssessment(id) {
+    if (!window.confirm('Clear this assessment? This will remove the interviewer lock and let any agent claim it again.')) return;
+    try {
+      const response = await fetch(`/api/records/${id}/remarks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interviewer: '',
+          text: '',
+          isActionable: '',
+          caseType: '',
+          subject: '',
+          isAdmin: true
+        })
+      });
+      const result = await response.json();
+      if (result.success) {
+        showToast('Assessment cleared', false, 'success');
+        setModalRemarks(false);
+      } else {
+        showToast('Failed to clear assessment.', true);
+      }
+    } catch (err) {
+      showToast('Server error.', true);
+    }
+  }
+
   async function submitRemarks() {
-    if (!remarksForm) return;
+    if (!remarksForm || remarksForm.readOnly) {
+      showToast('You do not have permission to edit this assessment.', true);
+      return;
+    }
+
+    try {
+      const checkRes = await fetch(`/api/records/${remarksForm.id}/remarks`);
+      const checkJson = await checkRes.json();
+       if (checkJson.success) {
+        const currentInterviewer = (checkJson.data.interviewer || '').trim().toLowerCase();
+        const myName = (user.username || '').trim().toLowerCase();
+        if (!isAdmin && currentInterviewer && currentInterviewer !== myName) {
+          showToast(`This assessment was already claimed by ${checkJson.data.interviewer}.`, true);
+          setModalRemarks(false);
+          return;
+        }
+      }
+    } catch (e) {
+      showToast('Could not verify assessment status. Please try again.', true);
+      return;
+    }
 
     let hasErrors = false;
     const newErrors = {};
@@ -707,7 +768,8 @@ async function submitEdit(e) {
           text: remarksForm.text,
           isActionable: remarksForm.isActionable,
           caseType,
-          subject: remarksForm.subject
+          subject: remarksForm.subject,
+          isAdmin
         })
       });
       const result = await response.json();
@@ -715,7 +777,8 @@ async function submitEdit(e) {
         showToast('Assessment saved successfully', false, 'success');
         setModalRemarks(false);
       } else {
-        showToast('Failed to save assessment.', true);
+        showToast(result.error || 'Failed to save assessment.', true);
+        if (response.status === 403) setModalRemarks(false);
       }
     } catch (err) {
       showToast('Server error.', true);
@@ -920,18 +983,16 @@ async function doExport(type) {
   // ==================== RENDER ====================
   if (!user) return null;
 
-  return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar
+ return (
+    <div style={{ display: 'flex', height: '100vh', maxWidth: '100vw', overflow: 'hidden' }}>   
+  <Sidebar
         user={user}
         activePath={location.pathname}
         onNavigate={navigate}
         onLogout={handleLogout}
       />
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-      {/* Action bar */}
-      <div className="action-bar" style={{ display: 'flex', flexDirection: 'column', gap: 15, padding: '20px 25px', background: 'var(--panel-bg)', borderBottom: '1px solid var(--border-color)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+<div style={{ flex: 1, minWidth: 0, maxWidth: '100%', display: 'flex', flexDirection: 'column', overflowX: 'hidden', height: '100vh', overflowY: 'hidden' }}>      {/* Action bar */}
+      <div className="action-bar" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 25px', background: 'var(--panel-bg)', borderBottom: '1px solid var(--border-color)' }}>        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--text-main)', fontWeight: 600, letterSpacing: '0.02em' }}>Complaint Records</h2>
           </div>
@@ -990,8 +1051,7 @@ async function doExport(type) {
 
       {/* Date navigation tabs */}
       {currentView === 'complaints' && (
-        <div className="sheet-tabs" style={{ position: 'relative', background: 'var(--bg-color)', borderBottom: '1px solid var(--border-color)', padding: '5px 20px 0 20px', display: 'flex' }}>
-          <div className="sheet-tab" id="dateHeader" title="Open Date from Calendar" onClick={openCalendar}>
+      <div className="sheet-tabs" style={{ position: 'relative', background: 'var(--bg-color)', borderBottom: '1px solid var(--border-color)', padding: '2px 20px 0 20px', display: 'flex' }}>          <div className="sheet-tab" id="dateHeader" title="Open Date from Calendar" onClick={openCalendar}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 6 }}><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" /></svg>
             <span style={{ fontSize: '0.7em', marginLeft: 4 }}>▼</span>
           </div>
@@ -1025,20 +1085,32 @@ async function doExport(type) {
       )}
 
       {/* Main table */}
-      <div className="grid-workspace" style={{ padding: 20, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--panel-bg)', borderRadius: 8, border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+      <div className="grid-workspace" style={{ padding: '10px 20px', display: 'flex', flexDirection: 'column', minWidth: 0, maxWidth: '100%', flex: 1, minHeight: 0 }}>        <div style={{ flex: 1, minWidth: 0, maxWidth: '100%', display: 'flex', flexDirection: 'column', background: 'var(--panel-bg)', borderRadius: 8, border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <style>{`
             .data-table th, .data-table td {
-              padding: 6px 4px !important;
-              font-size: 0.78rem !important;
+              padding: 4px 6px !important;
+              font-size: 0.75rem !important;
+              line-height: 1.2 !important;
             }
             .data-table th.col-title {
               font-size: 0.72rem !important;
               white-space: nowrap;
             }
+            .data-table th.col-title.duration-col {
+              white-space: normal !important;
+              font-size: 0.68rem !important;
+              word-break: normal !important;
+            }
+            .data-table th:first-child, .data-table td:first-child {
+              padding-left: 24px !important;
+            }
+            .data-table th:last-child, .data-table td:last-child {
+              padding-right: 24px !important;
+            }
           `}</style>
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            <table className="data-table" style={{ width: '100%', tableLayout: 'auto', borderCollapse: 'collapse' }}>
+          
+          <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', minWidth: 0 }}>
+            <table className="data-table" style={{ width: '100%', minWidth: 900, tableLayout: 'auto', borderCollapse: 'collapse' }}>
             <thead>
               {currentView === 'complaints' ? (
                 <tr className="column-titles">
@@ -1051,8 +1123,8 @@ async function doExport(type) {
                   <th className="col-title" onClick={() => handleSort('contact')}>Contact{sortIndicator('contact')}</th>
                   <th className="col-title" onClick={() => handleSort('is_priority')}>Priority{sortIndicator('is_priority')}</th>
                   <th className="col-title" onClick={() => handleSort('status')}>Status{sortIndicator('status')}</th>
-                  <th className="col-title" style={{ textAlign: 'center' }}>Registration Duration (mins)</th>
-                  <th className="col-title" style={{ textAlign: 'center' }}>Interview Duration (mins)</th>
+                  <th className="col-title" style={{ textAlign: 'center', whiteSpace: 'normal', fontSize: '0.68rem', lineHeight: 1.2, width: 90 }}>Registration<br />Duration</th>
+                  <th className="col-title" style={{ textAlign: 'center', whiteSpace: 'normal', fontSize: '0.68rem', lineHeight: 1.2, width: 90 }}>Interview<br />Duration</th>
                   <th className="col-title" style={{ textAlign: 'center', letterSpacing: '0.05em' }}>ACTIONS</th>
                 </tr>
               ) : (
@@ -1342,34 +1414,33 @@ async function doExport(type) {
         <div className="modal-overlay" style={{ display: 'flex' }}>
           <div className="modal" style={{ maxWidth: 900, width: '90vw' }}>
             <div className="modal-header">
-              <div className="modal-title">Agent Assessment</div>
+              <div className="modal-title">{remarksForm.readOnly ? 'Agent Assessment (View Only)' : 'Agent Assessment'}</div>
               <button className="modal-close" onClick={() => setModalRemarks(false)}>&times;</button>
             </div>
 
+            {remarksForm.readOnly && remarksForm.lockedBy && (
+              <div style={{ marginBottom: '1rem', padding: '10px 14px', borderRadius: 6, background: 'rgba(240,165,0,0.1)', border: '1px solid rgba(240,165,0,0.3)', fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                🔒 This assessment was created by <strong>{remarksForm.lockedBy}</strong>. Only that agent can edit it.
+              </div>
+            )}
+            {remarksForm.readOnly && !remarksForm.lockedBy && isAdmin && (
+              <div style={{ marginBottom: '1rem', padding: '10px 14px', borderRadius: 6, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                Admins have view-only access to assessments.
+              </div>
+            )}
+
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Interviewer (Agent) <span style={{ color: '#e74c3c' }}>*</span></label>
-              <input type="text" className={`form-input ${remarksErrors.interviewer ? 'err' : ''}`}
+              <input type="text" className="form-input" disabled
                 placeholder="Enter interviewer name..."
-                style={{ 
-                  width: '100%', 
-                  boxSizing: 'border-box', 
-                  display: 'block', 
-                  padding: '10px 16px',
-                  borderColor: remarksErrors.interviewer ? '#e74c3c' : ''
-                }}
+                style={{ width: '100%', boxSizing: 'border-box', display: 'block', padding: '10px 16px', opacity: 0.7 }}
                 value={remarksForm.interviewer || ''}
-                onChange={e => {
-                  const val = e.target.value;
-                  setRemarksForm(f => ({ ...f, interviewer: val }));
-                  if (val.trim()) {
-                    setRemarksErrors(errs => ({ ...errs, interviewer: false }));
-                  }
-                }}
+                readOnly
               />
             </div>
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Is Actionable?</label>
-              <select className="form-input" value={remarksForm.isActionable} 
+              <select className="form-input" value={remarksForm.isActionable} disabled={remarksForm.readOnly}
                 onChange={e => {
                   setRemarksForm(f => ({ ...f, isActionable: e.target.value, caseType: '', customCaseType: '' }));
                   setRemarksErrors(errs => ({ ...errs, caseType: false }));
@@ -1385,6 +1456,7 @@ async function doExport(type) {
                   <label className="form-label">Causes <span style={{ color: '#e74c3c' }}>*</span></label>
                   <select className={`form-input ${remarksErrors.caseType ? 'err' : ''}`} 
                     value={remarksForm.caseType}
+                    disabled={remarksForm.readOnly}
                     style={{ borderColor: remarksErrors.caseType ? '#e74c3c' : '' }}
                     onChange={e => {
                       setRemarksForm(f => ({ ...f, caseType: e.target.value }));
@@ -1409,6 +1481,7 @@ async function doExport(type) {
                     <label className="form-label" style={{ display: 'block', marginBottom: 6 }}>Custom Cause <span style={{ color: '#e74c3c' }}>*</span></label>
                     <input type="text" className={`form-input ${remarksErrors.caseType ? 'err' : ''}`} 
                       placeholder="Enter custom cause..."
+                      disabled={remarksForm.readOnly}
                       style={{ 
                         width: '100%', 
                         boxSizing: 'border-box', 
@@ -1431,6 +1504,7 @@ async function doExport(type) {
                 <div className="form-group" style={{ marginBottom: '1rem' }}>
                   <label className="form-label">Case Notes & Remarks</label>
                   <textarea className="form-textarea" placeholder="Enter agent remarks or comment for this complainant..."
+                    disabled={remarksForm.readOnly}
                     style={{ minHeight: 140, fontSize: '1rem', lineHeight: 1.5, resize: 'none' }}
                     value={remarksForm.text} onChange={e => handleRemarksTextChange(e.target.value)} />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
@@ -1446,6 +1520,7 @@ async function doExport(type) {
                   <label className="form-label">Case Type <span style={{ color: '#e74c3c' }}>*</span></label>
                   <select className={`form-input ${remarksErrors.caseType ? 'err' : ''}`} 
                     value={remarksForm.caseType}
+                    disabled={remarksForm.readOnly}
                     style={{ borderColor: remarksErrors.caseType ? '#e74c3c' : '' }}
                     onChange={e => {
                       setRemarksForm(f => ({ ...f, caseType: e.target.value }));
@@ -1470,6 +1545,7 @@ async function doExport(type) {
                     <label className="form-label" style={{ display: 'block', marginBottom: 6 }}>Custom Case Type <span style={{ color: '#e74c3c' }}>*</span></label>
                     <input type="text" className={`form-input ${remarksErrors.caseType ? 'err' : ''}`} 
                       placeholder="Enter custom case type..."
+                      disabled={remarksForm.readOnly}
                       style={{ 
                         width: '100%', 
                         boxSizing: 'border-box', 
@@ -1492,6 +1568,7 @@ async function doExport(type) {
                 <div className="form-group" style={{ marginBottom: '1rem' }}>
                   <label className="form-label">Subject</label>
                   <textarea className="form-input" placeholder="Brief subject/title of the case..." rows={2}
+                    disabled={remarksForm.readOnly}
                     style={{ width: '100%', boxSizing: 'border-box', resize: 'none', minHeight: 50, fontFamily: 'inherit' }}
                     value={remarksForm.subject} onChange={e => setRemarksForm(f => ({ ...f, subject: e.target.value }))} />
                 </div>
@@ -1502,12 +1579,18 @@ async function doExport(type) {
               {remarksForm.lastModified ? `Last modified: ${new Date(remarksForm.lastModified).toLocaleString('en-PH')}` : 'No previous assessment.'}
             </div>
             <div className="modal-footer">
-              <button className="btn-formal" onClick={() => setModalRemarks(false)}>Cancel</button>
-              <button className="btn-formal btn-primary" onClick={submitRemarks}>Save Assessment</button>
+              <button className="btn-formal" onClick={() => setModalRemarks(false)}>Close</button>
+              {isAdmin && remarksForm.lockedBy && (
+                <button className="btn-formal btn-danger" onClick={() => clearRemarksAssessment(remarksForm.id)}>Clear Assessment</button>
+              )}
+              {!remarksForm.readOnly && !remarksForm.loading && (
+                <button className="btn-formal btn-primary" onClick={submitRemarks}>Save Assessment</button>
+              )}
             </div>
           </div>
         </div>
       )}
+
 
       {modalExport && (
         <div className="modal-overlay" style={{ display: 'flex' }}>
@@ -1683,6 +1766,9 @@ async function doExport(type) {
     </div>
   );
 }
+ 
+
+
 
 function ViewDetailsBody({ data }) {
   const { record: r, remarks } = data;
