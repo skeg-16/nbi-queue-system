@@ -7,6 +7,7 @@ import Display from './pages/Display';
 import Staff from './pages/Staff';
 import Records from './pages/Records';
 import Feedback from './pages/FeedbackForms';
+import FeedbackReports from './pages/FeedbackReports';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
@@ -87,7 +88,7 @@ export default function App() {
               path="/feedback-reports"
               element={
                 <ProtectedRoute adminOnly>
-                  <ManageUsers />
+                  <FeedbackReports />
                 </ProtectedRoute>
               }
             />
