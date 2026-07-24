@@ -6,6 +6,7 @@ import {
   MonitorPlay,
   Users,
   FileEdit,
+  FileText,
   Tv,
   Settings,
   LogOut,
@@ -33,19 +34,21 @@ import {
 const MAIN_NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: ClipboardList, label: 'Records', path: '/ledger-m3z6' },
-  { icon: MessageSquareText, label: 'Feedback Reports', path: '/feedback-reports' },
   { icon: MonitorPlay, label: 'Staff Panel', path: '/panel-q1a8' },
 ];
 
+
 // Only shown when user.role === 'admin'. Appended after MAIN_NAV_ITEMS.
 const ADMIN_NAV_ITEMS = [
+  { icon: MessageSquareText, label: 'Feedback Reports', path: '/feedback-reports' },
   { icon: Users, label: 'Manage Users', path: '/manage-users' },
 ];
 
 // "Quick Access" section, rendered below the main list — things
 // everyone uses regardless of role.
 const QUICK_ACCESS_ITEMS = [
-  { icon: FileEdit, label: 'Register', path: '/kiosk-x7f2' },
+  { icon: FileEdit, label: 'Register', path: '/kiosk-x7f2', external: true },
+  { icon: FileText, label: 'Feedback Forms', path: '/csat-f5w9/en', external: true },
   { icon: Tv, label: 'TV Display', path: '/monitor-d9k4', external: true },
 ];
 
@@ -88,7 +91,7 @@ export default function Sidebar({
   return (
     <>
       <style>{`
-        .sidebar {
+        .app-sidebar {
           width: 240px;
           flex-shrink: 0;
           background: #0F1E30;
@@ -102,7 +105,7 @@ export default function Sidebar({
           transition: width 0.2s ease;
           z-index: 40;
         }
-        .sidebar.collapsed { width: 76px; }
+        .app-sidebar.collapsed { width: 76px; }
 
         .sidebar-top {
           display: flex;
@@ -112,7 +115,7 @@ export default function Sidebar({
           border-bottom: 1px solid rgba(240,165,0,0.15);
           margin-bottom: 14px;
         }
-        .sidebar.collapsed .sidebar-top {
+        .app-sidebar.collapsed .sidebar-top {
           justify-content: center;
           padding: 4px 0 18px 0;
         }
@@ -177,7 +180,7 @@ export default function Sidebar({
           letter-spacing: 0.6px;
           font-weight: 600;
         }
-        .sidebar.collapsed .nav-section-label { text-align: center; margin-left: 0; }
+        .app-sidebar.collapsed .nav-section-label { text-align: center; margin-left: 0; }
 
         .nav-item {
           display: flex;
@@ -195,7 +198,7 @@ export default function Sidebar({
           cursor: pointer;
           text-align: left;
         }
-        .sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
+        .app-sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
         .nav-item:hover { background: rgba(240,165,0,0.08); }
         .nav-item.active { background: rgba(240,165,0,0.14); color: #F0A500; font-weight: 700; }
         .nav-icon { font-size: 16px; width: 18px; text-align: center; flex-shrink: 0; }
@@ -206,7 +209,7 @@ export default function Sidebar({
         .sidebar-backdrop { display: none; }
 
         @media (max-width: 900px) {
-          .sidebar:not(.collapsed) {
+          .app-sidebar:not(.collapsed) {
             position: fixed;
             top: 0;
             left: 0;
@@ -227,8 +230,8 @@ export default function Sidebar({
       {/* Backdrop shown only on mobile while the sidebar is expanded */}
       <div className={`sidebar-backdrop ${!collapsed ? 'show' : ''}`} onClick={() => setCollapsed(true)} />
 
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-        <div className="sidebar-top">
+      <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`}>        <div 
+      className="sidebar-top">
           {collapsed ? (
             <button className="logo-toggle" onClick={() => setCollapsed(false)} title="Expand sidebar">
               <img src="/assets/nbi.png" alt="NBI Logo" className="sidebar-logo logo-default" />
