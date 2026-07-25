@@ -255,9 +255,10 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(s => !s)}
-                      style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#8092b8', fontSize: '11px', cursor: 'pointer', letterSpacing: '0.5px' }}
+                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#8092b8', cursor: 'pointer', padding: 4, display: 'flex' }}
+                      tabIndex={-1}
                     >
-                      {showPassword ? 'HIDE' : 'SHOW'}
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </label>
