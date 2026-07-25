@@ -236,14 +236,6 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/display', (req, res) => res.sendFile(path.join(__dirname, 'public', 'display.html')));
-app.get('/staff', (req, res) => res.sendFile(path.join(__dirname, 'public', 'staff.html')));
-app.get('/register', (req, res) => res.sendFile(path.join(__dirname, 'public', 'register.html')));
-app.get('/records', (req, res) => res.sendFile(path.join(__dirname, 'public', 'records.html')));
-app.get('/feedback/en', (req, res) => res.sendFile(path.join(__dirname, 'public', 'feedback.html')));
-app.get('/feedback/tl', (req, res) => res.sendFile(path.join(__dirname, 'public', 'feedback-tl.html')));
-app.get('/', (req, res) => res.redirect('/register'));
-
 
 // API Endpoint for Manual Queue Reset (for staff)
 app.post('/api/reset-queue', async (req, res) => {
