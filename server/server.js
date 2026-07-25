@@ -60,18 +60,23 @@ function getSortedList(waitingList, currentRegularCount = 0) {
     let rIdx = 0;
 
     while (pIdx < priorityQueue.length || rIdx < regularQueue.length) {
-        if (rCount >= 3 && pIdx < priorityQueue.length) {
-            interleaved.push(priorityQueue[pIdx]);
+        const nextPriority = priorityQueue[pIdx];
+        const nextRegular = regularQueue[rIdx];
+
+        // Bump the priority person up if the 1:3 slot is due, OR if they
+        // actually arrived earlier than the next regular person (don't make
+        // an earlier-arriving priority wait just to satisfy the ratio).
+        const priorityArrivedEarlier = nextPriority && nextRegular &&
+            new Date(nextPriority.created_at) < new Date(nextRegular.created_at);
+
+        if (nextPriority && (rCount >= 3 || !nextRegular || priorityArrivedEarlier)) {
+            interleaved.push(nextPriority);
             pIdx++;
             rCount = 0;
-        } else if (rIdx < regularQueue.length) {
-            interleaved.push(regularQueue[rIdx]);
+        } else if (nextRegular) {
+            interleaved.push(nextRegular);
             rIdx++;
             rCount++;
-        } else if (pIdx < priorityQueue.length) {
-            interleaved.push(priorityQueue[pIdx]);
-            pIdx++;
-            rCount = 0;
         }
     }
 
