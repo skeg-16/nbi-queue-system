@@ -39,6 +39,17 @@ export default function Register() {
   useEffect(() => { document.title = "Registration | NBI Cybercrime Division"; }, []);
   const socket = useSocket();
 
+  useEffect(() => {
+    if (!socket) return;
+    const onStaffUpdate = (data) => {
+      const total = data?.stats?.total ?? 0;
+      const nextNo = String(total + 1).padStart(4, '0');
+      setQueuePreview(`#${nextNo}`);
+    };
+    socket.on('staff_update', onStaffUpdate);
+    return () => socket.off('staff_update', onStaffUpdate);
+  }, [socket]);
+
   // ---------- Screens ----------
   const [screen, setScreen] = useState('landing'); // landing | priority | form
 
@@ -54,7 +65,7 @@ export default function Register() {
   const [gender, setGender] = useState('Prefer not to say');
   const [referredBy, setReferredBy] = useState('');
   const [isPriority, setIsPriority] = useState(false);
-
+  const [queuePreview, setQueuePreview] = useState(null);
   // ---------- Validation ----------
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false); // becomes true after first submit attempt
@@ -412,7 +423,31 @@ export default function Register() {
               <img src="/assets/nbi.png" alt="NBI Logo" className="reg-seal" />
               <div className="reg-agency">National Bureau of Investigation</div>
               <div className="reg-brand">Cybercrime Division</div>
-              <div className="reg-subtitle">Complainant Registration Form</div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+                <div style={{ width: 130 }} />
+                <div className="reg-subtitle" style={{ margin: 0 }}>Complainant Registration Form</div>
+                {queuePreview ? (
+                  <div style={{
+                    background: 'rgba(240,165,0,0.12)',
+                    border: '1px solid rgba(240,165,0,0.4)',
+                    borderRadius: 6,
+                    padding: '0.1rem 0.6rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    width: 130,
+                    justifyContent: 'center'
+                  }}>
+                    <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>
+                      Queue No.
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: '#F0A500', fontWeight: 800, letterSpacing: 0.5 }}>
+                      {queuePreview}
+                    </span>
+                  </div>
+                ) : <div style={{ width: 130 }} />}
+              </div>
             </div>
 
             <div className="reg-divider" />
@@ -476,7 +511,14 @@ export default function Register() {
                     id="age" type="number" className={`reg-input ${errors.age ? 'err' : ''}`}
                     placeholder="Age" min={1} max={120}
                     value={age}
-                    onChange={e => { setAge(e.target.value); trackKeystroke(); }}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setAge(val);
+                      trackKeystroke();
+                      // Auto-flag as priority kapag 60 years old and above (Senior Citizen)
+                      const n = parseInt(val, 10);
+                      if (!isNaN(n) && n >= 60) setIsPriority(true);
+                    }}
                     onBlur={() => handleBlur('age')}
                   />
                   {errors.age && <div className="reg-err-msg">{errors.age}</div>}

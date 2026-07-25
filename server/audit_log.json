@@ -1,5 +1,10 @@
 [
   {
+    "timestamp": "2026-07-25T17:42:55.545Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
     "timestamp": "2026-07-24T06:20:26.825Z",
     "action": "Login",
     "details": "admin logged in"
