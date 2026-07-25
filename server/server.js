@@ -220,7 +220,7 @@ async function sendQueueEmail(toEmail, displayName, shortNo) {
 // Scheduled Task will run below at 6:00 PM
 
 // Serve static files
-app.use(express.static(path.join(__dirname, 'public'), {
+app.use(express.static(path.join(__dirname, '../client/dist'), {
     setHeaders: (res, path) => {
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
@@ -1869,7 +1869,9 @@ async function sendQueueEmail(toEmail, displayName, shortNo) {
     }
 }
 
-
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
