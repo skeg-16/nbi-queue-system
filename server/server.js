@@ -396,7 +396,6 @@ app.post('/api/records/:id/remarks', async (req, res) => {
         res.status(500).json({ success: false, error: "Failed to save remarks" });
     }
 });
-
 app.delete('/api/records/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -411,6 +410,30 @@ app.delete('/api/records/:id', async (req, res) => {
         if (count === 0) {
             console.error("Supabase DELETE warning: 0 rows deleted. RLS may be blocking this, or ID is invalid. ID:", id);
             return res.status(403).json({ success: false, error: "Row not deleted. Permission denied by Supabase RLS, or row does not exist." });
+        }
+
+        // Kung na-delete ang record na may pinakamataas na CCD number ngayong araw,
+        // i-recompute ang in-memory daily counter para sa totoong pinakamataas na natitira —
+        // sa ganon, kung na-delete yung pinakahuling number, mare-reuse ito sa susunod na registration
+        // imbes na basta lumaktaw pasulong (stale in-memory counter).
+        try {
+            const todayStr = getTodayDateStr();
+            const { data: latestData } = await supabase
+                .from('registrations')
+                .select('ccd_no')
+                .like('ccd_no', `CCD-${todayStr}-%`)
+                .order('ccd_no', { ascending: false })
+                .limit(1);
+
+            if (latestData && latestData.length > 0) {
+                const parts = latestData[0].ccd_no.split('-');
+                const num = parseInt(parts[parts.length - 1], 10);
+                state.dailyCounter = isNaN(num) ? 0 : num;
+            } else {
+                state.dailyCounter = 0;
+            }
+        } catch (recalcErr) {
+            console.error("Failed to recalculate daily counter after delete:", recalcErr);
         }
 
         auditLog('Delete Record', `Deleted record ID ${id}`);

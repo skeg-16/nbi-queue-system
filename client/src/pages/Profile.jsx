@@ -1,15 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { Eye, EyeOff, Sun, Moon } from 'lucide-react';
+import { useSocket } from '../context/SocketContext';
+import { Eye, EyeOff, Sun, Moon, Volume2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 
 export default function Profile() {
   const { user, token, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const socket = useSocket();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // --- TV Display Voice Settings ---
+  const [voiceOptions, setVoiceOptions] = useState([]);
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState('');
+  const [voiceMsg, setVoiceMsg] = useState('');
+
+  useEffect(() => {
+    if (!socket) return;
+    function onVoicesUpdate(voices) {
+      setVoiceOptions(voices || []);
+    }
+    function onVoiceSettingsUpdate(settings) {
+      if (settings.voiceURI) setSelectedVoiceURI(settings.voiceURI);
+    }
+    socket.on('available_voices_update', onVoicesUpdate);
+    socket.on('voice_settings_update', onVoiceSettingsUpdate);
+    return () => {
+      socket.off('available_voices_update', onVoicesUpdate);
+      socket.off('voice_settings_update', onVoiceSettingsUpdate);
+    };
+  }, [socket]);
+
+  function saveVoiceSetting() {
+    socket?.emit('update_voice_settings', { voiceURI: selectedVoiceURI });
+    setVoiceMsg('Voice settings updated for TV Display.');
+    setTimeout(() => setVoiceMsg(''), 2500);
+  }
+
+  function testVoiceDisplay() {
+    socket?.emit('trigger_test_voice');
+    setVoiceMsg('Test announcement triggered on TV Display.');
+    setTimeout(() => setVoiceMsg(''), 2500);
+  }
 
   const handleLogout = () => {
     logout();
@@ -84,12 +119,27 @@ return (
           font-family: 'Inter', Arial, sans-serif;
         }
         .pf-card {
-          max-width: 460px;
+          max-width: 860px;
           margin: 0 auto;
           background: var(--panel-bg);
           border: 1px solid var(--border-color);
           border-radius: 14px;
           padding: 34px 30px;
+        }
+        .pf-columns {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+          align-items: start;
+        }
+        .pf-col-divider {
+          border-left: 1px solid var(--border-color);
+          padding-left: 32px;
+        }
+        @media (max-width: 768px) {
+          .pf-card { max-width: 100%; padding: 24px 20px; }
+          .pf-columns { grid-template-columns: 1fr; gap: 0; }
+          .pf-col-divider { border-left: none; padding-left: 0; border-top: 1px solid var(--border-color); padding-top: 22px; margin-top: 4px; }
         }
         .pf-title { margin: 0 0 22px 0; color: var(--text-main); font-size: 20px; letter-spacing: 0.3px; }
         .pf-info-block { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border-color); }
@@ -205,66 +255,94 @@ return (
             </div>
           )}
 
-          {/* Appearance / Theme Settings */}
-          <h3 className="pf-subtitle">Appearance</h3>
-          <div className="pf-theme-row" style={{ marginBottom: 22 }}>
-            <span className="pf-field-label" style={{ margin: 0 }}>Theme</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" className={`pf-theme-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>
-                <Sun size={14} /> Light
-              </button>
-              <button type="button" className={`pf-theme-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>
-                <Moon size={14} /> Dark
-              </button>
+          <div className="pf-columns">
+            {/* LEFT COLUMN: Appearance + TV Display Sound */}
+            <div>
+              <h3 className="pf-subtitle">Appearance</h3>
+              <div className="pf-theme-row" style={{ marginBottom: 22 }}>
+                <span className="pf-field-label" style={{ margin: 0 }}>Theme</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" className={`pf-theme-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>
+                    <Sun size={14} /> Light
+                  </button>
+                  <button type="button" className={`pf-theme-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>
+                    <Moon size={14} /> Dark
+                  </button>
+                </div>
+              </div>
+
+              <h3 className="pf-subtitle">TV Display Sound</h3>
+              {voiceMsg && <div className="pf-alert-success">{voiceMsg}</div>}
+              <div>
+                <label className="pf-field" style={{ marginBottom: 10 }}>
+                  <span className="pf-field-label">Selected Voice</span>
+                  <select className="pf-input" style={{ paddingRight: 12 }} value={selectedVoiceURI} onChange={e => setSelectedVoiceURI(e.target.value)}>
+                    <option value="">{voiceOptions.length === 0 ? 'Waiting for TV Display to connect...' : '-- Let System Decide --'}</option>
+                    {voiceOptions.map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>)}
+                  </select>
+                </label>
+                <p style={{ margin: '0 0 12px 0', fontSize: 11.5, color: 'var(--text-muted)' }}>
+                  These voices come from the browser running the TV Display. If the list is empty, open the TV Display tab and refresh it. For human-like neural voices, run the TV Display on Microsoft Edge.
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" className="pf-theme-btn" onClick={testVoiceDisplay}>
+                    <Volume2 size={14} /> Test Sound
+                  </button>
+                  <button type="button" className="pf-btn-primary" style={{ margin: 0, flex: 1 }} onClick={saveVoiceSetting}>
+                    Save Voice
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: Change Password */}
+            <div className="pf-col-divider">
+              <h3 className="pf-subtitle">Change Password</h3>
+
+              {error && <div className="pf-alert-error">{error}</div>}
+              {success && <div className="pf-alert-success">{success}</div>}
+
+              <form onSubmit={handleChangePassword}>
+                <label className="pf-field">
+                  <span className="pf-field-label">New Password</span>
+                  <div className="pf-input-wrap">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      className="pf-input"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                    <button type="button" className="pf-eye-btn" onClick={() => setShowNewPassword(s => !s)} tabIndex={-1}>
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </label>
+
+                <label className="pf-field">
+                  <span className="pf-field-label">Confirm New Password</span>
+                  <div className="pf-input-wrap">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      className="pf-input"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                    <button type="button" className="pf-eye-btn" onClick={() => setShowConfirmPassword(s => !s)} tabIndex={-1}>
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </label>
+
+                <button type="submit" className="pf-btn-primary" disabled={loading}>
+                  {loading ? 'Updating...' : 'Update Password'}
+                </button>
+              </form>
             </div>
           </div>
-
-          {/* Change Password Form */}
-          <h3 className="pf-subtitle">Change Password</h3>
-          
-
-          {error && <div className="pf-alert-error">{error}</div>}
-          {success && <div className="pf-alert-success">{success}</div>}
-
-          <form onSubmit={handleChangePassword}>
-            <label className="pf-field">
-              <span className="pf-field-label">New Password</span>
-              <div className="pf-input-wrap">
-                <input
-                  type={showNewPassword ? 'text' : 'password'}
-                  className="pf-input"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-                <button type="button" className="pf-eye-btn" onClick={() => setShowNewPassword(s => !s)} tabIndex={-1}>
-                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </label>
-
-            <label className="pf-field">
-              <span className="pf-field-label">Confirm New Password</span>
-              <div className="pf-input-wrap">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  className="pf-input"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-                <button type="button" className="pf-eye-btn" onClick={() => setShowConfirmPassword(s => !s)} tabIndex={-1}>
-                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </label>
-
-            <button type="submit" className="pf-btn-primary" disabled={loading}>
-              {loading ? 'Updating...' : 'Update Password'}
-            </button>
-          </form>
         </div>
       </div>
       </div>

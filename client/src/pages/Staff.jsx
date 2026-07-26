@@ -22,12 +22,25 @@ export default function StaffController() {
     logout();
     navigate('/login');
   };
+  // Load any cached queue state so switching tabs and coming back
+  // shows the last known data instantly instead of a blank screen
+  // while the socket reconnects and fetches fresh data.
+  const CACHE_KEY = 'nbi_staff_queue_cache';
+  const cached = (() => {
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const [connected, setConnected] = useState(false);
-  const [currentlyServing, setCurrentlyServing] = useState(null);
-  const [waitingList, setWaitingList] = useState([]);
-  const [skippedList, setSkippedList] = useState([]);
-  const [stats, setStats] = useState({ waiting: 0, served: 0, skipped: 0, total: 0 });
-  const [cycleLabel, setCycleLabel] = useState("---");
+  const [currentlyServing, setCurrentlyServing] = useState(cached?.currentlyServing ?? null);
+  const [waitingList, setWaitingList] = useState(cached?.waitingList ?? []);
+  const [skippedList, setSkippedList] = useState(cached?.skippedList ?? []);
+  const [stats, setStats] = useState(cached?.stats ?? { waiting: 0, served: 0, skipped: 0, total: 0 });
+  const [cycleLabel, setCycleLabel] = useState(cached?.cycleLabel ?? "---");
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [serveModalOpen, setServeModalOpen] = useState(false);
   const [breakModalOpen, setBreakModalOpen] = useState(false);
@@ -46,20 +59,37 @@ export default function StaffController() {
     const onDisconnect = () => setConnected(false);
     
     const onStaffUpdate = (data) => {
-      if (data.currentlyServing) {
-        setCurrentlyServing({
-          id: data.currentlyServing.id,
-          ccdNo: data.currentlyServing.ccdNo,
-          fullName: data.currentlyServing.fullName,
-          isPriority: data.currentlyServing.isPriority
-        });
-      } else {
-        setCurrentlyServing(null);
+      const nextCurrentlyServing = data.currentlyServing
+        ? {
+            id: data.currentlyServing.id,
+            ccdNo: data.currentlyServing.ccdNo,
+            fullName: data.currentlyServing.fullName,
+            isPriority: data.currentlyServing.isPriority
+          }
+        : null;
+      const nextWaitingList = data.waitingList || [];
+      const nextSkippedList = data.skippedList || [];
+      const nextStats = data.stats || { waiting: 0, served: 0, skipped: 0, total: 0 };
+      const nextCycleLabel = data.cycleLabel || "---";
+
+      setCurrentlyServing(nextCurrentlyServing);
+      setWaitingList(nextWaitingList);
+      setSkippedList(nextSkippedList);
+      setStats(nextStats);
+      setCycleLabel(nextCycleLabel);
+
+      // Cache the latest snapshot so it survives a tab switch / socket reconnect
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+          currentlyServing: nextCurrentlyServing,
+          waitingList: nextWaitingList,
+          skippedList: nextSkippedList,
+          stats: nextStats,
+          cycleLabel: nextCycleLabel
+        }));
+      } catch {
+        // sessionStorage full or unavailable — ignore, caching is best-effort
       }
-      setWaitingList(data.waitingList || []);
-      setSkippedList(data.skippedList || []);
-      setStats(data.stats || { waiting: 0, served: 0, skipped: 0, total: 0 });
-      setCycleLabel(data.cycleLabel || "---");
     };
 
     socket.on('connect', onConnect);

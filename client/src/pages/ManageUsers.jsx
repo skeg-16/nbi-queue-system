@@ -361,13 +361,13 @@ export default function ManageUsers() {
       <style>{`
         .mu-body {
           min-height: 100vh;
-          background: radial-gradient(circle at 50% 0%, #142d6e 0%, #050e1d 60%);
+          background: var(--bg-color);
           display: flex;
           font-family: 'Inter', Arial, sans-serif;
         }
         .mu-main { flex: 1; min-width: 0; padding: 30px 32px 60px; }
         .mu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; }
-        .mu-header h2 { margin: 0; color: #fff; font-size: 21px; letter-spacing: 0.3px; }
+        .mu-header h2 { margin: 0; color: var(--text-main); font-size: 21px; letter-spacing: 0.3px; }
 
         .mu-btn-primary {
           display: flex; align-items: center; gap: 6px;
@@ -386,8 +386,8 @@ export default function ManageUsers() {
           display: flex;
           align-items: center;
           gap: 4px;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(240,165,0,0.2);
+          background: var(--panel-bg);
+          border: 1px solid var(--border-color);
           border-radius: 8px;
           padding: 4px;
         }
@@ -397,16 +397,16 @@ export default function ManageUsers() {
           background: transparent;
           border: none;
           border-radius: 5px;
-          color: #c9d4ec;
+          color: var(--text-muted);
           cursor: pointer;
         }
         .mu-page-arrow:hover:not(:disabled) { background: rgba(240,165,0,0.15); color: #F0A500; }
         .mu-page-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .mu-alert-error {
-          background: rgba(138,31,31,0.2);
-          border: 1px solid rgba(138,31,31,0.5);
-          color: #ff8a8a;
+          background: rgba(220,38,38,0.1);
+          border: 1px solid rgba(220,38,38,0.4);
+          color: var(--red);
           padding: 12px 16px;
           border-radius: 8px;
           margin-bottom: 18px;
@@ -416,8 +416,8 @@ export default function ManageUsers() {
           margin-top: 10px;
           font-family: monospace;
           font-size: 14px;
-          color: #fff;
-          background: rgba(0,0,0,0.2);
+          color: var(--text-main);
+          background: var(--bg-color);
           padding: 10px 12px;
           border-radius: 6px;
         }
@@ -429,8 +429,8 @@ export default function ManageUsers() {
           padding: 20px;
         }
         .mu-modal {
-          background: #0d234f;
-          border: 1px solid rgba(240,165,0,0.25);
+          background: var(--panel-bg);
+          border: 1px solid var(--border-color);
           border-radius: 12px;
           padding: 26px;
           width: 420px;
@@ -438,24 +438,24 @@ export default function ManageUsers() {
         }
         .mu-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
         .mu-modal .mu-alert-error { margin-bottom: 16px; }
-        .mu-modal-header h3 { margin: 0; color: #fff; font-size: 17px; }
-        .mu-modal-close { background: none; border: none; color: #8092b8; cursor: pointer; }
+        .mu-modal-header h3 { margin: 0; color: var(--text-main); font-size: 17px; }
+        .mu-modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; }
         .mu-form-grid { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
-        .mu-form-grid label span { display: block; color: #c9d4ec; font-size: 12px; margin-bottom: 6px; letter-spacing: 0.4px; }
+        .mu-form-grid label span { display: block; color: var(--text-main); font-size: 12px; margin-bottom: 6px; letter-spacing: 0.4px; }
         .mu-input, .mu-select {
           width: 100%;
           padding: 10px 12px;
           box-sizing: border-box;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(240,165,0,0.3);
+          background: var(--bg-color);
+          border: 1px solid var(--border-color);
           border-radius: 6px;
-          color: #fff;
+          color: var(--text-main);
           font-size: 13.5px;
           outline: none;
         }
-        .mu-select option { background: #0b1f4d; color: #fff; }
-        .mu-input.error, .mu-select.error { border-color: #e04b4b; background: rgba(224,75,75,0.08); }
-        .mu-field-error { margin: 6px 0 0 0; color: #ff8a8a; font-size: 11.5px; }
+        .mu-select option { background: var(--panel-bg); color: var(--text-main); }
+        .mu-input.error, .mu-select.error { border-color: var(--red); background: rgba(220,38,38,0.08); }
+        .mu-field-error { margin: 6px 0 0 0; color: var(--red); font-size: 11.5px; }
 
         /* ---- Card grid ---- */
         .uc-grid {
@@ -464,13 +464,13 @@ export default function ManageUsers() {
           gap: 16px;
         }
         .uc-card {
-          background: #0d234f;
-          border: 1px solid rgba(240,165,0,0.18);
+          background: var(--panel-bg);
+          border: 1px solid var(--border-color);
           border-radius: 14px;
           padding: 18px;
         }
         .uc-card-inactive {
-          border-color: rgba(224,75,75,0.35);
+          border-color: rgba(220,38,38,0.35);
           opacity: 0.75;
         }
         .uc-card-locked {
@@ -486,42 +486,42 @@ export default function ManageUsers() {
           flex-shrink: 0;
         }
         .uc-name-block { flex: 1; min-width: 0; }
-        .uc-name { margin: 0; color: #fff; font-size: 15.5px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .uc-name { margin: 0; color: var(--text-main); font-size: 15.5px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .uc-role { margin: 2px 0 0 0; color: #F0A500; font-size: 10.5px; letter-spacing: 0.6px; text-transform: uppercase; font-weight: 600; }
 
         .uc-menu-wrap { position: relative; }
-        .uc-menu-btn { background: none; border: none; color: #8092b8; cursor: pointer; padding: 4px; border-radius: 5px; }
-        .uc-menu-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .uc-menu-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 5px; }
+        .uc-menu-btn:hover { background: var(--table-hover); color: var(--text-main); }
         .uc-menu-dropdown {
           position: absolute; right: 0; top: 28px; z-index: 10;
-          background: #142d6e; border: 1px solid rgba(240,165,0,0.25); border-radius: 8px;
-          min-width: 140px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+          background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px;
+          min-width: 140px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
         .uc-menu-item {
           display: flex; align-items: center; gap: 8px; width: 100%;
-          padding: 9px 12px; background: none; border: none; color: #c9d4ec; font-size: 12.5px; cursor: pointer; text-align: left;
+          padding: 9px 12px; background: none; border: none; color: var(--text-main); font-size: 12.5px; cursor: pointer; text-align: left;
         }
-        .uc-menu-item.danger { color: #ff8a8a; }
-        .uc-menu-item:hover { background: rgba(255,255,255,0.06); }
-        .uc-menu-item.danger:hover { background: rgba(138,31,31,0.2); }
+        .uc-menu-item.danger { color: var(--red); }
+        .uc-menu-item:hover { background: var(--table-hover); }
+        .uc-menu-item.danger:hover { background: rgba(220,38,38,0.12); }
 
         .uc-meta-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .uc-meta-label { margin: 0; color: #5c6f94; font-size: 10px; letter-spacing: 0.4px; text-transform: uppercase; }
-        .uc-meta-value { margin: 2px 0 0 0; color: #e6ecf7; font-size: 13px; font-weight: 600; }
+        .uc-meta-label { margin: 0; color: var(--text-muted); font-size: 10px; letter-spacing: 0.4px; text-transform: uppercase; }
+        .uc-meta-value { margin: 2px 0 0 0; color: var(--text-main); font-size: 13px; font-weight: 600; }
 
-        .uc-divider { height: 1px; background: rgba(255,255,255,0.08); margin-bottom: 12px; }
+        .uc-divider { height: 1px; background: var(--border-color); margin-bottom: 12px; }
 
-        .uc-detail-row { display: flex; align-items: center; gap: 8px; color: #c9d4ec; font-size: 12.5px; margin-bottom: 6px; }
+        .uc-detail-row { display: flex; align-items: center; gap: 8px; color: var(--text-main); font-size: 12.5px; margin-bottom: 6px; }
         .uc-detail-row:last-child { margin-bottom: 0; }
-        .uc-status-text.active { color: #4ade80; font-weight: 600; }
-        .uc-status-text.inactive { color: #ff8a8a; font-weight: 600; }
+        .uc-status-text.active { color: #16a34a; font-weight: 600; }
+        .uc-status-text.inactive { color: var(--red); font-weight: 600; }
 
-        .uc-empty { color: #8092b8; font-size: 13.5px; padding: 40px; text-align: center; grid-column: 1 / -1; }
+        .uc-empty { color: var(--text-muted); font-size: 13.5px; padding: 40px; text-align: center; grid-column: 1 / -1; }
 
         /* ---- Confirm modal ---- */
         .mu-confirm-modal {
-          background: #0d234f;
-          border: 1px solid rgba(224,75,75,0.35);
+          background: var(--panel-bg);
+          border: 1px solid rgba(220,38,38,0.35);
           border-radius: 12px;
           padding: 26px;
           width: 380px;
@@ -530,29 +530,29 @@ export default function ManageUsers() {
         }
         .mu-confirm-icon {
           width: 46px; height: 46px; border-radius: 50%;
-          background: rgba(224,75,75,0.15);
+          background: rgba(220,38,38,0.12);
           display: flex; align-items: center; justify-content: center;
           margin: 0 auto 16px;
-          color: #ff8a8a;
+          color: var(--red);
         }
-        .mu-confirm-modal h3 { margin: 0 0 8px 0; color: #fff; font-size: 16px; }
-        .mu-confirm-modal p { margin: 0 0 22px 0; color: #a9b6d6; font-size: 13px; line-height: 1.5; }
-        .mu-confirm-modal p strong { color: #e6ecf7; }
+        .mu-confirm-modal h3 { margin: 0 0 8px 0; color: var(--text-main); font-size: 16px; }
+        .mu-confirm-modal p { margin: 0 0 22px 0; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+        .mu-confirm-modal p strong { color: var(--text-main); }
         .mu-confirm-actions { display: flex; gap: 10px; }
         .mu-btn-cancel {
           flex: 1; padding: 10px 16px;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.12);
-          color: #c9d4ec;
+          background: var(--btn-bg);
+          border: 1px solid var(--border-color);
+          color: var(--text-main);
           border-radius: 8px;
           cursor: pointer;
           font-weight: 600;
           font-size: 13px;
         }
-        .mu-btn-cancel:hover { background: rgba(255,255,255,0.1); }
+        .mu-btn-cancel:hover { background: var(--table-hover); }
         .mu-btn-danger {
           flex: 1; padding: 10px 16px;
-          background: #c23f3f;
+          background: var(--red);
           border: none;
           color: #fff;
           border-radius: 8px;
@@ -560,11 +560,27 @@ export default function ManageUsers() {
           font-weight: 700;
           font-size: 13px;
         }
-        .mu-btn-danger:hover { background: #d94848; }
+        .mu-btn-danger:hover { opacity: 0.9; }
         .mu-btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
         @media (max-width: 700px) {
           .mu-main { padding: 20px 16px 40px; }
           .uc-grid { grid-template-columns: 1fr; }
+        }
+
+       @media (max-width: 480px) {
+          .mu-main { padding: 16px 12px 32px; }
+          .mu-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+          .mu-header h2 { font-size: 18px; }
+          .mu-btn-primary { width: 100%; justify-content: center; font-size: 13px; padding: 10px; }
+          .mu-page-nav { align-self: flex-end; }
+          .uc-card { padding: 14px; }
+          .uc-name { font-size: 14px; }
+          .mu-modal { padding: 18px; }
+          .mu-confirm-modal { padding: 20px; }
+
+          .uc-meta-row { flex-direction: column; gap: 8px; }
+          .uc-meta-row > div:last-child { text-align: left !important; }
         }
       `}</style>
 
@@ -609,15 +625,15 @@ export default function ManageUsers() {
 
           {requests.length > 0 && (
             <div style={{ marginBottom: 24 }}>
-              <h3 style={{ color: '#fff', fontSize: 15, marginBottom: 10 }}>Pending Requests ({requests.length})</h3>
+<h3 style={{ color: 'var(--text-main)', fontSize: 15, marginBottom: 10 }}>Pending Requests ({requests.length})</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {requests.map(r => (
-                  <div key={r.id} style={{ background: '#0d234f', border: '1px solid rgba(240,165,0,0.25)', borderRadius: 10, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                  <div key={r.id} style={{ background: 'var(--panel-bg)', border: '1px solid var(--border-color)', borderRadius: 10, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                     <div>
-                      <p style={{ margin: 0, color: '#fff', fontWeight: 600, fontSize: 13.5 }}>
+                      <p style={{ margin: 0, color: 'var(--text-main)', fontWeight: 600, fontSize: 13.5 }}>
                         {r.users?.full_name} ({r.users?.username})
                       </p>
-                      <p style={{ margin: '3px 0 0 0', color: '#c9d4ec', fontSize: 12 }}>
+                      <p style={{ margin: '3px 0 0 0', color: 'var(--text-muted)', fontSize: 12 }}>
                         {r.type === 'forgot_password' ? 'Requested a password reset' : 'Account locked after 3 failed login attempts'}
                       </p>
                     </div>
@@ -652,7 +668,7 @@ export default function ManageUsers() {
               <h3>{acceptingRequest.type === 'forgot_password' ? 'Send Reset Code' : 'Unlock Account'}</h3>
               <button className="mu-modal-close" onClick={() => setAcceptingRequest(null)}><X size={18} /></button>
             </div>
-            <p style={{ color: '#c9d4ec', fontSize: 13, margin: '0 0 16px 0' }}>
+            <p style={{ color: 'var(--text-main)', fontSize: 13, margin: '0 0 16px 0' }}>
               {acceptingRequest.type === 'forgot_password'
                 ? `Enter the email of ${acceptingRequest.users?.full_name} (${acceptingRequest.users?.username}) to send the reset code.`
                 : `Unlock the account of ${acceptingRequest.users?.full_name} (${acceptingRequest.users?.username})?`}
@@ -723,7 +739,7 @@ export default function ManageUsers() {
               <h3>Account Created</h3>
               <button className="mu-modal-close" onClick={() => setCreatedInfo(null)}><X size={18} /></button>
             </div>
-            <p style={{ color: '#c9d4ec', fontSize: 13, margin: '0 0 14px 0' }}>
+            <p style={{ color: 'var(--text-main)', fontSize: 13, margin: '0 0 14px 0' }}>
               {createdInfo.role === 'admin'
                 ? 'Email could not be sent — give these credentials to the user manually:'
                 : 'Give these credentials to the agent directly (no email needed):'}

@@ -1,5 +1,10 @@
 [
   {
+    "timestamp": "2026-07-26T21:42:48.501Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
     "timestamp": "2026-07-26T15:37:22.911Z",
     "action": "Feedback Submit",
     "details": "Received en feedback"
