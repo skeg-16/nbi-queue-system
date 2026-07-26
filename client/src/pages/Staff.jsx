@@ -166,9 +166,9 @@ if (!user) return null;
       />
       <div className="staff-body" style={{ flex: 1, minWidth: 0 }}>
       <style>{`
-        html, body { background-color: #050e1d !important; margin: 0; height: 100%; overflow: hidden; }
+        html, body { background-color: var(--bg-color) !important; margin: 0; height: 100%; overflow: hidden; }
         .staff-body {
-          background: radial-gradient(circle at top, #11284d 0%, #050e1d 100%);
+          background: var(--bg-color);
           height: 100vh;
           margin: 0;
           padding: 0;
@@ -177,7 +177,7 @@ if (!user) return null;
           flex: 1;
           width: 100%;
           font-family: 'Inter', sans-serif;
-          color: white;
+          color: var(--text-main);
           box-sizing: border-box;
           overflow: hidden;
         }
@@ -187,8 +187,8 @@ if (!user) return null;
           display: flex;
           justify-content: center;
           align-items: center;
-          background: rgba(5, 14, 29, 0.95);
-          border-bottom: 1px solid rgba(255,255,255,0.1);
+          background: var(--panel-bg);
+          border-bottom: 1px solid var(--border-color);
           padding: 0.6rem 0;
           flex-shrink: 0;
           z-index: 50;
@@ -205,23 +205,23 @@ if (!user) return null;
         .right-column { display: flex; flex-direction: column; height: 100%; gap: 0.7rem; min-height: 0; }
 
         .dashboard-card {
-          background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 16px; padding: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-          backdrop-filter: blur(15px); width: 100%; display: flex; flex-direction: column;
+          background: var(--panel-bg); border: 1px solid var(--border-color);
+          border-radius: 16px; padding: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+          width: 100%; display: flex; flex-direction: column;
         }
 
         .waiting-card, .skipped-card { padding: 1rem; display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
         .waiting-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 0.5rem; padding-right: 8px; min-height: 0; max-height: none; }
         .serving-card {
           text-align: center;
-          background: linear-gradient(145deg, rgba(243, 156, 18, 0.05), rgba(0,0,0,0.3));
-          border-color: rgba(243, 156, 18, 0.2);
+          background: var(--panel-bg);
+          border-color: rgba(243, 156, 18, 0.3);
           padding: 0.7rem;
         }
-        .card-label { font-size: 1rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 0.4rem; }
+        .card-label { font-size: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 0.4rem; }
         .status-display { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
         .status-number { font-size: 3.4rem; font-weight: 800; color: #f39c12; text-shadow: 0 0 40px rgba(243, 156, 18, 0.3); line-height: 1; margin-bottom: 0.2rem; }
-        .status-name { font-size: 1.4rem; font-weight: 600; color: white; }
+        .status-name { font-size: 1.4rem; font-weight: 600; color: var(--text-main); }
         .priority-badge {
           display: inline-block; background: #f39c12; color: #0b1d3a; padding: 0.3rem 1rem;
           border-radius: 50px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase;
@@ -241,7 +241,7 @@ if (!user) return null;
         .btn-call-skipped:hover:not(:disabled) { background: linear-gradient(135deg, #c0392b, #a8352a); }
 
         .secondary-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; width: 100%; }
-        .btn-secondary { padding: 0.6rem; flex-direction: row; gap: 0.6rem; font-size: 0.95rem; font-weight: 700; color: white; min-height: 40px; }
+        .btn-secondary { padding: 0.6rem; flex-direction: row; gap: 0.6rem; font-size: 0.95rem; font-weight: 700; color: var(--text-main); min-height: 40px; }
         .btn-skip { background: rgba(149, 165, 166, 0.2); border: 1px solid rgba(149, 165, 166, 0.4); }
         .btn-skip:hover:not(:disabled) { background: rgba(149, 165, 166, 0.3); }
         .btn-repeat { background: rgba(52, 152, 219, 0.2); border: 1px solid rgba(52, 152, 219, 0.4); color: #3498db; }
@@ -254,9 +254,9 @@ if (!user) return null;
         .btn-undo:hover:not(:disabled) { background: rgba(155, 89, 182, 0.3); }
 
         .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; width: 100%; }
-        .stat-card { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0.5rem; text-align: center; }
-        .stat-value { font-size: 1.2rem; font-weight: 800; color: white; line-height: 1.2; }
-        .stat-label { font-size: 0.85rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .stat-card { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.5rem; text-align: center; }
+        .stat-value { font-size: 1.2rem; font-weight: 800; color: var(--text-main); line-height: 1.2; }
+        .stat-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .stat-waiting { color: #f39c12 !important; }
         .stat-served { color: #2ecc71 !important; }
         .stat-skipped { color: #e74c3c !important; }
@@ -269,7 +269,7 @@ if (!user) return null;
         .waiting-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
 
         .waiting-item {
-          background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); padding: 1.2rem 1.5rem;
+          background: var(--bg-color); border: 1px solid var(--border-color); padding: 1.2rem 1.5rem;
           border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;
         }
         .waiting-item.is-priority { border-left: 6px solid #f39c12; background: linear-gradient(90deg, rgba(243, 156, 18, 0.1) 0%, rgba(0,0,0,0.3) 100%); }
@@ -280,8 +280,8 @@ if (!user) return null;
           box-shadow: inset 0 0 20px rgba(243, 156, 18, 0.15);
         }
         .waiting-info { display: flex; flex-direction: column; gap: 0.2rem; }
-        .waiting-ccd { color: white; font-weight: 800; font-size: 1.2rem; }
-        .waiting-name { color: #a0aec0; font-weight: 500; font-size: 1rem; }
+        .waiting-ccd { color: var(--text-main); font-weight: 800; font-size: 1.2rem; }
+        .waiting-name { color: var(--text-muted); font-weight: 500; font-size: 1rem; }
         .wait-time { font-size: 0.8rem; color: #f39c12; margin-top: 0.3rem; font-weight: 600; }
         .waiting-badge { background: rgba(243, 156, 18, 0.2); color: #f39c12; padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
 
@@ -300,16 +300,16 @@ if (!user) return null;
         }
         .btn-archive:hover { background: rgba(231, 76, 60, 0.25); border-color: rgba(231, 76, 60, 0.5); color: #e74c3c; }
 
-        .empty-state { text-align: center; padding: 4rem 2rem; color: #a0aec0; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
         .empty-icon { font-size: 3rem; opacity: 0.5; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal-overlay.active { display: flex; }
-        .modal-box { background: #0d1f3d; border: 1px solid #e74c3c; padding: 2.5rem; border-radius: 16px; text-align: center; max-width: 400px; box-shadow: 0 10px 40px rgba(231, 76, 60, 0.3); }
-        .modal-title { font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 1rem; }
-        .modal-text { color: #a0aec0; line-height: 1.5; margin-bottom: 2rem; }
+        .modal-box { background: var(--panel-bg); border: 1px solid #e74c3c; padding: 2.5rem; border-radius: 16px; text-align: center; max-width: 400px; box-shadow: 0 10px 40px rgba(231, 76, 60, 0.2); }
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; }
+        .modal-text { color: var(--text-muted); line-height: 1.5; margin-bottom: 2rem; }
         .modal-actions { display: flex; gap: 1rem; }
-        .btn-cancel { flex: 1; padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; cursor: pointer; font-weight: 600; }
+        .btn-cancel { flex: 1; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: transparent; color: var(--text-main); cursor: pointer; font-weight: 600; }
         .btn-confirm-danger { flex: 1; padding: 1rem; border-radius: 8px; border: none; background: #e74c3c; color: white; cursor: pointer; font-weight: 800; }
         .btn-confirm-success { background: #2ecc71 !important; }
 
@@ -351,8 +351,8 @@ if (!user) return null;
           .mobile-queue-toggle { display: flex; }
           .right-column {
             position: fixed; top: 0; right: ${mobileOpen ? "0" : "-100%"}; width: 100%; height: 100vh;
-            background: #050e1d; z-index: 1000; padding: 1.5rem; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-y: auto; box-shadow: -5px 0 30px rgba(0,0,0,0.8);
+            background: var(--bg-color); z-index: 1000; padding: 1.5rem; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto; box-shadow: -5px 0 30px rgba(0,0,0,0.4);
           }
           .mobile-queue-close { display: flex; align-self: flex-end; background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); font-size: 1.2rem; cursor: pointer; margin-bottom: 1rem; padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; align-items: center; justify-content: center; }
         }
@@ -370,6 +370,11 @@ if (!user) return null;
           .staff-nav { padding: 0.5rem; }
           .mobile-queue-toggle { font-size: 0.9rem; padding: 0.4rem 0.8rem; }
           .nav-links-container { gap: 0.5rem; }
+
+          /* Call Next / Call Skipped: i-stack patayo imbes na magkatabi, para hindi masikip */
+          .call-buttons-row { flex-direction: column; }
+          .btn-next .btn-next-label { font-size: 1.3rem !important; }
+          .status-display .priority-badge { font-size: 0.75rem; padding: 0.25rem 0.7rem; }
         }
       `}</style>
 
@@ -390,14 +395,14 @@ if (!user) return null;
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "1rem", width: "100%" }}>
+            <div className="call-buttons-row" style={{ display: "flex", gap: "1rem", width: "100%" }}>
               <button
                 className="btn btn-next"
                 style={{ flex: 1.5 }}
                 disabled={onBreak || (isQueueEmpty && !hasCurrentlyServing)}
                 onClick={callNext}
               >
-                <span style={{ fontSize: "1.6rem", fontWeight: 800, textTransform: "uppercase" }}>Call Next</span>
+                <span className="btn-next-label" style={{ fontSize: "1.6rem", fontWeight: 800, textTransform: "uppercase" }}>Call Next</span>
                 <span style={{ fontSize: "1rem", fontWeight: 600, opacity: 0.8 }}>{cycleLabel}</span>
               </button>
               <button

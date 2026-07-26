@@ -338,7 +338,7 @@ export default function FeedbackForm() {
     setStep((s) => s - 1);
   }
 
-  async function handleSubmit() {
+ async function handleSubmit() {
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       setErrors((e) => ({ ...e, email: t.emailError }));
       return;
@@ -346,11 +346,20 @@ export default function FeedbackForm() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const record = { ...form, language: lang, submittedAt: new Date().toISOString() };
-      if (window.storage) {
-        await window.storage.set(`feedback:${lang}:${id}`, JSON.stringify(record), true);
+      const payload = { ...form, language: lang };
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setSubmitError(data.error ? `Error: ${data.error}` : 'Submission failed. Please try again.');
+        setSubmitting(false);
+        return;
       }
+
       setSubmitted(true);
     } catch (err) {
       setSubmitError('Submission failed. Please try again.');

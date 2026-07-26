@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SocketProvider } from './context/SocketContext';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Register from './pages/Register';
 import Display from './pages/Display';
@@ -16,6 +17,7 @@ import ManageUsers from './pages/ManageUsers';
 
 export default function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <SocketProvider>
         <BrowserRouter>
@@ -97,5 +99,6 @@ export default function App() {
         </BrowserRouter>
       </SocketProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }

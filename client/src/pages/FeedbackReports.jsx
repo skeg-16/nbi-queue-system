@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { RefreshCw, Download, Printer, Search } from 'lucide-react';
+import {Download, Printer, Search } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
 
@@ -159,22 +159,11 @@ export default function FeedbackReports() {
   const t = COPY[lang];
 
   const loadLang = useCallback(async (l) => {
-    if (!window.storage) return [];
-    const listed = await window.storage.list(`feedback:${l}:`, true).catch(() => null);
-    const keys = listed?.keys ?? [];
-    const items = await Promise.all(
-      keys.map(async (k) => {
-        try {
-          const res = await window.storage.get(k, true);
-          return res ? JSON.parse(res.value) : null;
-        } catch {
-          return null;
-        }
-      })
-    );
-    return items
-      .filter(Boolean)
-      .sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+    const res = await fetch(`/api/feedbacks?language=${l}`);
+    if (!res.ok) throw new Error('Failed to fetch feedbacks');
+    const data = await res.json();
+    // Server returns created_at (Supabase timestamp) but we want to use submittedAt for display and sorting
+    return (Array.isArray(data) ? data : []).map((r) => ({ ...r, submittedAt: r.created_at }));
   }, []);
 
   const loadAll = useCallback(async () => {
@@ -269,9 +258,6 @@ export default function FeedbackReports() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <button className="btn-formal" onClick={loadAll}>
-                <RefreshCw size={14} style={{ marginRight: 4, verticalAlign: -2 }} className={status === 'loading' ? 'animate-spin' : ''} /> {t.refresh}
-              </button>
               <button className="btn-formal" onClick={() => downloadCsv(filtered, lang)} disabled={filtered.length === 0}>
                 <Download size={14} style={{ marginRight: 4, verticalAlign: -2 }} /> {t.export}
               </button>

@@ -282,7 +282,7 @@ export default function Sidebar({
         </nav>
 
         <div className="sidebar-bottom">
-          <NavItem icon={Settings} label="Profile" collapsed={collapsed} onClick={() => onNavigate('/profile')} />
+          <NavItem icon={Settings} label="Settings" collapsed={collapsed} active={activePath === '/profile'} onClick={() => onNavigate('/profile')} />
           <NavItem icon={LogOut} label="Logout" collapsed={collapsed} onClick={onLogout} />
         </div>
       </aside>

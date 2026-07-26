@@ -1,11 +1,20 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { Eye, EyeOff, Sun, Moon } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
 
 export default function Profile() {
   const { user, token, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -63,11 +72,6 @@ export default function Profile() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   if (!user) return null;
 
 return (
@@ -75,22 +79,22 @@ return (
       <style>{`
         .pf-body {
           min-height: 100vh;
-          background: radial-gradient(circle at 50% 0%, #142d6e 0%, #050e1d 60%);
+          background: var(--bg-color);
           padding: 50px 16px;
           font-family: 'Inter', Arial, sans-serif;
         }
         .pf-card {
           max-width: 460px;
           margin: 0 auto;
-          background: #0d234f;
-          border: 1px solid rgba(240,165,0,0.18);
+          background: var(--panel-bg);
+          border: 1px solid var(--border-color);
           border-radius: 14px;
           padding: 34px 30px;
         }
-        .pf-title { margin: 0 0 22px 0; color: #fff; font-size: 20px; letter-spacing: 0.3px; }
-        .pf-info-block { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-        .pf-label { margin: 0 0 4px 0; color: #5c6f94; font-size: 10.5px; letter-spacing: 0.5px; text-transform: uppercase; }
-        .pf-value { margin: 0 0 14px 0; color: #e6ecf7; font-size: 14.5px; font-weight: 600; }
+        .pf-title { margin: 0 0 22px 0; color: var(--text-main); font-size: 20px; letter-spacing: 0.3px; }
+        .pf-info-block { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border-color); }
+        .pf-label { margin: 0 0 4px 0; color: var(--text-muted); font-size: 10.5px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .pf-value { margin: 0 0 14px 0; color: var(--text-main); font-size: 14.5px; font-weight: 600; }
         .pf-role-badge {
           display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
           padding: 4px 10px; border-radius: 5px; text-transform: uppercase;
@@ -98,52 +102,52 @@ return (
         .pf-warning {
           background: rgba(240,165,0,0.12);
           border-left: 4px solid #f0a500;
-          color: #f0c674;
+          color: #b7860b;
           padding: 12px 16px;
           border-radius: 6px;
           margin-bottom: 20px;
           font-size: 13px;
           line-height: 1.5;
         }
-        .pf-subtitle { font-size: 15px; color: #fff; margin: 0 0 16px 0; }
+        .pf-subtitle { font-size: 15px; color: var(--text-main); margin: 0 0 16px 0; }
         .pf-alert-error {
-          background: rgba(138,31,31,0.2);
-          border: 1px solid rgba(138,31,31,0.5);
-          color: #ff8a8a;
+          background: rgba(220,38,38,0.1);
+          border: 1px solid rgba(220,38,38,0.4);
+          color: var(--red);
           padding: 11px 14px;
           border-radius: 8px;
           margin-bottom: 16px;
           font-size: 13px;
         }
         .pf-alert-success {
-          background: rgba(30,122,60,0.18);
-          border: 1px solid rgba(30,122,60,0.5);
-          color: #8fe0a8;
+          background: rgba(30,142,90,0.12);
+          border: 1px solid rgba(30,142,90,0.4);
+          color: #1e8e5a;
           padding: 11px 14px;
           border-radius: 8px;
           margin-bottom: 16px;
           font-size: 13px;
         }
         .pf-field { display: block; margin-bottom: 16px; }
-        .pf-field-label { display: block; color: #c9d4ec; font-size: 12px; margin-bottom: 6px; letter-spacing: 0.4px; }
+        .pf-field-label { display: block; color: var(--text-main); font-size: 12px; margin-bottom: 6px; letter-spacing: 0.4px; }
         .pf-input-wrap { position: relative; }
         .pf-input {
           width: 100%;
           padding: 10px 40px 10px 12px;
           box-sizing: border-box;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(240,165,0,0.3);
+          background: var(--bg-color);
+          border: 1px solid var(--border-color);
           border-radius: 6px;
-          color: #fff;
+          color: var(--text-main);
           font-size: 13.5px;
           outline: none;
         }
         .pf-eye-btn {
           position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-          background: none; border: none; color: #8092b8; cursor: pointer; padding: 2px;
+          background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px;
           display: flex; align-items: center;
         }
-        .pf-eye-btn:hover { color: #fff; }
+        .pf-eye-btn:hover { color: var(--text-main); }
         .pf-btn-primary {
           width: 100%; padding: 11px; background: #F0A500; color: #0b1f4d;
           border: none; border-radius: 8px; cursor: pointer; font-weight: 700;
@@ -152,13 +156,31 @@ return (
         .pf-btn-primary:hover { background: #ffb800; }
         .pf-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .pf-btn-logout {
-          width: 100%; padding: 11px; background: transparent; color: #ff8a8a;
-          border: 1px solid rgba(224,75,75,0.4); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13.5px;
+          width: 100%; padding: 11px; background: transparent; color: var(--red);
+          border: 1px solid rgba(220,38,38,0.4); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13.5px;
         }
-        .pf-btn-logout:hover { background: rgba(224,75,75,0.1); }
+        .pf-btn-logout:hover { background: rgba(220,38,38,0.1); }
+        .pf-theme-row {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 10px 14px; border-radius: 8px; background: var(--bg-color);
+          border: 1px solid var(--border-color); margin-bottom: 4px;
+        }
+        .pf-theme-btn {
+          display: flex; align-items: center; gap: 6px;
+          padding: 7px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
+          cursor: pointer; border: 1px solid var(--border-color); background: var(--panel-bg); color: var(--text-muted);
+        }
+        .pf-theme-btn.active { background: #F0A500; color: #0b1f4d; border-color: #F0A500; }
       `}</style>
 
-      <div className="pf-body">
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <Sidebar
+          user={user}
+          activePath={location.pathname}
+          onNavigate={navigate}
+          onLogout={handleLogout}
+        />
+        <div className="pf-body" style={{ flex: 1, minWidth: 0 }}>
         <div className="pf-card">
           <h2 className="pf-title">My Profile</h2>
 
@@ -183,8 +205,23 @@ return (
             </div>
           )}
 
+          {/* Appearance / Theme Settings */}
+          <h3 className="pf-subtitle">Appearance</h3>
+          <div className="pf-theme-row" style={{ marginBottom: 22 }}>
+            <span className="pf-field-label" style={{ margin: 0 }}>Theme</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" className={`pf-theme-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>
+                <Sun size={14} /> Light
+              </button>
+              <button type="button" className={`pf-theme-btn ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>
+                <Moon size={14} /> Dark
+              </button>
+            </div>
+          </div>
+
           {/* Change Password Form */}
           <h3 className="pf-subtitle">Change Password</h3>
+          
 
           {error && <div className="pf-alert-error">{error}</div>}
           {success && <div className="pf-alert-success">{success}</div>}
@@ -228,11 +265,8 @@ return (
               {loading ? 'Updating...' : 'Update Password'}
             </button>
           </form>
-
-          <button onClick={handleLogout} className="pf-btn-logout">
-            Logout
-          </button>
         </div>
+      </div>
       </div>
     </>
   );
