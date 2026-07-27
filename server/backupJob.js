@@ -191,6 +191,7 @@ async function runBackupAndCleanup() {
 
         // 4. Send Email
         const timestamp = Date.now();
+        const buffer = await workbook.xlsx.writeBuffer();
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: BOSS_EMAIL,
