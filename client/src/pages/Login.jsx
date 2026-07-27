@@ -3,26 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
 
-const inputStyle = {
-  width: '100%',
-  padding: '11px 12px',
-  boxSizing: 'border-box',
-  background: 'rgba(255,255,255,0.06)',
-  border: '1px solid rgba(240,165,0,0.3)',
-  borderRadius: '5px',
-  color: '#ffffff',
-  fontSize: '14px',
-  outline: 'none'
-};
-
-const labelTextStyle = {
-  display: 'block',
-  color: '#c9d4ec',
-  fontSize: '12px',
-  marginBottom: '6px',
-  letterSpacing: '0.5px'
-};
-
 export default function Login() {
   const [mode, setMode] = useState('login'); // 'login' | 'forgot-request' | 'forgot-verify'
   const [username, setUsername] = useState('');
@@ -162,263 +142,350 @@ export default function Login() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: 'radial-gradient(circle at 50% 40%, #1a365d 0%, #050e1d 80%)',
-        fontFamily: 'Arial, sans-serif',
-        padding: '16px',
-        boxSizing: 'border-box'
-      }}
-    >
-      <div
-        style={{
-          width: '380px',
-          maxWidth: '100%',
-          background: '#0d234f',
-          borderRadius: '10px',
-          border: '1px solid rgba(240,165,0,0.25)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-          overflow: 'hidden'
-        }}
-      >
-        {/* Header / Branding */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #0b1f4d 0%, #142d6e 100%)',
-            borderBottom: '4px solid #f0a500',
-            padding: '28px 32px',
-            textAlign: 'center'
-          }}
-        >
-          <img
-            src="/assets/nbi.png"
-            alt="NBI Logo"
-            style={{ width: '56px', height: '56px', objectFit: 'contain', marginBottom: '10px' }}
-          />
-          <p style={{ margin: 0, color: '#f0a500', fontSize: '11px', letterSpacing: '2px', fontWeight: 'bold', textTransform: 'uppercase' }}>
-            Republic of the Philippines
-          </p>
-          <p style={{ margin: '4px 0 0 0', color: '#ffffff', fontSize: '19px', fontWeight: 'bold' }}>
-            National Bureau of Investigation
-          </p>
-          <p style={{ margin: '2px 0 0 0', color: '#c9d4ec', fontSize: '13px', letterSpacing: '1px' }}>
-            Cybercrime Division
-          </p>
-        </div>
+    <>
+      <style>{`
+        .login-page {
+          min-height: 100vh;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-sizing: border-box;
+          padding: 24px;
+          font-family: 'Inter', Arial, sans-serif;
+          background:
+            radial-gradient(circle at 15% 15%, rgba(240,165,0,0.10), transparent 55%),
+            radial-gradient(circle at 88% 92%, rgba(63,168,150,0.10), transparent 55%),
+            var(--bg-color);
+        }
 
-        <div style={{ padding: '28px 32px 32px 32px' }}>
+        .login-card {
+          width: 920px;
+          max-width: 100%;
+          min-height: 560px;
+          background: var(--panel-bg);
+          border: 1px solid var(--border-color);
+          border-radius: 20px;
+          box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+          display: flex;
+          overflow: hidden;
+        }
 
-          {error && (
-            <div style={{ background: 'rgba(138,31,31,0.2)', border: '1px solid rgba(138,31,31,0.5)', color: '#ff8a8a', padding: '10px 14px', borderRadius: '4px', marginBottom: '18px', fontSize: '13px' }}>
-              {error}
-              {locked && (
-                <div style={{ marginTop: 6, fontSize: '12px', color: '#f0c674' }}>
-                  A request has been sent to your administrator to unlock this account.
+        /* ---------- Left visual / branding panel ---------- */
+        .login-visual {
+          flex: 1 1 46%;
+          position: relative;
+          min-width: 0;
+          padding: 32px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          overflow: hidden;
+          background:
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05), transparent 2px) 0 0/22px 22px,
+            linear-gradient(160deg, #0b1f4d 0%, #081533 60%, #050b18 100%);
+        }
+
+        .login-visual-brand { display: flex; align-items: center; gap: 12px; z-index: 2; position: relative; }
+        .login-visual-brand img { width: 52px; height: 52px; object-fit: contain; flex-shrink: 0; }
+        .login-visual-brand-text p { margin: 0; color: #F0A500; font-weight: 800; font-size: 15px; letter-spacing: 0.4px; line-height: 1.3; }
+        .login-visual-brand-text span { color: #9fb0d1; font-size: 11px; letter-spacing: 0.5px; }
+
+        .login-visual-seal {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 200px;
+          z-index: 1;
+          position: relative;
+        }
+        .login-visual-seal::before {
+          content: '';
+          position: absolute;
+          width: 280px; height: 280px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(240,165,0,0.14) 0%, transparent 70%);
+        }
+        .login-visual-seal img { width: 180px; height: 180px; object-fit: contain; position: relative; z-index: 1; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4)); }
+
+        .login-visual-copy { position: relative; z-index: 2; }
+        .login-visual-copy h1 { margin: 0 0 10px 0; color: #fff; font-size: 25px; line-height: 1.3; font-weight: 800; }
+        .login-visual-copy h1 span { color: #F0A500; }
+        .login-visual-copy p { margin: 0; color: #9fb0d1; font-size: 12.5px; line-height: 1.6; max-width: 320px; }
+
+        /* ---------- Right form panel ---------- */
+        .login-form-panel {
+          flex: 1 1 54%;
+          min-width: 0;
+          padding: 40px 44px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .login-form-header { margin-bottom: 22px; }
+        .login-form-header h2 { margin: 0; color: var(--text-main); font-size: 23px; font-weight: 800; }
+        .login-form-header p { margin: 6px 0 0 0; color: var(--text-muted); font-size: 12.5px; line-height: 1.5; }
+        .login-form-header p.uppercase-sub { text-transform: uppercase; letter-spacing: 1px; font-size: 11.5px; }
+
+        .login-alert { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
+        .login-alert.error { background: rgba(194,63,63,0.12); border: 1px solid rgba(194,63,63,0.35); color: #c23f3f; }
+        .login-alert.info { background: rgba(63,168,96,0.14); border: 1px solid rgba(63,168,96,0.4); color: #2f8a52; }
+        .login-alert .lock-note { margin-top: 6px; font-size: 12px; color: #b8860b; }
+
+        .login-label { display: block; margin-bottom: 14px; }
+        .login-label span { display: block; color: var(--text-muted); font-size: 11px; margin-bottom: 6px; letter-spacing: 0.6px; font-weight: 700; }
+
+        .login-input {
+          width: 100%; padding: 12px 14px; box-sizing: border-box;
+          background: var(--bg-color);
+          border: 1px solid var(--border-color);
+          border-radius: 10px;
+          color: var(--text-main);
+          font-size: 14px;
+          outline: none;
+          transition: border-color .15s ease;
+        }
+        .login-input:focus { border-color: #F0A500; }
+        .login-input-wrap { position: relative; }
+        .login-eye-btn {
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+          background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex;
+        }
+        .login-otp-input { letter-spacing: 6px; text-align: center; font-size: 18px; font-weight: 700; }
+
+        .login-forgot-row { text-align: right; margin-bottom: 18px; }
+        .login-link-btn { background: none; border: none; color: #F0A500; font-size: 12.5px; cursor: pointer; padding: 0; font-weight: 700; }
+
+        .login-submit-btn {
+          width: 100%; padding: 13px; border: none; border-radius: 10px;
+          background: #F0A500; color: #0b1f4d; font-weight: 800; font-size: 14px;
+          letter-spacing: 0.4px; cursor: pointer;
+        }
+        .login-submit-btn:disabled { background: #a37a2a; cursor: default; }
+        .login-submit-btn:hover:not(:disabled) { background: #ffb800; }
+
+        .login-secondary-btn {
+          width: 100%; padding: 11px; border-radius: 10px; background: transparent;
+          border: 1px solid var(--border-color); color: var(--text-muted); font-size: 13px; cursor: pointer; margin-top: 10px;
+        }
+        .login-secondary-btn:hover { background: rgba(240,165,0,0.06); }
+
+        .login-text-link-center { text-align: center; margin-top: 16px; }
+        .login-underline-btn { background: none; border: none; color: var(--text-muted); font-size: 11.5px; cursor: pointer; padding: 0; text-decoration: underline; }
+
+        .login-divider { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
+        .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border-color); }
+        .login-divider span { color: var(--text-muted); font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 860px) {
+          .login-card { flex-direction: column; min-height: 0; }
+          .login-visual { flex: none; min-height: 130px; padding: 22px 24px; }
+          .login-visual-seal, .login-visual-copy { display: none; }
+          .login-form-panel { padding: 28px 24px 32px; }
+        }
+
+        @media (max-width: 480px) {
+          .login-page { padding: 12px; }
+          .login-card { border-radius: 14px; }
+          .login-visual { min-height: 96px; padding: 18px 20px; }
+          .login-visual-brand-text p { font-size: 12px; }
+          .login-visual-brand-text span { font-size: 9.5px; }
+          .login-form-panel { padding: 22px 18px 26px; }
+          .login-form-header h2 { font-size: 19px; }
+        }
+      `}</style>
+
+      <div className="login-page">
+        <div className="login-card">
+          {/* ---------- Left: branding / visual ---------- */}
+          <div className="login-visual">
+            <div className="login-visual-brand">
+              <img src="/assets/nbi.png" alt="NBI Logo" />
+              <div className="login-visual-brand-text">
+                <p>National Bureau of Investigation</p>
+                <span>CYBERCRIME DIVISION</span>
+              </div>
+            </div>
+
+            <div className="login-visual-seal">
+              <img src="/assets/ccd.png" alt="" />
+            </div>
+
+            <div className="login-visual-copy">
+              <h1>Serve. Protect.<br /><span>Secure.</span></h1>
+              <p>Restricted access portal for NBI Cybercrime Division personnel only. All activity on this system is monitored and logged.</p>
+            </div>
+          </div>
+
+          {/* ---------- Right: form ---------- */}
+          <div className="login-form-panel">
+            {error && (
+              <div className="login-alert error">
+                {error}
+                {locked && (
+                  <div className="lock-note">
+                    A request has been sent to your administrator to unlock this account.
+                  </div>
+                )}
+              </div>
+            )}
+            {info && <div className="login-alert info">{info}</div>}
+
+            {/* ===== LOGIN MODE ===== */}
+            {mode === 'login' && (
+              <>
+                <div className="login-form-header">
+                  <h2>Welcome back</h2>
+                  <p className="uppercase-sub">Login Portal</p>
                 </div>
-              )}
-            </div>
-          )}
-          {info && (
-            <div style={{ background: 'rgba(30,122,60,0.2)', border: '1px solid rgba(30,122,60,0.5)', color: '#8fe0a8', padding: '10px 14px', borderRadius: '4px', marginBottom: '18px', fontSize: '13px' }}>
-              {info}
-            </div>
-          )}
 
-          {/* ===== LOGIN MODE ===== */}
-          {mode === 'login' && (
-            <>
-              <p style={{ margin: '0 0 20px 0', color: '#c9d4ec', fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase', textAlign: 'center' }}>
-                Staff Login Portal
-              </p>
+                <form onSubmit={handleSubmit}>
+                  <label className="login-label">
+                    <span>USERNAME</span>
+                    <input type="text" className="login-input" value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus />
+                  </label>
 
-              <form onSubmit={handleSubmit}>
-                <label style={{ display: 'block', marginBottom: '16px' }}>
-                  <span style={labelTextStyle}>USERNAME</span>
-                  <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus style={inputStyle} />
-                </label>
+                  <label className="login-label">
+                    <span>PASSWORD</span>
+                    <div className="login-input-wrap">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        className="login-input"
+                        style={{ paddingRight: 48 }}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button type="button" className="login-eye-btn" onClick={() => setShowPassword(s => !s)} tabIndex={-1}>
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </label>
 
-                 <label style={{ display: 'block', marginBottom: '10px' }}>
-                  <span style={labelTextStyle}>PASSWORD</span>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      style={{ ...inputStyle, paddingRight: '48px' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(s => !s)}
-                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#8092b8', cursor: 'pointer', padding: 4, display: 'flex' }}
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  <div className="login-forgot-row">
+                    <button type="button" className="login-link-btn" onClick={() => { resetMessages(); setMode('forgot-request'); }}>
+                      Forgot Password?
                     </button>
                   </div>
-                </label>
 
-                <div style={{ textAlign: 'right', marginBottom: '20px' }}>
-                  <button
-                    type="button"
-                    onClick={() => { resetMessages(); setMode('forgot-request'); }}
-                    style={{ background: 'none', border: 'none', color: '#f0a500', fontSize: '12px', cursor: 'pointer', padding: 0 }}
-                  >
-                    Forgot Password?
+                  <button type="submit" className="login-submit-btn" disabled={loading}>
+                    {loading ? 'LOGGING IN...' : 'LOG IN'}
                   </button>
+
+                  <div className="login-text-link-center">
+                    <button type="button" className="login-underline-btn" onClick={() => { resetMessages(); setMode('forgot-verify'); }}>
+                      Already have a reset code?
+                    </button>
+                  </div>
+
+                  <div className="login-divider"><span>Secure Access</span></div>
+                </form>
+              </>
+            )}
+
+            {/* ===== FORGOT PASSWORD — REQUEST ===== */}
+            {mode === 'forgot-request' && (
+              <>
+                <div className="login-form-header">
+                  <h2>Reset your password</h2>
+                  <p>Your request will be sent to an administrator. You'll be given a reset code once it's approved.</p>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{ width: '100%', padding: '12px', background: loading ? '#8a6a1a' : '#f0a500', color: '#0b1f4d', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '14px', letterSpacing: '0.5px', cursor: loading ? 'default' : 'pointer' }}
-                >
-                  {loading ? 'LOGGING IN...' : 'LOGIN'}
-                </button>
+                <form onSubmit={handleForgotRequest}>
+                  <label className="login-label">
+                    <span>USERNAME</span>
+                    <input type="text" className="login-input" value={fpUsername} onChange={(e) => setFpUsername(e.target.value)} required autoFocus />
+                  </label>
 
-                <div style={{ textAlign: 'center', marginTop: '16px' }}>
-                  <button
-                    type="button"
-                    onClick={() => { resetMessages(); setMode('forgot-verify'); }}
-                    style={{ background: 'none', border: 'none', color: '#8092b8', fontSize: '11.5px', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
-                  >
-                    Already have a reset code?
+                  <button type="submit" className="login-submit-btn" disabled={loading}>
+                    {loading ? 'SENDING REQUEST...' : 'SEND REQUEST'}
                   </button>
+
+                  <button type="button" className="login-secondary-btn" onClick={backToLogin}>
+                    Back to Login
+                  </button>
+
+                  <div className="login-text-link-center">
+                    <button type="button" className="login-link-btn" onClick={() => { resetMessages(); setMode('forgot-verify'); }}>
+                      Already have a code? Enter it here
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+
+            {/* ===== FORGOT PASSWORD — VERIFY CODE ===== */}
+            {mode === 'forgot-verify' && (
+              <>
+                <div className="login-form-header">
+                  <h2>Enter reset code</h2>
+                  <p>Enter the code your administrator sent to your email.</p>
                 </div>
-              </form>
-            </>
-          )}
 
-          {/* ===== FORGOT PASSWORD — REQUEST ===== */}
-          {mode === 'forgot-request' && (
-            <>
-              <p style={{ margin: '0 0 8px 0', color: '#c9d4ec', fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase', textAlign: 'center' }}>
-                Reset Your Password
-              </p>
-              <p style={{ margin: '0 0 20px 0', color: '#8092b8', fontSize: '12.5px', textAlign: 'center', lineHeight: 1.5 }}>
-                Your request will be sent to an administrator. You'll be given a reset code once it's approved.
-              </p>
+                <form onSubmit={handleForgotVerify}>
+                  <label className="login-label">
+                    <span>USERNAME</span>
+                    <input type="text" className="login-input" value={vUsername} onChange={(e) => setVUsername(e.target.value)} required autoFocus />
+                  </label>
 
-              <form onSubmit={handleForgotRequest}>
-                <label style={{ display: 'block', marginBottom: '20px' }}>
-                  <span style={labelTextStyle}>USERNAME</span>
-                  <input type="text" value={fpUsername} onChange={(e) => setFpUsername(e.target.value)} required autoFocus style={inputStyle} />
-                </label>
+                  <label className="login-label">
+                    <span>RESET CODE</span>
+                    <input
+                      type="text"
+                      className="login-input login-otp-input"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      required
+                      maxLength={6}
+                    />
+                  </label>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{ width: '100%', padding: '12px', background: loading ? '#8a6a1a' : '#f0a500', color: '#0b1f4d', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '14px', letterSpacing: '0.5px', cursor: loading ? 'default' : 'pointer', marginBottom: '12px' }}
-                >
-                  {loading ? 'SENDING REQUEST...' : 'SEND REQUEST'}
-                </button>
+                  <label className="login-label">
+                    <span>NEW PASSWORD</span>
+                    <div className="login-input-wrap">
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        className="login-input"
+                        style={{ paddingRight: 40 }}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        minLength={6}
+                      />
+                      <button type="button" className="login-eye-btn" onClick={() => setShowNewPassword(s => !s)} tabIndex={-1}>
+                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </label>
 
-                <button
-                  type="button"
-                  onClick={backToLogin}
-                  style={{ width: '100%', padding: '10px', background: 'transparent', color: '#c9d4ec', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '5px', cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Back to Login
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { resetMessages(); setFpUsername(prev => prev); setMode('forgot-reset'); }}
-                  style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#f0a500', fontSize: '12px', cursor: 'pointer', marginTop: '10px' }}
-                >
-                  Already have a code? Enter it here
-                </button>
-              </form>
-            </>
-          )}
-
-          {/* ===== FORGOT PASSWORD — VERIFY CODE ===== */}
-          {mode === 'forgot-verify' && (
-            <>
-              <p style={{ margin: '0 0 8px 0', color: '#c9d4ec', fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase', textAlign: 'center' }}>
-                Enter Reset Code
-              </p>
-              <p style={{ margin: '0 0 20px 0', color: '#8092b8', fontSize: '12.5px', textAlign: 'center', lineHeight: 1.5 }}>
-                Enter the code your administrator sent to your email.
-              </p>
-
-              <form onSubmit={handleForgotVerify}>
-                <label style={{ display: 'block', marginBottom: '16px' }}>
-                  <span style={labelTextStyle}>USERNAME</span>
-                  <input type="text" value={vUsername} onChange={(e) => setVUsername(e.target.value)} required autoFocus style={inputStyle} />
-                </label>
-
-                <label style={{ display: 'block', marginBottom: '16px' }}>
-                  <span style={labelTextStyle}>RESET CODE</span>
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    required
-                    maxLength={6}
-                    style={{ ...inputStyle, letterSpacing: '4px', textAlign: 'center', fontSize: '18px' }}
-                  />
-                </label>
-
-                <label style={{ display: 'block', marginBottom: '16px' }}>
-                  <span style={labelTextStyle}>NEW PASSWORD</span>
-                  <div style={{ position: 'relative' }}>
+                  <label className="login-label" style={{ marginBottom: 20 }}>
+                    <span>CONFIRM NEW PASSWORD</span>
                     <input
                       type={showNewPassword ? 'text' : 'password'}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="login-input"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       minLength={6}
-                      style={{ ...inputStyle, paddingRight: 40 }}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(s => !s)}
-                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#8092b8', cursor: 'pointer', padding: 4, display: 'flex' }}
-                      tabIndex={-1}
-                    >
-                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </label>
+                  </label>
 
-                <label style={{ display: 'block', marginBottom: '20px' }}>
-                  <span style={labelTextStyle}>CONFIRM NEW PASSWORD</span>
-                  <input type={showNewPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} style={inputStyle} />
-                </label>
+                  <button type="submit" className="login-submit-btn" disabled={loading}>
+                    {loading ? 'RESETTING...' : 'RESET PASSWORD'}
+                  </button>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{ width: '100%', padding: '12px', background: loading ? '#8a6a1a' : '#f0a500', color: '#0b1f4d', border: 'none', borderRadius: '5px', fontWeight: 'bold', fontSize: '14px', letterSpacing: '0.5px', cursor: loading ? 'default' : 'pointer', marginBottom: '12px' }}
-                >
-                  {loading ? 'RESETTING...' : 'RESET PASSWORD'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={backToLogin}
-                  style={{ width: '100%', padding: '10px', background: 'transparent', color: '#c9d4ec', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '5px', cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Back to Login
-                </button>
-              </form>
-            </>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div style={{ padding: '14px 32px', background: '#0b1f4d', borderTop: '1px solid rgba(240,165,0,0.15)' }}>
-          <p style={{ margin: 0, color: '#8092b8', fontSize: '11px', textAlign: 'center' }}>
-            Authorized personnel only. All access is logged.
-          </p>
+                  <button type="button" className="login-secondary-btn" onClick={backToLogin}>
+                    Back to Login
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

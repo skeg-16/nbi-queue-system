@@ -59,7 +59,12 @@ const COPY = {
     agePh: 'e.g. 30',
     region: 'Region of Residence',
     service: 'Service Availed',
-    servicePh: 'e.g. Filing a complaint',
+    servicePh: 'Select service availed',
+    serviceOpts: [
+      ['File a Complaint', 'File a Complaint'],
+      ['Inquire', 'Inquire'],
+      ['Follow-up', 'Follow-up'],
+    ],
     ccIntro:
       "INSTRUCTIONS: Select your answer to the Citizen's Charter (CC) questions. The Citizen's Charter is an official document that reflects the services of a government agency/office including its requirements, fees, and processing times among others.",
     cc1: 'CC1. Which of the following best describes your awareness of a CC?',
@@ -117,7 +122,7 @@ const COPY = {
       'Please select sex.',
       'Please enter a valid age.',
       'Please select your region.',
-      'Please enter the service availed.',
+      'Please select the service availed.',
       'Please select an option.',
     ],
     stepOf: (s, t) => `Step ${s} of ${t}`,
@@ -143,7 +148,12 @@ const COPY = {
     agePh: 'hal. 30',
     region: 'Rehiyon',
     service: 'Uri ng transaksyon o serbisyo',
-    servicePh: 'hal. Paghahain ng reklamo',
+    servicePh: 'Pumili ng uri ng serbisyo',
+    serviceOpts: [
+      ['File a Complaint', 'Paghahain ng Reklamo'],
+      ['Inquire', 'Pagtatanong'],
+      ['Follow-up', 'Follow-up / Pagsubaybay'],
+    ],
     ccIntro:
       "PANUTO: Piliin ang iyong sagot sa mga sumusunod na katanungan tungkol sa Citizen's Charter (CC). Ito ay isang opisyal na dokumento na naglalaman ng mga serbisyo sa isang ahensya/opisina ng gobyerno, kasama na rito ang kinakailangang dokumento, kaukulang bayarin, at pangkabuuang oras ng pagproseso.",
     cc1: 'CC1. Alin sa mga susunod ang naglalarawan sa iyong kaalaman sa CC?',
@@ -201,7 +211,7 @@ const COPY = {
       'Mangyaring pumili ng kasarian.',
       'Mangyaring maglagay ng balidong edad.',
       'Mangyaring piliin ang iyong rehiyon.',
-      'Mangyaring ilagay ang uri ng serbisyo.',
+      'Mangyaring pumili ng uri ng serbisyo.',
       'Mangyaring pumili ng sagot.',
     ],
     stepOf: (s, t) => `Hakbang ${s} ng ${t}`,
@@ -273,7 +283,7 @@ function Select({ value, onChange, options, placeholder, hasError }) {
 /* ------------------------------------------------------------------ */
 
 export default function FeedbackForm() {
-  const [lang, setLang] = useState('en');
+  const [lang, setLang] = useState(null);
   const [step, setStep] = useState(1);
   const [dir, setDir] = useState('forward');
   const [form, setForm] = useState(initialForm());
@@ -284,7 +294,7 @@ export default function FeedbackForm() {
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  const t = COPY[lang];
+  const t = lang ? COPY[lang] : null;
   const totalSteps = 4;
 
   const set = useCallback((key, value) => {
@@ -374,9 +384,53 @@ export default function FeedbackForm() {
     setErrors({});
     setSqdError(false);
     setSubmitted(false);
+    setLang(null);
   }
 
   const pct = (step / totalSteps) * 100;
+
+  /* ---------------- Language picker (shown before anything else) ---------------- */
+  if (!lang) {
+    return (
+      <div
+        className="w-full min-h-[640px] flex flex-col items-center justify-center p-4 sm:p-8"
+        style={{
+          background: 'radial-gradient(circle at 50% 0%, #1a365d 0%, #050e1d 60%)',
+          fontFamily: "'Inter', system-ui, sans-serif",
+        }}
+      >
+        <div
+          className="w-full max-w-md rounded-2xl overflow-hidden border border-white/10 shadow-2xl text-center px-8 py-10"
+          style={{ background: 'rgba(11,29,58,0.4)', backdropFilter: 'blur(10px)' }}
+        >
+          <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center font-black text-lg" style={{ background: GOLD, color: '#050e1d' }}>
+            NBI
+          </div>
+          <h1 className="text-xs tracking-[2px] uppercase font-semibold text-slate-400">National Bureau of Investigation</h1>
+          <h2 className="text-xl font-extrabold my-1" style={{ color: GOLD }}>Cybercrime Division</h2>
+
+          <p className="text-white font-semibold mt-6 mb-1">Choose your language</p>
+          <p className="text-slate-400 text-sm mb-6">Piliin ang gusto mong wika</p>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => setLang('en')}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold min-h-[48px] transition-transform hover:scale-[1.02]"
+              style={{ background: GOLD, color: '#050e1d' }}
+            >
+              <Globe size={18} /> English
+            </button>
+            <button
+              onClick={() => setLang('tl')}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold border-2 border-white/10 bg-white/10 text-white hover:bg-white/20 transition-colors min-h-[48px]"
+            >
+              <Globe size={18} /> Tagalog
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -393,11 +447,11 @@ export default function FeedbackForm() {
           style={{ borderColor: GOLD, background: 'linear-gradient(180deg, rgba(11,29,58,0.9) 0%, rgba(5,14,29,0) 100%)' }}
         >
           <button
-            onClick={() => setLang(lang === 'en' ? 'tl' : 'en')}
-            className="absolute top-4 right-4 text-xs font-semibold px-2 py-1 rounded-md border flex items-center gap-1 transition-colors"
+            onClick={() => setLang(null)}
+            className="absolute top-4 left-4 text-xs font-semibold px-2 py-1 rounded-md border flex items-center gap-1 transition-colors"
             style={{ color: GOLD, borderColor: GOLD, background: 'rgba(241,196,15,0.1)' }}
           >
-            <Globe size={12} /> {t.langLabel}
+            <ChevronLeft size={12} /> {t.langLabel === 'Tagalog' ? 'Back' : 'Bumalik'}
           </button>
           <div className="mx-auto mb-2 w-16 h-16 rounded-full flex items-center justify-center font-black text-lg" style={{ background: GOLD, color: '#050e1d' }}>
             NBI
@@ -453,7 +507,7 @@ export default function FeedbackForm() {
                     <Select value={form.region} onChange={(v) => set('region', v)} options={REGIONS} placeholder="—" hasError={!!errors.region} />
                   </Field>
                   <Field label={t.service} required error={errors.service_availed}>
-                    <input type="text" placeholder={t.servicePh} value={form.service_availed} onChange={(e) => set('service_availed', e.target.value)} className={inputCls(!!errors.service_availed)} />
+                    <Select value={form.service_availed} onChange={(v) => set('service_availed', v)} options={t.serviceOpts} placeholder={t.servicePh} hasError={!!errors.service_availed} />
                   </Field>
                 </div>
               )}

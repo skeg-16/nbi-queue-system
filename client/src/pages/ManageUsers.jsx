@@ -16,7 +16,7 @@ function daysSince(dateStr) {
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 }
 
-function UserCard({ u, onDeactivate, onReactivate, onEdit }) {
+function UserRow({ u, onDeactivate, onReactivate, onEdit }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -32,68 +32,62 @@ function UserCard({ u, onDeactivate, onReactivate, onEdit }) {
   const daysDeactivated = !isActive ? daysSince(u.deactivated_at) : 0;
   const daysLeft = Math.max(0, 30 - daysDeactivated);
 
- return (
-    <div className={`uc-card ${!isActive ? 'uc-card-inactive' : ''} ${u.is_locked ? 'uc-card-locked' : ''}`}>
-      <div className="uc-top">
-        <div className="uc-avatar">
-          <User size={20} strokeWidth={2.2} />
+  return (
+    <tr className={`${!isActive ? 'ur-inactive' : ''} ${u.is_locked ? 'ur-locked' : ''}`}>
+      <td>
+        <div className="ur-user-cell">
+          <div className="ur-avatar">
+            <User size={16} strokeWidth={2.2} />
+          </div>
+          <div className="ur-name-block">
+            <p className="ur-name">{u.username}</p>
+            <p className="ur-role">{u.role}{u.is_locked ? ' · LOCKED' : ''}</p>
+          </div>
         </div>
-         <div className="uc-name-block">
-          <p className="uc-name">{u.username}</p>
-          <p className="uc-role">{u.role}{u.is_locked ? ' · LOCKED' : ''}</p>
+      </td>
+      <td>{u.full_name}</td>
+      <td>
+        <div className="ur-email-cell">
+          <Mail size={13} />
+          <span>{u.email || 'No email on file'}</span>
         </div>
-        <div className="uc-menu-wrap" ref={menuRef}>
-          <button className="uc-menu-btn" onClick={() => setMenuOpen(m => !m)}>
+      </td>
+      <td>{formatDate(u.created_at)}</td>
+      <td>
+        {isActive ? (
+          <span className="ur-status-text active">
+            {u.is_first_login ? 'Password not set' : 'Active'}
+          </span>
+        ) : (
+          <span className="ur-status-text inactive">
+            Deactivated {daysDeactivated}d ago · auto-deletes in {daysLeft}d
+          </span>
+        )}
+      </td>
+      <td style={{ textAlign: 'center' }}>
+        <div className="ur-menu-wrap" ref={menuRef}>
+          <button className="ur-menu-btn" onClick={() => setMenuOpen(m => !m)}>
             <MoreHorizontal size={18} />
           </button>
           {menuOpen && (
-            <div className="uc-menu-dropdown">
-              <button className="uc-menu-item" onClick={() => { setMenuOpen(false); onEdit(u); }}>
+            <div className="ur-menu-dropdown">
+              <button className="ur-menu-item" onClick={() => { setMenuOpen(false); onEdit(u); }}>
                 <User size={14} /> Edit Username
               </button>
               {isActive ? (
-                <button className="uc-menu-item danger" onClick={() => { setMenuOpen(false); onDeactivate(u.id, u.username); }}>
+                <button className="ur-menu-item danger" onClick={() => { setMenuOpen(false); onDeactivate(u.id, u.username); }}>
                   <UserX size={14} /> Deactivate
                 </button>
               ) : (
-                <button className="uc-menu-item" onClick={() => { setMenuOpen(false); onReactivate(u.id, u.username); }}>
+                <button className="ur-menu-item" onClick={() => { setMenuOpen(false); onReactivate(u.id, u.username); }}>
                   <UserCheck size={14} /> Reactivate
                 </button>
               )}
             </div>
           )}
         </div>
-      </div>
-
-      <div className="uc-meta-row">
-        <div>
-          <p className="uc-meta-label">Full Name</p>
-          <p className="uc-meta-value">{u.full_name}</p>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <p className="uc-meta-label">Date Added</p>
-          <p className="uc-meta-value">{formatDate(u.created_at)}</p>
-        </div>
-      </div>
-
-      <div className="uc-divider" />
-
-      <div className="uc-detail-row">
-        <Mail size={13} />
-        <span>{u.email || 'No email on file'}</span>
-      </div>
-      <div className="uc-detail-row">
-        {isActive ? (
-          <span className="uc-status-text active">
-            {u.is_first_login ? 'Password not set' : 'Active'}
-          </span>
-        ) : (
-          <span className="uc-status-text inactive">
-            Deactivated {daysDeactivated}d ago · auto-deletes in {daysLeft}d
-          </span>
-        )}
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 }
 
@@ -457,66 +451,74 @@ export default function ManageUsers() {
         .mu-input.error, .mu-select.error { border-color: var(--red); background: rgba(220,38,38,0.08); }
         .mu-field-error { margin: 6px 0 0 0; color: var(--red); font-size: 11.5px; }
 
-        /* ---- Card grid ---- */
-        .uc-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 16px;
-        }
-        .uc-card {
+        /* ---- User table ---- */
+        .mu-table-wrap {
           background: var(--panel-bg);
           border: 1px solid var(--border-color);
-          border-radius: 14px;
-          padding: 18px;
+          border-radius: 12px;
+          overflow: hidden;
         }
-        .uc-card-inactive {
-          border-color: rgba(220,38,38,0.35);
-          opacity: 0.75;
+        .mu-table-scroll { overflow-x: auto; }
+        .ur-table {
+          width: 100%;
+          border-collapse: collapse;
+          min-width: 720px;
         }
-        .uc-card-locked {
-          border-color: rgba(240,165,0,0.6);
-          box-shadow: 0 0 0 1px rgba(240,165,0,0.3);
+        .ur-table thead th {
+          text-align: left;
+          padding: 12px 16px;
+          font-size: 11px;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          border-bottom: 1px solid var(--border-color);
+          white-space: nowrap;
         }
-        .uc-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
-        .uc-avatar {
-          position: relative;
-          width: 42px; height: 42px; border-radius: 50%;
+        .ur-table tbody td {
+          padding: 12px 16px;
+          font-size: 13px;
+          color: var(--text-main);
+          border-bottom: 1px solid var(--border-color);
+          vertical-align: middle;
+        }
+        .ur-table tbody tr:last-child td { border-bottom: none; }
+        .ur-table tbody tr:hover td { background: var(--table-hover); }
+        .ur-table tbody tr.ur-inactive td { opacity: 0.65; }
+        .ur-table tbody tr.ur-locked td:first-child { box-shadow: inset 3px 0 0 rgba(240,165,0,0.7); }
+
+        .ur-user-cell { display: flex; align-items: center; gap: 10px; }
+        .ur-avatar {
+          width: 34px; height: 34px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
           color: #0b1f4d; background: #F0A500;
           flex-shrink: 0;
         }
-        .uc-name-block { flex: 1; min-width: 0; }
-        .uc-name { margin: 0; color: var(--text-main); font-size: 15.5px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .uc-role { margin: 2px 0 0 0; color: #F0A500; font-size: 10.5px; letter-spacing: 0.6px; text-transform: uppercase; font-weight: 600; }
+        .ur-name-block { min-width: 0; }
+        .ur-name { margin: 0; color: var(--text-main); font-size: 13.5px; font-weight: 700; white-space: nowrap; }
+        .ur-role { margin: 2px 0 0 0; color: #F0A500; font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; }
 
-        .uc-menu-wrap { position: relative; }
-        .uc-menu-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 5px; }
-        .uc-menu-btn:hover { background: var(--table-hover); color: var(--text-main); }
-        .uc-menu-dropdown {
+        .ur-email-cell { display: flex; align-items: center; gap: 7px; color: var(--text-main); white-space: nowrap; }
+
+        .ur-status-text.active { color: #16a34a; font-weight: 600; white-space: nowrap; }
+        .ur-status-text.inactive { color: var(--red); font-weight: 600; white-space: nowrap; }
+
+        .ur-menu-wrap { position: relative; display: inline-block; }
+        .ur-menu-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 5px; }
+        .ur-menu-btn:hover { background: var(--table-hover); color: var(--text-main); }
+        .ur-menu-dropdown {
           position: absolute; right: 0; top: 28px; z-index: 10;
           background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px;
           min-width: 140px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
-        .uc-menu-item {
+        .ur-menu-item {
           display: flex; align-items: center; gap: 8px; width: 100%;
           padding: 9px 12px; background: none; border: none; color: var(--text-main); font-size: 12.5px; cursor: pointer; text-align: left;
         }
-        .uc-menu-item.danger { color: var(--red); }
-        .uc-menu-item:hover { background: var(--table-hover); }
-        .uc-menu-item.danger:hover { background: rgba(220,38,38,0.12); }
+        .ur-menu-item.danger { color: var(--red); }
+        .ur-menu-item:hover { background: var(--table-hover); }
+        .ur-menu-item.danger:hover { background: rgba(220,38,38,0.12); }
 
-        .uc-meta-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .uc-meta-label { margin: 0; color: var(--text-muted); font-size: 10px; letter-spacing: 0.4px; text-transform: uppercase; }
-        .uc-meta-value { margin: 2px 0 0 0; color: var(--text-main); font-size: 13px; font-weight: 600; }
-
-        .uc-divider { height: 1px; background: var(--border-color); margin-bottom: 12px; }
-
-        .uc-detail-row { display: flex; align-items: center; gap: 8px; color: var(--text-main); font-size: 12.5px; margin-bottom: 6px; }
-        .uc-detail-row:last-child { margin-bottom: 0; }
-        .uc-status-text.active { color: #16a34a; font-weight: 600; }
-        .uc-status-text.inactive { color: var(--red); font-weight: 600; }
-
-        .uc-empty { color: var(--text-muted); font-size: 13.5px; padding: 40px; text-align: center; grid-column: 1 / -1; }
+        .uc-empty { color: var(--text-muted); font-size: 13.5px; padding: 40px; text-align: center; }
 
         /* ---- Confirm modal ---- */
         .mu-confirm-modal {
@@ -565,7 +567,6 @@ export default function ManageUsers() {
 
         @media (max-width: 700px) {
           .mu-main { padding: 20px 16px 40px; }
-          .uc-grid { grid-template-columns: 1fr; }
         }
 
        @media (max-width: 480px) {
@@ -574,13 +575,8 @@ export default function ManageUsers() {
           .mu-header h2 { font-size: 18px; }
           .mu-btn-primary { width: 100%; justify-content: center; font-size: 13px; padding: 10px; }
           .mu-page-nav { align-self: flex-end; }
-          .uc-card { padding: 14px; }
-          .uc-name { font-size: 14px; }
           .mu-modal { padding: 18px; }
           .mu-confirm-modal { padding: 20px; }
-
-          .uc-meta-row { flex-direction: column; gap: 8px; }
-          .uc-meta-row > div:last-child { text-align: left !important; }
         }
       `}</style>
 
@@ -646,16 +642,32 @@ export default function ManageUsers() {
             </div>
           )}
 
-          <div className="uc-grid">
-            {loading ? (
-              <div className="uc-empty">Loading...</div>
-            ) : users.length === 0 ? (
-              <div className="uc-empty">No accounts yet.</div>
-            ) : (
-              paginatedUsers.map(u => (
-                <UserCard key={u.id} u={u} onDeactivate={handleDeactivate} onReactivate={handleReactivate} onEdit={openEditModal} />
-              ))
-            )}
+          <div className="mu-table-wrap">
+            <div className="mu-table-scroll">
+              <table className="ur-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Date Added</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan={6} className="uc-empty">Loading...</td></tr>
+                  ) : users.length === 0 ? (
+                    <tr><td colSpan={6} className="uc-empty">No accounts yet.</td></tr>
+                  ) : (
+                    paginatedUsers.map(u => (
+                      <UserRow key={u.id} u={u} onDeactivate={handleDeactivate} onReactivate={handleReactivate} onEdit={openEditModal} />
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         
           </main>

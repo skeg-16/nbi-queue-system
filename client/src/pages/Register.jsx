@@ -62,7 +62,7 @@ export default function Register() {
   const [address, setAddress] = useState('');
   const [purpose, setPurpose] = useState('');
   const [civilStatus, setCivilStatus] = useState('Single');
-  const [gender, setGender] = useState('Prefer not to say');
+  const [gender, setGender] = useState('');
   const [referredBy, setReferredBy] = useState('');
   const [isPriority, setIsPriority] = useState(false);
   const [queuePreview, setQueuePreview] = useState(null);
@@ -255,7 +255,7 @@ export default function Register() {
   function resetForm() {
     setFullName(''); setContact(''); setEmail(''); setAge('');
     setRegion(''); setAddress(''); setPurpose('');
-    setCivilStatus('Single'); setGender('Prefer not to say'); setReferredBy('');
+    setCivilStatus('Single'); setGender(''); setReferredBy('');
     setIsPriority(false);
     setErrors({});
     setSubmitted(false);
@@ -579,7 +579,6 @@ export default function Register() {
                   <select id="gender" className="reg-input" value={gender} onChange={e => setGender(e.target.value)}>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
-                    <option value="Prefer not to say">Prefer not to say</option>
                   </select>
                 </div>
 

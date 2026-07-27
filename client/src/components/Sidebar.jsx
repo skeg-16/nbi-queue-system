@@ -12,6 +12,7 @@ import {
   LogOut,
   PanelLeftClose,
   ChevronsRight,
+  AlertTriangle,
 } from 'lucide-react';
 /**
  * Reusable app sidebar. Drop this into any page.
@@ -73,6 +74,7 @@ export default function Sidebar({
   const [internalCollapsed, setInternalCollapsed] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth <= 900 : false
   );
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   const collapsed = isControlled ? collapsedProp : internalCollapsed;
   const setCollapsed = (val) => {
@@ -225,6 +227,54 @@ export default function Sidebar({
             z-index: 55;
           }
         }
+
+        /* ---- Logout confirm modal ---- */
+        .logout-modal-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+          display: flex; align-items: center; justify-content: center; z-index: 100;
+          padding: 20px;
+        }
+        .logout-confirm-modal {
+          background: #0d234f;
+          border: 1px solid rgba(194,63,63,0.4);
+          border-radius: 12px;
+          padding: 26px;
+          width: 360px;
+          max-width: 100%;
+          text-align: center;
+        }
+        .logout-confirm-icon {
+          width: 46px; height: 46px; border-radius: 50%;
+          background: rgba(194,63,63,0.15);
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 16px;
+          color: #e04b4b;
+        }
+        .logout-confirm-modal h3 { margin: 0 0 8px 0; color: #fff; font-size: 16px; }
+        .logout-confirm-modal p { margin: 0 0 22px 0; color: #a9b6d6; font-size: 13px; line-height: 1.5; }
+        .logout-confirm-actions { display: flex; gap: 10px; }
+        .logout-btn-cancel {
+          flex: 1; padding: 10px 16px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          color: #c9d4ec;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 13px;
+        }
+        .logout-btn-cancel:hover { background: rgba(255,255,255,0.1); }
+        .logout-btn-confirm {
+          flex: 1; padding: 10px 16px;
+          background: #c23f3f;
+          border: none;
+          color: #fff;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 13px;
+        }
+        .logout-btn-confirm:hover { background: #d94848; }
       `}</style>
 
       {/* Backdrop shown only on mobile while the sidebar is expanded */}
@@ -283,9 +333,25 @@ export default function Sidebar({
 
         <div className="sidebar-bottom">
           <NavItem icon={Settings} label="Settings" collapsed={collapsed} active={activePath === '/profile'} onClick={() => onNavigate('/profile')} />
-          <NavItem icon={LogOut} label="Logout" collapsed={collapsed} onClick={onLogout} />
+          <NavItem icon={LogOut} label="Logout" collapsed={collapsed} onClick={() => setConfirmLogout(true)} />
         </div>
       </aside>
+
+      {confirmLogout && (
+        <div className="logout-modal-overlay" onClick={() => setConfirmLogout(false)}>
+          <div className="logout-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="logout-confirm-icon">
+              <AlertTriangle size={22} />
+            </div>
+            <h3>Log Out</h3>
+            <p>Are you sure you want to log out? You'll need to sign in again to continue.</p>
+            <div className="logout-confirm-actions">
+              <button className="logout-btn-cancel" onClick={() => setConfirmLogout(false)}>Cancel</button>
+              <button className="logout-btn-confirm" onClick={() => { setConfirmLogout(false); onLogout(); }}>Log Out</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
