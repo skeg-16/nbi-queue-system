@@ -315,7 +315,7 @@ export default function Login() {
             </div>
 
             <div className="login-visual-copy">
-              <h1>Serve. Protect.<br /><span>Secure.</span></h1>
+              <h1>Nobility. Bravery.<br /><span>Integrity.</span></h1>
               <p>Restricted access portal for NBI Cybercrime Division personnel only. All activity on this system is monitored and logged.</p>
             </div>
           </div>
