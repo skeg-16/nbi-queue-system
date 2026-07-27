@@ -440,8 +440,7 @@ export default function FeedbackForm() {
         fontFamily: "'Inter', system-ui, sans-serif",
       }}
     >
-      <div className="w-full max-w-2xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(11,29,58,0.4)', backdropFilter: 'blur(10px)' }}>
-        {/* Header */}
+    <div className="w-full max-w-4xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(11,29,58,0.4)', backdropFilter: 'blur(10px)' }}>        {/* Header */}
         <div
           className="relative text-center px-6 py-8 border-b-2"
           style={{ borderColor: GOLD, background: 'linear-gradient(180deg, rgba(11,29,58,0.9) 0%, rgba(5,14,29,0) 100%)' }}
@@ -590,9 +589,11 @@ export default function FeedbackForm() {
                     <textarea
                       placeholder={t.suggestionsPh}
                       value={form.suggestions}
-                      onChange={(e) => set('suggestions', e.target.value)}
+                      maxLength={200}
+                      onChange={(e) => set('suggestions', e.target.value.slice(0, 200))}
                       className={inputCls(false) + ' min-h-[120px] resize-y text-justify'}
                     />
+                    <div className="text-right text-xs text-slate-400 mt-1">{form.suggestions.length}/200</div>
                   </Field>
                   <Field label={t.email} error={errors.email}>
                     <input

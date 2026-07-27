@@ -227,11 +227,11 @@ if (!user) return null;
         .nav-links-container { display: flex; justify-content: center; gap: 2rem; flex-grow: 1; }
 
         .staff-container {
-          max-width: 1400px; margin: 0 auto; padding: 0.6rem 1rem 0.6rem;
-          flex: 1; display: flex; flex-direction: column; width: 100%; min-height: 0; overflow: hidden;
+          width: 100%; margin: 0; padding: 0.6rem 1.5rem 0.8rem;
+          flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;
         }
-        .dashboard-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: stretch; flex: 1; min-height: 0; }
-        .left-column { display: flex; flex-direction: column; gap: 0.45rem; min-height: 0; }
+        .dashboard-layout { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; gap: 1rem; align-items: stretch; flex: 1; min-height: 0; }
+        .left-column { display: flex; flex-direction: column; gap: 0.7rem; min-height: 0; height: 100%; }
         .right-column { display: flex; flex-direction: column; height: 100%; gap: 0.7rem; min-height: 0; }
 
         .dashboard-card {
@@ -240,13 +240,16 @@ if (!user) return null;
           width: 100%; display: flex; flex-direction: column;
         }
 
-        .waiting-card, .skipped-card { padding: 1rem; display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+        .waiting-card { padding: 1rem; display: flex; flex-direction: column; flex: 2.4; min-height: 0; overflow: hidden; }
+        .skipped-card { padding: 1rem; display: flex; flex-direction: column; flex: 1; min-height: 0; max-height: 280px; overflow: hidden; }
         .waiting-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 0.5rem; padding-right: 8px; min-height: 0; max-height: none; }
         .serving-card {
           text-align: center;
           background: var(--panel-bg);
           border-color: rgba(243, 156, 18, 0.3);
           padding: 0.7rem;
+          flex: 0.9;
+          justify-content: center;
         }
         .card-label { font-size: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 0.4rem; }
         .status-display { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
@@ -264,35 +267,35 @@ if (!user) return null;
 
         .btn-next {
           background: linear-gradient(135deg, #f1c40f, #f39c12); color: #0b1d3a; padding: 0.8rem;
-          flex-direction: column; gap: 0.3rem; box-shadow: 0 8px 25px rgba(243, 156, 18, 0.3); min-height: 64px;
+          flex-direction: column; gap: 0.3rem; box-shadow: 0 8px 25px rgba(243, 156, 18, 0.35); min-height: 64px;
         }
         .btn-next:hover:not(:disabled) { background: linear-gradient(135deg, #f39c12, #e67e22); box-shadow: 0 12px 35px rgba(243, 156, 18, 0.5); transform: translateY(-2px); }
-        .btn-call-skipped { background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3); color: white; }
-        .btn-call-skipped:hover:not(:disabled) { background: linear-gradient(135deg, #c0392b, #a8352a); }
+        .btn-call-skipped { background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 8px 25px rgba(231, 76, 60, 0.35); color: white; }
+        .btn-call-skipped:hover:not(:disabled) { background: linear-gradient(135deg, #c0392b, #a8352a); box-shadow: 0 12px 35px rgba(231, 76, 60, 0.5); transform: translateY(-2px); }
 
-        .secondary-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; width: 100%; }
-        .btn-secondary { padding: 0.6rem; flex-direction: row; gap: 0.6rem; font-size: 0.95rem; font-weight: 700; color: var(--text-main); min-height: 40px; }
-        .btn-skip { background: rgba(149, 165, 166, 0.2); border: 1px solid rgba(149, 165, 166, 0.4); }
-        .btn-skip:hover:not(:disabled) { background: rgba(149, 165, 166, 0.3); }
-        .btn-repeat { background: rgba(52, 152, 219, 0.2); border: 1px solid rgba(52, 152, 219, 0.4); color: #3498db; }
-        .btn-repeat:hover:not(:disabled) { background: rgba(52, 152, 219, 0.3); }
-        .btn-reset { background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.4); color: #e74c3c; }
-        .btn-reset:hover:not(:disabled) { background: rgba(231, 76, 60, 0.3); }
-        .btn-end { background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.4); color: #2ecc71; }
-        .btn-end:hover:not(:disabled) { background: rgba(46, 204, 113, 0.3); }
-        .btn-undo { grid-column: 1 / -1; background: rgba(155, 89, 182, 0.2); border: 1px solid rgba(155, 89, 182, 0.4); color: #9b59b6; }
-        .btn-undo:hover:not(:disabled) { background: rgba(155, 89, 182, 0.3); }
+        .call-buttons-row { flex: 1; }
+        .secondary-controls { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 0.9rem; width: 100%; margin-top: 0.3rem; flex: 1.8; }
+        .btn-secondary { padding: 0.85rem 1rem; flex-direction: row; gap: 0.6rem; font-size: 0.95rem; font-weight: 700; min-height: 50px; border-width: 1.5px; border-style: solid; box-shadow: 0 4px 12px rgba(0,0,0,0.08); white-space: nowrap; letter-spacing: 0.2px; }
+        .btn-skip { background: rgba(149, 165, 166, 0.28); border-color: rgba(149, 165, 166, 0.6); color: #5d6d6e; }
+        .btn-skip:hover:not(:disabled) { background: rgba(149, 165, 166, 0.42); }
+        .btn-repeat { background: rgba(52, 152, 219, 0.22); border-color: rgba(52, 152, 219, 0.6); color: #1f76ab; }
+        .btn-repeat:hover:not(:disabled) { background: rgba(52, 152, 219, 0.36); }
+        .btn-reset { background: rgba(231, 76, 60, 0.22); border-color: rgba(231, 76, 60, 0.6); color: #c0392b; }
+        .btn-reset:hover:not(:disabled) { background: rgba(231, 76, 60, 0.36); }
+        .btn-end { background: rgba(46, 204, 113, 0.22); border-color: rgba(46, 204, 113, 0.6); color: #1e8449; }
+        .btn-end:hover:not(:disabled) { background: rgba(46, 204, 113, 0.36); }
+        .btn-undo { grid-column: 1 / -1; background: rgba(155, 89, 182, 0.22); border-color: rgba(155, 89, 182, 0.6); color: #7d3c98; }
+        .btn-undo:hover:not(:disabled) { background: rgba(155, 89, 182, 0.36); }
 
-        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; width: 100%; }
-        .stat-card { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.5rem; text-align: center; }
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; width: 100%; flex: 0.7; }
+        .stat-card { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.5rem; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .stat-value { font-size: 1.2rem; font-weight: 800; color: var(--text-main); line-height: 1.2; }
         .stat-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .stat-waiting { color: #f39c12 !important; }
         .stat-served { color: #2ecc71 !important; }
         .stat-skipped { color: #e74c3c !important; }
 
-        .waiting-card, .skipped-card { padding: 1.5rem; display: flex; flex-direction: column; flex: 1; min-height: 0; }
-        .waiting-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 0.8rem; padding-right: 10px; min-height: 0; max-height: 480px; }
+        .waiting-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 0.8rem; padding-right: 10px; min-height: 0; }
         .waiting-list::-webkit-scrollbar { width: 8px; }
         .waiting-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
         .waiting-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
@@ -302,33 +305,33 @@ if (!user) return null;
           background: var(--bg-color); border: 1px solid var(--border-color); padding: 1.2rem 1.5rem;
           border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;
         }
-        .waiting-item.is-priority { border-left: 6px solid #f39c12; background: linear-gradient(90deg, rgba(243, 156, 18, 0.1) 0%, rgba(0,0,0,0.3) 100%); }
-        .waiting-item.next-up { border: 1px solid rgba(46, 204, 113, 0.5); box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.1); background: linear-gradient(90deg, rgba(46, 204, 113, 0.1) 0%, rgba(0,0,0,0.3) 100%); }
+        .waiting-item.is-priority { border-left: 6px solid #f39c12; background: linear-gradient(90deg, rgba(243, 156, 18, 0.14) 0%, var(--bg-color) 100%); }
+        .waiting-item.next-up { border: 1px solid rgba(46, 204, 113, 0.5); box-shadow: inset 0 0 20px rgba(46, 204, 113, 0.08); background: linear-gradient(90deg, rgba(46, 204, 113, 0.14) 0%, var(--bg-color) 100%); }
         .waiting-item.next-up.is-priority {
           border-left: 6px solid #f39c12; border-top: 1px solid rgba(243, 156, 18, 0.5);
           border-bottom: 1px solid rgba(243, 156, 18, 0.5); border-right: 1px solid rgba(243, 156, 18, 0.5);
-          box-shadow: inset 0 0 20px rgba(243, 156, 18, 0.15);
+          box-shadow: inset 0 0 20px rgba(243, 156, 18, 0.12);
         }
         .waiting-info { display: flex; flex-direction: column; gap: 0.2rem; }
         .waiting-ccd { color: var(--text-main); font-weight: 800; font-size: 1.2rem; }
         .waiting-name { color: var(--text-muted); font-weight: 500; font-size: 1rem; }
         .wait-time { font-size: 0.8rem; color: #f39c12; margin-top: 0.3rem; font-weight: 600; }
-        .waiting-badge { background: rgba(243, 156, 18, 0.2); color: #f39c12; padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+        .waiting-badge { background: rgba(120, 120, 120, 0.18); color: var(--text-main); padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
 
         .btn-serve-now {
-          background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.4); color: #2ecc71;
+          background: rgba(46, 204, 113, 0.2); border: 1px solid rgba(46, 204, 113, 0.6); color: #1e8449;
           padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.9rem;
           transition: all 0.2s; white-space: nowrap;
         }
-        .btn-serve-now:hover { background: rgba(46, 204, 113, 0.3); }
+        .btn-serve-now:hover { background: rgba(46, 204, 113, 0.35); }
         .btn-serve-now.danger { background: #e74c3c; border: 1px solid #c0392b; color: white; }
 
         .btn-archive {
-          background: rgba(149, 165, 166, 0.15); border: 1px solid rgba(149, 165, 166, 0.4); color: #95a5a6;
+          background: rgba(149, 165, 166, 0.2); border: 1px solid rgba(149, 165, 166, 0.6); color: #6b7a7a;
           padding: 0.6rem 0.75rem; border-radius: 8px; cursor: pointer; font-size: 1rem; line-height: 1;
           transition: all 0.2s; display: flex; align-items: center; justify-content: center;
         }
-        .btn-archive:hover { background: rgba(231, 76, 60, 0.25); border-color: rgba(231, 76, 60, 0.5); color: #e74c3c; }
+        .btn-archive:hover { background: rgba(231, 76, 60, 0.3); border-color: rgba(231, 76, 60, 0.6); color: #e74c3c; }
 
         .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
         .empty-icon { font-size: 3rem; opacity: 0.5; }
@@ -353,8 +356,12 @@ if (!user) return null;
         }
 
         @media (max-width: 900px) {
-          .dashboard-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+          .dashboard-layout { grid-template-columns: 1fr; grid-template-rows: auto; gap: 1.5rem; }
+          .left-column { height: auto; }
+          .serving-card, .call-buttons-row, .secondary-controls, .stats-row { flex: none; }
           .right-column { height: auto; min-height: 400px; }
+          .waiting-card { flex: none; }
+          .skipped-card { flex: none; max-height: 320px; }
           .waiting-list { max-height: 450px; }
           .stats-row { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
           .status-number { font-size: 4.5rem; }
@@ -498,7 +505,7 @@ if (!user) return null;
                         <span className="wait-time">{index === 0 ? "Up Next" : `Est. wait: ~${index * 5} mins`}</span>
                       </div>
                       <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", width: "auto" }}>
-                        <div className="waiting-badge" style={person.isPriority ? { background: "rgba(243, 156, 18, 0.2)", color: "#f39c12" } : { background: "rgba(255,255,255,0.1)", color: "white" }}>
+                        <div className="waiting-badge" style={person.isPriority ? { background: "rgba(243, 156, 18, 0.28)", color: "#a5670a" } : {}}>
                           {person.isPriority ? "[PRIORITY]" : "[REGULAR]"}
                         </div>
                         <button className="btn-serve-now" disabled={onBreak} onClick={() => openServeModal(person.id)}>Serve Now</button>
@@ -511,29 +518,29 @@ if (!user) return null;
             </div>
 
               <div className="dashboard-card skipped-card" style={{ background: "rgba(231, 76, 60, 0.1)", border: "1px solid rgba(231, 76, 60, 0.3)" }}>
-                <div className="card-label" style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.5rem" }}>
-                  <span style={{ color: "#ffb8b8" }}>Skipped Complainants</span>
+                <div className="card-label" style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.8rem" }}>
+                  <span style={{ color: "#e74c3c" }}>Skipped Complainants</span>
                   <span style={{ color: "white", fontWeight: "bold", background: "rgba(231, 76, 60, 0.5)", padding: "0.2rem 0.8rem", borderRadius: "50px" }}>
                     {skippedList.length}
                   </span>
                 </div>
                 <ul className="waiting-list">
                   {skippedList.length === 0 ? (
-                    <div className="empty-state">
-                      <div className="empty-icon">✓</div>
+                    <div className="empty-state" style={{ padding: "1.5rem 1rem" }}>
+                      <div className="empty-icon" style={{ fontSize: "1.8rem" }}>✓</div>
                       <div>No skipped complainants.</div>
                     </div>
                   ) : (
                     skippedList.map((person) => (
-                      <li key={person.id} className={`waiting-item${person.isPriority ? " is-priority" : ""}`}>
+                      <li key={person.id} className={`waiting-item${person.isPriority ? " is-priority" : ""}`} style={{ padding: "0.8rem 1rem" }}>
                         <div className="waiting-info">
-                          <span className="waiting-ccd" style={{ color: "#ffb8b8" }}>{shortenCcd(person.ccdNo)}</span>
+                          <span className="waiting-ccd" style={{ color: "#c0392b", fontSize: "1.05rem" }}>{shortenCcd(person.ccdNo)}</span>
                           <span className="waiting-name">{person.fullName}</span>
                           <span className="wait-time" style={{ color: "#e74c3c" }}>Skipped</span>
                         </div>
-                        <div style={{ display: "flex", gap: "1rem", alignItems: "center", width: "auto" }}>
-                          <div className="waiting-badge" style={person.isPriority ? { background: "rgba(243, 156, 18, 0.2)", color: "#f39c12" } : { background: "rgba(255,255,255,0.1)", color: "white" }}>
-                            {person.isPriority ? "[PRIORITY] PWD/Senior" : "[REGULAR] Lane"}
+                        <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", width: "auto" }}>
+                          <div className="waiting-badge" style={person.isPriority ? { background: "rgba(243, 156, 18, 0.28)", color: "#a5670a" } : {}}>
+                            {person.isPriority ? "[PRIORITY]" : "[REGULAR]"}
                           </div>
                           <button className="btn-serve-now danger" disabled={onBreak} onClick={() => openServeModal(person.id)}>Serve Now</button>
                         </div>

@@ -22,7 +22,7 @@ import {
  * No need to pass navItems from each page anymore.
  *
  * Props:
- *  - user:        { full_name, role }            (required)
+ *  - user:        { username, full_name, role }  (required)
  *  - activePath:  string  -> usually `location.pathname` from the page
  *  - onNavigate:  (path) => void  -> usually `navigate` from react-router
  *  - onLogout:    () => void
@@ -90,6 +90,8 @@ export default function Sidebar({
     ...(user.role === 'admin' ? ADMIN_NAV_ITEMS : []),
   ];
 
+  const displayName = user.username || user.full_name;
+
   return (
     <>
       <style>{`
@@ -116,6 +118,7 @@ export default function Sidebar({
           padding: 4px 6px 18px 6px;
           border-bottom: 1px solid rgba(240,165,0,0.15);
           margin-bottom: 14px;
+          background: transparent;
         }
         .app-sidebar.collapsed .sidebar-top {
           justify-content: center;
@@ -155,9 +158,10 @@ export default function Sidebar({
         .sidebar-logo {
           width: 34px; height: 34px; object-fit: contain; flex-shrink: 0;
           filter: drop-shadow(0 0 6px rgba(240,165,0,0.25));
+          background: transparent;
         }
-        .sidebar-brand { overflow: hidden; }
-        .sidebar-brand p { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-brand { overflow: hidden; background: transparent; }
+        .sidebar-brand p { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: transparent; }
         .sidebar-brand .name { font-size: 13px; font-weight: 700; color: #fff; }
         .sidebar-brand .role { font-size: 11px; color: #F0A500; text-transform: capitalize; }
 
@@ -206,7 +210,7 @@ export default function Sidebar({
         .nav-icon { font-size: 16px; width: 18px; text-align: center; flex-shrink: 0; }
         .nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .sidebar-bottom { border-top: 1px solid rgba(240,165,0,0.15); padding-top: 10px; }
+        .sidebar-bottom { border-top: 1px solid rgba(240,165,0,0.15); padding-top: 10px; background: transparent; }
 
         .sidebar-backdrop { display: none; }
 
@@ -280,8 +284,11 @@ export default function Sidebar({
       {/* Backdrop shown only on mobile while the sidebar is expanded */}
       <div className={`sidebar-backdrop ${!collapsed ? 'show' : ''}`} onClick={() => setCollapsed(true)} />
 
-      <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`}>        <div 
-      className="sidebar-top">
+      {/* Inline background here so the sidebar is never white on first paint,
+          even for a split second before the <style> tag above has been
+          applied (e.g. right after navigating to a new page). */}
+      <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`} style={{ background: '#0F1E30' }}>
+        <div className="sidebar-top">
           {collapsed ? (
             <button className="logo-toggle" onClick={() => setCollapsed(false)} title="Expand sidebar">
               <img src="/assets/nbi.png" alt="NBI Logo" className="sidebar-logo logo-default" />
@@ -291,7 +298,7 @@ export default function Sidebar({
             <>
               <img src="/assets/nbi.png" alt="NBI Logo" className="sidebar-logo" />
               <div className="sidebar-brand" style={{ flex: 1 }}>
-                <p className="name">{user.full_name}</p>
+                <p className="name">{displayName}</p>
                 <p className="role">{user.role}</p>
               </div>
               <button className="collapse-btn" onClick={() => setCollapsed(true)} title="Minimize sidebar">
