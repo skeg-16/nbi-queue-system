@@ -678,7 +678,7 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         if (user.is_active === false) {
-            return res.status(403).json({ success: false, error: 'This account has been deactivated. Please contact your administrator.' });
+            return res.status(403).json({ success: false, error: 'Invalid Credentials.' });
         }
 
         if (user.is_locked) {
