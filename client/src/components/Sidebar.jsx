@@ -50,7 +50,7 @@ const ADMIN_NAV_ITEMS = [
 const QUICK_ACCESS_ITEMS = [
   { icon: FileEdit, label: 'Register', path: '/kiosk-x7f2', external: true },
   { icon: FileText, label: 'Feedback Forms', path: '/csat-f5w9/en', external: true },
-  { icon: Tv, label: 'TV Display', path: '/monitor-d9k4', external: true },
+  { icon: Tv, label: 'TV Display', path: '/display', external: true },
 ];
 
 function NavItem({ icon: Icon, label, active, collapsed, onClick }) {

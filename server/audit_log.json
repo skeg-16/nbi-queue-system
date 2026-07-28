@@ -1,5 +1,35 @@
 [
   {
+    "timestamp": "2026-07-28T06:25:24.904Z",
+    "action": "Change Password",
+    "details": "undefined changed password"
+  },
+  {
+    "timestamp": "2026-07-28T06:21:29.464Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-28T06:21:16.894Z",
+    "action": "Change Password",
+    "details": "undefined changed password"
+  },
+  {
+    "timestamp": "2026-07-28T06:10:15.662Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-28T01:15:11.537Z",
+    "action": "Create User",
+    "details": "admin created account for rust"
+  },
+  {
+    "timestamp": "2026-07-28T01:12:24.424Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
     "timestamp": "2026-07-27T08:01:42.331Z",
     "action": "Login",
     "details": "cache logged in"

@@ -823,7 +823,27 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
 app.post('/api/auth/change-password', verifyToken, async (req, res) => {
     try {
-        const { newPassword } = req.body;
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword) {
+            return res.status(400).json({ success: false, error: 'Current password is required' });
+        }
+
+        const { data: existingUser, error: fetchErr } = await supabase
+            .from('users')
+            .select('password_hash')
+            .eq('id', req.user.id)
+            .single();
+
+        if (fetchErr || !existingUser) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const match = await bcrypt.compare(currentPassword, existingUser.password_hash);
+        if (!match) {
+            return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+        }
+
         const hash = await bcrypt.hash(newPassword, 10);
 
         const { error } = await supabase

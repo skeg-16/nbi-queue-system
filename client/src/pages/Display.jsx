@@ -328,7 +328,7 @@ export default function Display() {
     <>
       <style>{`
         .powered-by-text {
-          font-size: 19px;
+          font-size: 12px;
           font-weight: 700;
           letter-spacing: 0.8px;
           margin-top: 5px;
@@ -346,6 +346,14 @@ export default function Display() {
           color: transparent;
           animation: poweredByShift 9s ease-in-out infinite;
           text-shadow: 0 0 12px rgba(240,165,0,0.35);
+        }
+
+        @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+          .powered-by-text {
+            background: none;
+            -webkit-text-fill-color: #d4a017;
+            color: #d4a017;
+          }
         }
           
         @keyframes poweredByShift {

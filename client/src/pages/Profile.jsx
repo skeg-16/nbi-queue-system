@@ -51,11 +51,13 @@ export default function Profile() {
     navigate('/login');
   };
 
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -64,6 +66,10 @@ export default function Profile() {
     setError('');
     setSuccess('');
 
+    if (!currentPassword) {
+      setError('Please enter your current password.');
+      return;
+    }
     if (newPassword.length < 6) {
       setError('Password must be at least 6 characters.');
       return;
@@ -81,7 +87,7 @@ export default function Profile() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ newPassword })
+        body: JSON.stringify({ currentPassword, newPassword })
       });
       const data = await res.json();
 
@@ -92,6 +98,7 @@ export default function Profile() {
       }
 
       setSuccess('Password updated successfully.');
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setLoading(false);
@@ -303,6 +310,22 @@ return (
               {success && <div className="pf-alert-success">{success}</div>}
 
               <form onSubmit={handleChangePassword}>
+                <label className="pf-field">
+                  <span className="pf-field-label">Current Password</span>
+                  <div className="pf-input-wrap">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      className="pf-input"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                    />
+                    <button type="button" className="pf-eye-btn" onClick={() => setShowCurrentPassword(s => !s)} tabIndex={-1}>
+                      {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </label>
+
                 <label className="pf-field">
                   <span className="pf-field-label">New Password</span>
                   <div className="pf-input-wrap">

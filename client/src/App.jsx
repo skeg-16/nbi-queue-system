@@ -35,7 +35,7 @@ export default function App() {
               }
             />
 
-            <Route path="/monitor-d9k4" element={<Display />} />
+            <Route path="/display" element={<Display />} />
 
             <Route
               path="/kiosk-x7f2"
