@@ -160,6 +160,11 @@ export default function Sidebar({
           filter: drop-shadow(0 0 6px rgba(240,165,0,0.25));
           background: transparent;
         }
+        .sidebar-user-avatar {
+          width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+          border: 1.5px solid rgba(240,165,0,0.4);
+          background: rgba(255,255,255,0.06);
+        }
         .sidebar-brand { overflow: hidden; background: transparent; }
         .sidebar-brand p { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: transparent; }
         .sidebar-brand .name { font-size: 13px; font-weight: 700; color: #fff; }
@@ -193,14 +198,14 @@ export default function Sidebar({
           align-items: center;
           gap: 12px;
           width: 100%;
-          padding: 10px 12px;
-          margin-bottom: 3px;
+          padding: 8px 12px;
+          margin-bottom: 2px;
           background: transparent;
           border: none;
           border-radius: 8px;
           color: #c9d4ec;
           font-weight: 500;
-          font-size: 13.5px;
+          font-size: 13px;
           cursor: pointer;
           text-align: left;
         }
@@ -297,6 +302,11 @@ export default function Sidebar({
           ) : (
             <>
               <img src="/assets/nbi.png" alt="NBI Logo" className="sidebar-logo" />
+              <img
+                src={`https://api.dicebear.com/10.x/avataaars/svg?seed=${encodeURIComponent(user.avatar_seed || user.full_name || displayName)}`}
+                alt={displayName}
+                className="sidebar-user-avatar"
+              />
               <div className="sidebar-brand" style={{ flex: 1 }}>
                 <p className="name">{displayName}</p>
                 <p className="role">{user.role}</p>
@@ -322,7 +332,7 @@ export default function Sidebar({
 
           {QUICK_ACCESS_ITEMS.length > 0 && (
             <>
-              {!collapsed && <p className="nav-section-label" style={{ marginTop: '36px' }}>Quick Access</p>}
+           {!collapsed && <p className="nav-section-label" style={{ marginTop: '18px' }}>Quick Access</p>}
               {collapsed && <div style={{ height: '24px' }} />}
               {QUICK_ACCESS_ITEMS.map((item) => (
                 <NavItem

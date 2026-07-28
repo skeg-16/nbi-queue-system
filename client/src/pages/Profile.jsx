@@ -7,7 +7,7 @@ import { Eye, EyeOff, Sun, Moon, Volume2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 
 export default function Profile() {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const socket = useSocket();
   const navigate = useNavigate();
@@ -17,6 +17,49 @@ export default function Profile() {
   const [voiceOptions, setVoiceOptions] = useState([]);
   const [selectedVoiceURI, setSelectedVoiceURI] = useState('');
   const [voiceMsg, setVoiceMsg] = useState('');
+
+  // --- Avatar Style ---
+const [avatarStyles, setAvatarStyles] = useState([]);
+
+  // --- Avatar Face (always avataaars style, different seeds = different faces) ---
+  function randomSeed() {
+    return Math.random().toString(36).slice(2, 10);
+  }
+
+  const [avatarSeed, setAvatarSeed] = useState(user?.avatar_seed || user.full_name);
+  const [pendingSeed, setPendingSeed] = useState(user?.avatar_seed || user.full_name);
+  const [seedOptions, setSeedOptions] = useState(() =>
+    Array.from({ length: 8 }, () => randomSeed())
+  );
+  const [avatarMsg, setAvatarMsg] = useState('');
+  const [avatarSaving, setAvatarSaving] = useState(false);
+
+  function regenerateOptions() {
+    setSeedOptions(Array.from({ length: 8 }, () => randomSeed()));
+  }
+
+  async function saveAvatarSeed() {
+    setAvatarSaving(true);
+    try {
+      const res = await fetch('/api/auth/avatar-seed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ avatarSeed: pendingSeed })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAvatarSeed(pendingSeed);
+        updateUser({ avatar_seed: pendingSeed });
+        setAvatarMsg('Avatar updated.');
+      } else {
+        setAvatarMsg(data.error || 'Failed to update avatar.');
+      }
+    } catch (err) {
+      setAvatarMsg('Network error. Please try again.');
+    }
+    setAvatarSaving(false);
+    setTimeout(() => setAvatarMsg(''), 2500);
+  }
 
   useEffect(() => {
     if (!socket) return;
@@ -122,7 +165,7 @@ return (
         .pf-body {
           min-height: 100vh;
           background: var(--bg-color);
-          padding: 50px 16px;
+          padding: 20px 16px;
           font-family: 'Inter', Arial, sans-serif;
         }
         .pf-card {
@@ -131,7 +174,7 @@ return (
           background: var(--panel-bg);
           border: 1px solid var(--border-color);
           border-radius: 14px;
-          padding: 34px 30px;
+          padding: 22px 26px;
         }
         .pf-columns {
           display: grid;
@@ -148,7 +191,7 @@ return (
           .pf-columns { grid-template-columns: 1fr; gap: 0; }
           .pf-col-divider { border-left: none; padding-left: 0; border-top: 1px solid var(--border-color); padding-top: 22px; margin-top: 4px; }
         }
-        .pf-title { margin: 0 0 22px 0; color: var(--text-main); font-size: 20px; letter-spacing: 0.3px; }
+        .pf-title { margin: 0 0 14px 0; color: var(--text-main); font-size: 18px; letter-spacing: 0.3px; }
         .pf-info-block { margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border-color); }
         .pf-label { margin: 0 0 4px 0; color: var(--text-muted); font-size: 10.5px; letter-spacing: 0.5px; text-transform: uppercase; }
         .pf-value { margin: 0 0 14px 0; color: var(--text-main); font-size: 14.5px; font-weight: 600; }
@@ -166,7 +209,7 @@ return (
           font-size: 13px;
           line-height: 1.5;
         }
-        .pf-subtitle { font-size: 15px; color: var(--text-main); margin: 0 0 16px 0; }
+                .pf-subtitle { font-size: 14px; color: var(--text-main); margin: 0 0 8px 0; }
         .pf-alert-error {
           background: rgba(220,38,38,0.1);
           border: 1px solid rgba(220,38,38,0.4);
@@ -185,7 +228,7 @@ return (
           margin-bottom: 16px;
           font-size: 13px;
         }
-        .pf-field { display: block; margin-bottom: 16px; }
+        .pf-field { display: block; margin-bottom: 10px; }
         .pf-field-label { display: block; color: var(--text-main); font-size: 12px; margin-bottom: 6px; letter-spacing: 0.4px; }
         .pf-input-wrap { position: relative; }
         .pf-input {
@@ -242,17 +285,24 @@ return (
           <h2 className="pf-title">My Profile</h2>
 
           {/* User Info Section */}
-          <div className="pf-info-block">
-            <p className="pf-label">Full Name</p>
+          <div className="pf-info-block" style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+            <img
+                            src={`https://api.dicebear.com/10.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}`}
+              alt={user.full_name}
+              style={{ width: 52, height: 52, borderRadius: '50%', border: '2px solid var(--border-color)', flexShrink: 0 }}
+            />
+            <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <p className="pf-label" style={{ margin: 0 }}>Full Name</p>
+              <span className="pf-role-badge" style={{ fontSize: 9.5, padding: '2px 8px', background: user.role === 'admin' ? '#f0a500' : '#1e3a6e', color: user.role === 'admin' ? '#1a1a1a' : '#c9d4ec' }}>
+                {user.role}
+              </span>
+            </div>
             <p className="pf-value">{user.full_name}</p>
 
             <p className="pf-label">Email</p>
-            <p className="pf-value">{user.email}</p>
-
-            <p className="pf-label" style={{ marginBottom: 6 }}>Role</p>
-            <span className="pf-role-badge" style={{ background: user.role === 'admin' ? '#f0a500' : '#1e3a6e', color: user.role === 'admin' ? '#1a1a1a' : '#c9d4ec' }}>
-              {user.role}
-            </span>
+            <p className="pf-value" style={{ marginBottom: 0 }}>{user.email}</p>
+            </div>
           </div>
 
           {/* First Login Warning */}
@@ -266,7 +316,7 @@ return (
             {/* LEFT COLUMN: Appearance + TV Display Sound */}
             <div>
               <h3 className="pf-subtitle">Appearance</h3>
-              <div className="pf-theme-row" style={{ marginBottom: 22 }}>
+              <div className="pf-theme-row" style={{ marginBottom: 10, padding: '6px 14px' }}>
                 <span className="pf-field-label" style={{ margin: 0 }}>Theme</span>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button type="button" className={`pf-theme-btn ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>
@@ -276,6 +326,44 @@ return (
                     <Moon size={14} /> Dark
                   </button>
                 </div>
+              </div>
+
+              <h3 className="pf-subtitle" style={{ marginBottom: 10 }}>Choose Your Avatar</h3>
+              {avatarMsg && <div className="pf-alert-success">{avatarMsg}</div>}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                {seedOptions.map(seed => (
+                  <div
+                    key={seed}
+                    onClick={() => setPendingSeed(seed)}
+                    style={{
+                      cursor: 'pointer',
+                      padding: 4,
+                      borderRadius: 8,
+                      border: pendingSeed === seed ? '2px solid #F0A500' : '1px solid var(--border-color)',
+                      background: 'var(--bg-color)'
+                    }}
+                  >
+                    <img
+                      src={`https://api.dicebear.com/10.x/avataaars/svg?seed=${encodeURIComponent(seed)}`}
+                      alt="Avatar option"
+                      style={{ width: 34, height: 34, borderRadius: '50%', display: 'block' }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                <button type="button" className="pf-theme-btn" onClick={regenerateOptions}>
+                  Regenerate
+                </button>
+                <button
+                  type="button"
+                  className="pf-btn-primary"
+                  style={{ margin: 0, flex: 1 }}
+                  disabled={avatarSaving || pendingSeed === avatarSeed}
+                  onClick={saveAvatarSeed}
+                >
+                  {avatarSaving ? 'Saving...' : 'Save Avatar'}
+                </button>
               </div>
 
               <h3 className="pf-subtitle">TV Display Sound</h3>
@@ -288,7 +376,7 @@ return (
                     {voiceOptions.map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>)}
                   </select>
                 </label>
-                <p style={{ margin: '0 0 12px 0', fontSize: 11.5, color: 'var(--text-muted)' }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: 10.5, color: 'var(--text-muted)' }}>
                   These voices come from the browser running the TV Display. If the list is empty, open the TV Display tab and refresh it. For human-like neural voices, run the TV Display on Microsoft Edge.
                 </p>
                 <div style={{ display: 'flex', gap: 8 }}>

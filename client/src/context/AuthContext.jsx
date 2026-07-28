@@ -23,8 +23,16 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateUser = (updates) => {
+    setUser(prev => {
+      const merged = { ...prev, ...updates };
+      localStorage.setItem('nbi_user', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -36,9 +36,11 @@ function UserRow({ u, onDeactivate, onReactivate, onEdit }) {
     <tr className={`${!isActive ? 'ur-inactive' : ''} ${u.is_locked ? 'ur-locked' : ''}`}>
       <td>
         <div className="ur-user-cell">
-          <div className="ur-avatar">
-            <User size={16} strokeWidth={2.2} />
-          </div>
+          <img
+            className="ur-avatar"
+            src={`https://api.dicebear.com/10.x/avataaars/svg?seed=${encodeURIComponent(u.avatar_seed || u.full_name || u.username)}`}
+            alt={u.full_name || u.username}
+          />
           <div className="ur-name-block">
             <p className="ur-name">{u.username}</p>
             <p className="ur-role">{u.role}{u.is_locked ? ' · LOCKED' : ''}</p>
@@ -92,7 +94,7 @@ function UserRow({ u, onDeactivate, onReactivate, onEdit }) {
 }
 
 export default function ManageUsers() {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -117,7 +119,7 @@ export default function ManageUsers() {
   const [toasts, setToasts] = useState([]);
   const toastIdRef = useRef(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 12;
+  const usersPerPage = 8;
 
   const [requests, setRequests] = useState([]);
   const [acceptingRequest, setAcceptingRequest] = useState(null);
@@ -397,6 +399,20 @@ export default function ManageUsers() {
         .mu-page-arrow:hover:not(:disabled) { background: rgba(240,165,0,0.15); color: #F0A500; }
         .mu-page-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
 
+        .mu-page-number {
+          min-width: 28px; height: 28px;
+          padding: 0 6px;
+          display: flex; align-items: center; justify-content: center;
+          background: transparent;
+          border: none;
+          border-radius: 5px;
+          color: var(--text-muted);
+          font-size: 12.5px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .mu-page-number:hover { background: rgba(240,165,0,0.15); color: #F0A500; }
+        .mu-page-number[data-active="true"] { background: #F0A500; color: #0b1f4d; }
         .mu-alert-error {
           background: rgba(220,38,38,0.1);
           border: 1px solid rgba(220,38,38,0.4);
@@ -489,8 +505,9 @@ export default function ManageUsers() {
         .ur-user-cell { display: flex; align-items: center; gap: 10px; }
         .ur-avatar {
           width: 34px; height: 34px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          color: #0b1f4d; background: #F0A500;
+          object-fit: cover;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid var(--border-color);
           flex-shrink: 0;
         }
         .ur-name-block { min-width: 0; }
@@ -592,24 +609,6 @@ export default function ManageUsers() {
           <div className="mu-header">
             <h2>Manage User Accounts</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              {!loading && totalPages > 1 && (
-                <div className="mu-page-nav">
-                  <button
-                    className="mu-page-arrow"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    className="mu-page-arrow"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              )}
               <button className="mu-btn-primary" onClick={() => { setShowForm(true); setCreatedInfo(null); setError(''); setFieldErrors({}); }}>
                 <Plus size={16} />
                 Add Agent / Admin
@@ -669,7 +668,38 @@ export default function ManageUsers() {
               </table>
             </div>
           </div>
-        
+
+          {!loading && totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+              <div className="mu-page-nav">
+                <button
+                  className="mu-page-arrow"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                  <button
+                    key={pageNum}
+                    className="mu-page-number"
+                    data-active={pageNum === currentPage}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+                <button
+                  className="mu-page-arrow"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+
           </main>
       </div>
 

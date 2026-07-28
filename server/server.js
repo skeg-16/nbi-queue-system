@@ -725,7 +725,7 @@ app.post('/api/auth/login', async (req, res) => {
 
         auditLog('Login', `${user.username} logged in`);
 
-        res.json({
+       res.json({
             success: true,
             token,
             user: {
@@ -734,7 +734,8 @@ app.post('/api/auth/login', async (req, res) => {
                 email: user.email,
                 role: user.role,
                 full_name: user.full_name,
-                is_first_login: user.is_first_login
+                is_first_login: user.is_first_login,
+                avatar_seed: user.avatar_seed
             }
         });
     } catch (err) {
@@ -859,6 +860,29 @@ app.post('/api/auth/change-password', verifyToken, async (req, res) => {
     }
 });
 
+app.post('/api/auth/avatar-seed', verifyToken, async (req, res) => {
+    try {
+        const { avatarSeed } = req.body;
+        if (!avatarSeed || typeof avatarSeed !== 'string' || avatarSeed.length > 100) {
+            return res.status(400).json({ success: false, error: 'Invalid avatar seed' });
+        }
+
+        const { error } = await supabase
+            .from('users')
+            .update({ avatar_seed: avatarSeed })
+            .eq('id', req.user.id);
+
+        if (error) {
+            console.error('Avatar seed update error:', error);
+            throw error;
+        }
+        auditLog('Update Avatar', `${req.user.email || req.user.username} changed avatar`);
+        res.json({ success: true, avatarSeed });
+    } catch (err) {
+        res.status(500).json({ success: false, error: 'Failed to update avatar' });
+    }
+});
+
 async function sendAccountCredentialsEmail(toEmail, displayName, username, password, role) {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping account email');
@@ -925,7 +949,7 @@ app.get('/api/users', verifyToken, requireAdmin, async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('users')
-            .select('id, username, email, role, full_name, is_first_login, created_at, is_active, deactivated_at, is_locked, failed_login_attempts')
+            .select('id, username, email, role, full_name, is_first_login, created_at, is_active, deactivated_at, is_locked, failed_login_attempts, avatar_seed')
             .order('created_at', { ascending: false });
         if (error) throw error;
         res.json({ success: true, data });
