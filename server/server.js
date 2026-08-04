@@ -189,7 +189,10 @@ async function markTodayAsServed() {
 
 // Email Configuration
 const emailTransporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    family: 4,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -982,7 +985,7 @@ app.post('/api/users', verifyToken, requireAdmin, async (req, res) => {
             .insert([{ id: crypto.randomUUID(), username, email: finalEmail, full_name, role, password_hash: hash, is_first_login: true }])
             .select()
             .single();
-            
+
         if (error) {
             console.error('Create user DB error:', error);
 
