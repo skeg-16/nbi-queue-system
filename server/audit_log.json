@@ -1,5 +1,10 @@
 [
   {
+    "timestamp": "2026-08-04T08:31:01.789Z",
+    "action": "Create User",
+    "details": "admin created account for gel"
+  },
+  {
     "timestamp": "2026-08-04T05:01:07.050Z",
     "action": "Login",
     "details": "admin logged in"

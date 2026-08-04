@@ -11,6 +11,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { runBackupAndCleanup } = require('./backupJob');
+const crypto = require('crypto');
 
 const app = express();
 const server = http.createServer(app);
@@ -978,10 +979,10 @@ app.post('/api/users', verifyToken, requireAdmin, async (req, res) => {
 
         const { data, error } = await supabase
             .from('users')
-            .insert([{ username, email: finalEmail, full_name, role, password_hash: hash, is_first_login: true }])
+            .insert([{ id: crypto.randomUUID(), username, email: finalEmail, full_name, role, password_hash: hash, is_first_login: true }])
             .select()
             .single();
-
+            
         if (error) {
             console.error('Create user DB error:', error);
 
@@ -1098,19 +1099,32 @@ app.put('/api/users/:id/username', verifyToken, requireAdmin, async (req, res) =
 // === Account Requests (Forgot Password / Locked Account) — Admin Only ===
 app.get('/api/account-requests', verifyToken, requireAdmin, async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { data: requests, error } = await supabase
             .from('account_requests')
-            .select('*, users(username, full_name, email, role)')
+            .select('*')
             .eq('status', 'pending')
             .order('created_at', { ascending: true });
         if (error) throw error;
+
+        const userIds = [...new Set((requests || []).map(r => r.user_id).filter(Boolean))];
+        let usersMap = {};
+        if (userIds.length > 0) {
+            const { data: usersData, error: usersErr } = await supabase
+                .from('users')
+                .select('id, username, full_name, email, role')
+                .in('id', userIds);
+            if (usersErr) throw usersErr;
+            (usersData || []).forEach(u => { usersMap[u.id] = u; });
+        }
+
+        const data = (requests || []).map(r => ({ ...r, users: usersMap[r.user_id] || null }));
+
         res.json({ success: true, data });
     } catch (err) {
         console.error('Fetch account requests error:', err);
         res.status(500).json({ success: false, error: 'Failed to fetch requests' });
     }
 });
-
 app.post('/api/account-requests/:id/accept', verifyToken, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
@@ -1118,14 +1132,21 @@ app.post('/api/account-requests/:id/accept', verifyToken, requireAdmin, async (r
 
         const { data: reqRow, error: fetchErr } = await supabase
             .from('account_requests')
-            .select('*, users(id, username, full_name, email)')
+            .select('*')
             .eq('id', id)
             .maybeSingle();
         if (fetchErr || !reqRow) {
             return res.status(404).json({ success: false, error: 'Request not found' });
         }
 
-        const targetUser = reqRow.users;
+        const { data: targetUser, error: userFetchErr } = await supabase
+            .from('users')
+            .select('id, username, full_name, email')
+            .eq('id', reqRow.user_id)
+            .maybeSingle();
+        if (userFetchErr || !targetUser) {
+            return res.status(404).json({ success: false, error: 'Associated user not found' });
+        }
 
         if (reqRow.type === 'forgot_password') {
             if (!email) {
