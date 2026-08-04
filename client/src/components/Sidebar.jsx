@@ -13,6 +13,8 @@ import {
   PanelLeftClose,
   ChevronsRight,
   AlertTriangle,
+  MoreHorizontal,
+  X,
 } from 'lucide-react';
 /**
  * Reusable app sidebar. Drop this into any page.
@@ -21,12 +23,18 @@ import {
  * item once and every page that uses <Sidebar /> updates automatically.
  * No need to pass navItems from each page anymore.
  *
+ * On screens <= 900px, this renders a Facebook/LinkedIn-style fixed
+ * bottom tab bar instead of the collapsible side panel. The first
+ * few MAIN_NAV_ITEMS get their own tab; everything else (admin links,
+ * quick access, settings, logout) lives behind a "More" tab that
+ * opens a slide-up sheet.
+ *
  * Props:
  *  - user:        { username, full_name, role }  (required)
  *  - activePath:  string  -> usually `location.pathname` from the page
  *  - onNavigate:  (path) => void  -> usually `navigate` from react-router
  *  - onLogout:    () => void
- *  - collapsed / onCollapsedChange: optional controlled mode.
+ *  - collapsed / onCollapsedChange: optional controlled mode (desktop only).
  *      If you don't pass these, Sidebar manages its own collapsed
  *      state (starts collapsed on screens <= 900px, like before).
  */
@@ -38,7 +46,6 @@ const MAIN_NAV_ITEMS = [
   { icon: MonitorPlay, label: 'Staff Panel', path: '/panel-q1a8' },
 ];
 
-
 // Only shown when user.role === 'admin'. Appended after MAIN_NAV_ITEMS.
 const ADMIN_NAV_ITEMS = [
   { icon: MessageSquareText, label: 'Feedback Reports', path: '/feedback-reports' },
@@ -48,7 +55,7 @@ const ADMIN_NAV_ITEMS = [
 // "Quick Access" section, rendered below the main list — things
 // everyone uses regardless of role.
 const QUICK_ACCESS_ITEMS = [
-  { icon: FileEdit, label: 'Register', path: '/kiosk-x7f2', external: true },
+  { icon: FileEdit, label: 'Register', path: '/register', external: true },
   { icon: FileText, label: 'Feedback Forms', path: '/csat-f5w9/en', external: true },
   { icon: Tv, label: 'TV Display', path: '/display', external: true },
 ];
@@ -58,6 +65,15 @@ function NavItem({ icon: Icon, label, active, collapsed, onClick }) {
     <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick} title={collapsed ? label : undefined}>
       <span className="nav-icon"><Icon size={17} strokeWidth={2} /></span>
       {!collapsed && <span className="nav-label">{label}</span>}
+    </button>
+  );
+}
+
+function MobileTab({ icon: Icon, label, active, onClick }) {
+  return (
+    <button className={`mobile-tab ${active ? 'active' : ''}`} onClick={onClick}>
+      <Icon size={20} strokeWidth={2} />
+      <span>{label}</span>
     </button>
   );
 }
@@ -75,6 +91,7 @@ export default function Sidebar({
     typeof window !== 'undefined' ? window.innerWidth <= 900 : false
   );
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   const collapsed = isControlled ? collapsedProp : internalCollapsed;
   const setCollapsed = (val) => {
@@ -91,6 +108,17 @@ export default function Sidebar({
   ];
 
   const displayName = user.username || user.full_name;
+
+  // ---- Mobile bottom-bar split ----
+  // All main + admin nav items get their own tab; "..." holds Quick Access, Settings, Logout only.
+  const mobileTabItems = navItems;
+  const mobileMoreItems = QUICK_ACCESS_ITEMS;
+  const isMoreActive = activePath === '/profile';
+  function handleMobileNavigate(item) {
+    setMobileMoreOpen(false);
+    if (item.external) window.open(item.path, '_blank');
+    else onNavigate(item.path);
+  }
 
   return (
     <>
@@ -219,22 +247,119 @@ export default function Sidebar({
 
         .sidebar-backdrop { display: none; }
 
+        /* ---- Mobile bottom tab bar (FB/LinkedIn style) ---- */
+        .mobile-bottom-nav { display: none; }
+        .mobile-more-overlay { display: none; }
+
         @media (max-width: 900px) {
-          .app-sidebar:not(.collapsed) {
+          /* Hide the desktop side panel entirely on mobile — the
+             bottom tab bar replaces it. */
+          .app-sidebar { display: none; }
+
+          .mobile-bottom-nav {
+            display: flex;
             position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            z-index: 60;
-            box-shadow: 0 0 40px rgba(0,0,0,0.55);
+            bottom: 14px;
+            left: 14px;
+            right: 14px;
+            height: 60px;
+            background: #1c1c22;
+            border-radius: 22px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+            z-index: 70;
+            padding: 0 4px;
+            margin-bottom: env(safe-area-inset-bottom, 0);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
           }
-          .sidebar-backdrop.show {
+          .mobile-bottom-nav::-webkit-scrollbar { display: none; }
+          .mobile-tab {
+            flex: 1 0 auto;
+            min-width: 56px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #9a9aa5;
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 8px 4px 6px;
+            position: relative;
+          }
+          .mobile-tab.active { color: #4d9dff; }
+          .mobile-tab.active svg { color: #4d9dff; }
+          .mobile-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 18px;
+            height: 2px;
+            border-radius: 2px;
+            background: #4d9dff;
+          }
+          .mobile-tab span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 64px;
+          }
+
+          .mobile-more-overlay {
             display: block;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 55;
+            background: rgba(0,0,0,0.45);
+            z-index: 80;
           }
+          .mobile-more-sheet {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0F1E30;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0));
+            max-height: 75vh;
+            overflow-y: auto;
+            z-index: 90;
+          }
+          .mobile-more-handle {
+            width: 40px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.2);
+            margin: 6px auto 14px;
+          }
+          .mobile-more-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 6px 14px;
+            border-bottom: 1px solid rgba(240,165,0,0.15);
+            margin-bottom: 10px;
+          }
+          .mobile-more-close {
+            margin-left: auto;
+            background: transparent;
+            border: none;
+            color: #c9d4ec;
+            cursor: pointer;
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+          }
+          .mobile-more-close:hover { background: rgba(255,255,255,0.08); }
+
+          /* Give page content room so it isn't hidden behind the floating bar */
+          body { padding-bottom: 90px; }
         }
 
         /* ---- Logout confirm modal ---- */
@@ -286,22 +411,17 @@ export default function Sidebar({
         .logout-btn-confirm:hover { background: #d94848; }
       `}</style>
 
-      {/* Backdrop shown only on mobile while the sidebar is expanded */}
+      {/* ---------- Desktop / tablet sidebar ---------- */}
       <div className={`sidebar-backdrop ${!collapsed ? 'show' : ''}`} onClick={() => setCollapsed(true)} />
 
-      {/* Inline background here so the sidebar is never white on first paint,
-          even for a split second before the <style> tag above has been
-          applied (e.g. right after navigating to a new page). */}
       <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`} style={{ background: '#0F1E30' }}>
         <div className="sidebar-top">
           {collapsed ? (
             <button className="logo-toggle" onClick={() => setCollapsed(false)} title="Expand sidebar">
-              <img src="/assets/nbi.png" alt="NBI Logo" className="sidebar-logo logo-default" />
-              <span className="logo-hover-icon"><ChevronsRight size={16} /></span>
-            </button>
+                <span className="logo-hover-icon"><ChevronsRight size={16} /></span>
+              </button>
           ) : (
             <>
-              <img src="/assets/nbi.png" alt="NBI Logo" className="sidebar-logo" />
               <img
                 src={`https://api.dicebear.com/10.x/avataaars/svg?seed=${encodeURIComponent(user.avatar_seed || user.full_name || displayName)}`}
                 alt={displayName}
@@ -353,6 +473,70 @@ export default function Sidebar({
           <NavItem icon={LogOut} label="Logout" collapsed={collapsed} onClick={() => setConfirmLogout(true)} />
         </div>
       </aside>
+
+      {/* ---------- Mobile bottom tab bar ---------- */}
+      <nav className="mobile-bottom-nav">
+        {mobileTabItems.map((item) => (
+          <MobileTab
+            key={item.path}
+            icon={item.icon}
+            label={item.label}
+            active={activePath === item.path}
+            onClick={() => (item.external ? window.open(item.path, '_blank') : onNavigate(item.path))}
+          />
+        ))}
+        <MobileTab
+          icon={MoreHorizontal}
+          label="⋯"
+          active={isMoreActive}
+          onClick={() => setMobileMoreOpen(true)}
+        />
+      </nav>
+
+      {/* ---------- Mobile "More" slide-up sheet ---------- */}
+      {mobileMoreOpen && (
+        <>
+          <div className="mobile-more-overlay" onClick={() => setMobileMoreOpen(false)} />
+          <div className="mobile-more-sheet">
+            <div className="mobile-more-handle" />
+            <div className="mobile-more-header">
+              <img
+                src={`https://api.dicebear.com/10.x/avataaars/svg?seed=${encodeURIComponent(user.avatar_seed || user.full_name || displayName)}`}
+                alt={displayName}
+                className="sidebar-user-avatar"
+              />
+              <div className="sidebar-brand" style={{ flex: 1 }}>
+                <p className="name">{displayName}</p>
+                <p className="role">{user.role}</p>
+              </div>
+              <button className="mobile-more-close" onClick={() => setMobileMoreOpen(false)}>
+                <X size={16} />
+              </button>
+            </div>
+
+            {mobileMoreItems.length > 0 && (
+              <>
+                <p className="nav-section-label" style={{ marginTop: '4px' }}>Quick Access</p>
+                {mobileMoreItems.map((item) => (
+                  <NavItem
+                    key={item.path}
+                    icon={item.icon}
+                    label={item.label}
+                    collapsed={false}
+                    active={activePath === item.path}
+                    onClick={() => handleMobileNavigate(item)}
+                  />
+                ))}
+              </>
+            )}
+
+            <div className="sidebar-bottom" style={{ marginTop: '10px' }}>
+              <NavItem icon={Settings} label="Settings" collapsed={false} active={activePath === '/profile'} onClick={() => handleMobileNavigate({ path: '/profile' })} />
+              <NavItem icon={LogOut} label="Logout" collapsed={false} onClick={() => { setMobileMoreOpen(false); setConfirmLogout(true); }} />
+            </div>
+          </div>
+        </>
+      )}
 
       {confirmLogout && (
         <div className="logout-modal-overlay" onClick={() => setConfirmLogout(false)}>

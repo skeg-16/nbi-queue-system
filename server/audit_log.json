@@ -1,5 +1,60 @@
 [
   {
+    "timestamp": "2026-08-04T05:01:07.050Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-08-04T04:46:50.645Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-08-04T03:59:53.537Z",
+    "action": "Bulk Import",
+    "details": "Imported 1 records"
+  },
+  {
+    "timestamp": "2026-08-04T03:29:46.623Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-08-04T03:21:16.180Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-08-03T17:02:58.066Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-08-03T16:30:37.101Z",
+    "action": "Agent Remarks",
+    "details": "Updated remarks for ID ae315b38-84a1-495f-bf99-cf9276f54c75 by zero"
+  },
+  {
+    "timestamp": "2026-08-03T16:25:15.779Z",
+    "action": "Login",
+    "details": "zero logged in"
+  },
+  {
+    "timestamp": "2026-08-03T15:49:24.041Z",
+    "action": "Delete Record",
+    "details": "Deleted record ID 3ace809f-36e1-4b56-9102-c014a86cc915"
+  },
+  {
+    "timestamp": "2026-08-03T15:01:37.212Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
+    "timestamp": "2026-07-31T22:59:19.421Z",
+    "action": "Login",
+    "details": "admin logged in"
+  },
+  {
     "timestamp": "2026-07-28T08:20:21.837Z",
     "action": "Reactivate User",
     "details": "admin reactivated user 4712c8f6-b73a-412b-bc18-743990f2a4e5"

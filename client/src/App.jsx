@@ -38,7 +38,7 @@ export default function App() {
             <Route path="/display" element={<Display />} />
 
             <Route
-              path="/kiosk-x7f2"
+              path="/register"
               element={
                 <ProtectedRoute>
                   <Register />

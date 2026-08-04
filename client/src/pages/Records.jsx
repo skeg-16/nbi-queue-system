@@ -40,6 +40,26 @@ const CAUSES_OPTIONS = [
   { value: '__custom__', label: 'other (Specific)...' }
 ];
 
+const REGION_OPTIONS = [
+  'NCR',
+  'CAR',
+  'Region I',
+  'Region II',
+  'Region III',
+  'Region IV-A',
+  'Region IV-B',
+  'Region V',
+  'Region VI',
+  'Region VII',
+  'Region VIII',
+  'Region IX',
+  'Region X',
+  'Region XI',
+  'Region XII',
+  'Region XIII',
+  'BARMM'
+];
+
 const DEFAULT_GLOBAL_COLORS = {
   Served: { bg: '#064e3b', txt: '#34d399' },
   Waiting: { bg: '#1e3a8a', txt: '#60a5fa' },
@@ -148,6 +168,7 @@ export default function Records() {
   const [allRecords, setAllRecords] = useState([]);
   const [lastFetchTime, setLastFetchTime] = useState(null);
   const [isConnected, setIsConnected] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState('complaints'); // complaints | feedback_en | feedback_tl
 
   // --- View/nav state ---
@@ -168,9 +189,16 @@ export default function Records() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  useEffect(() => {
+  const [modalDailyReminder, setModalDailyReminder] = useState(false);
+
+useEffect(() => {
     setCurrentPage(1);
+    setSelectedRows(new Set());
   }, [searchTerm, filterStatus, filterPriority, currentView, viewDateObj]);
+
+  useEffect(() => {
+    setIsLoading(true);
+  }, [currentView]);
 
   // --- Global colors ---
   const [globalColors, setGlobalColors] = useState(getGlobalColors());
@@ -196,6 +224,11 @@ export default function Records() {
   const [modalDelete, setModalDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
+  const [modalBulkDelete, setModalBulkDelete] = useState(false);
+  const [selectedRows, setSelectedRows] = useState(new Set());
+
+const [actionsMenuOpen, setActionsMenuOpen] = useState(null);
+  const [actionsMenuPos, setActionsMenuPos] = useState({ top: 0, left: 0 });
   // --- Toasts ---
   const [toasts, setToasts] = useState([]);
   const toastIdRef = useRef(0);
@@ -212,6 +245,7 @@ export default function Records() {
 
   // ---------- Fetching ----------
   async function fetchRecords(silent = false) {
+    if (!silent) setIsLoading(true);
     try {
       let url;
       if (currentView === 'complaints') {
@@ -236,6 +270,8 @@ export default function Records() {
     } catch (err) {
       console.error(err);
       setIsConnected(false);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -248,6 +284,23 @@ export default function Records() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentView]);
+
+// ---------- Login export reminder (admin only, every login session) ----------
+useEffect(() => {
+  if (!isAdmin) return;
+  const alreadyShownThisSession = sessionStorage.getItem('nbi_export_reminder_shown');
+  if (!alreadyShownThisSession) {
+    setModalDailyReminder(true);
+  }
+}, [isAdmin]);
+
+function dismissDailyReminder(openExport = false) {
+  sessionStorage.setItem('nbi_export_reminder_shown', 'true');
+  setModalDailyReminder(false);
+  if (openExport) {
+    openExportModal();
+  }
+}
 
   // ---------- Socket realtime ----------
   useEffect(() => {
@@ -428,16 +481,20 @@ export default function Records() {
     setCalendarOpen(true);
   }
 
-  // close calendar on outside click
+// close calendar on outside click
   useEffect(() => {
     function handler(e) {
       if (!e.target.closest('#calendarPopover') && !e.target.closest('#dateHeader')) {
         setCalendarOpen(false);
       }
+      if (!e.target.closest('.actions-menu-wrap')) {
+        setActionsMenuOpen(null);
+      }
     }
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
   }, []);
+
 
   // ---------- updateCell (inline edits in the grid) ----------
   async function updateCell(id, field, value) {
@@ -503,7 +560,7 @@ export default function Records() {
       created_at: localNow.toISOString().slice(0, 16),
       full_name: '', age: '', contact: '', email: '',
       gender: 'Prefer not to say', civil_status: 'Single',
-      address: '', purpose: 'File a Complaint', referred_by: '',
+      region: '', address: '', purpose: 'File a Complaint', referred_by: '',
       serving_duration: '', is_priority: false
     });
     setModalEdit(true);
@@ -526,6 +583,7 @@ export default function Records() {
       email: record.email || '',
       gender: record.gender || 'Prefer not to say',
       civil_status: record.civil_status || 'Single',
+      region: record.region || '',
       address: record.address || '',
       purpose: record.purpose || 'File a Complaint',
       referred_by: record.referred_by || '',
@@ -792,6 +850,36 @@ async function openRemarks(id) {
     }
   }
 
+  // ---------- Bulk select / delete ----------
+  function toggleRowSelect(id) {
+    setSelectedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelectedRows(prev => {
+      const allSelected = currentFilteredRecords.length > 0 && currentFilteredRecords.every(r => prev.has(r.id));
+      if (allSelected) return new Set();
+      return new Set(currentFilteredRecords.map(r => r.id));
+    });
+  }
+
+  async function submitBulkDelete() {
+    const ids = Array.from(selectedRows);
+    try {
+      const results = await Promise.all(ids.map(id => fetch(`/api/records/${id}`, { method: 'DELETE' })));
+      const allOk = results.every(res => res.ok);
+      setModalBulkDelete(false);
+      setAllRecords(recs => recs.filter(r => !selectedRows.has(r.id)));
+      setSelectedRows(new Set());
+      showToast(allOk ? `${ids.length} record(s) deleted successfully` : 'Some records failed to delete.', !allOk, allOk ? 'success' : 'error');
+    } catch (err) {
+      showToast('Server error. Bulk deletion failed.', true);
+    }
+  }
   // ---------- Export ----------
   function openExportModal() {
     setExportRange({ start: viewDateStr, end: viewDateStr });
@@ -848,12 +936,22 @@ async function doExport(type) {
       return;
     }
     setModalExport(false);
-    showToast('Preparing export, fetching assessments...');
+    showToast('Preparing export — this may take a bit longer if the server was idle...', false, 'info');
+
+    let fetchDone = false;
+    const wakeupWarningTimer = setTimeout(() => {
+      if (!fetchDone) {
+        showToast('Still waking up the server — please wait a bit longer...', false, 'info');
+      }
+    }, 8000);
 
     try {
       await fetchRemarksForExport(recordsToExport);
     } catch (e) {
       showToast('Some assessments failed to load, exporting with available data.', true);
+    } finally {
+      fetchDone = true;
+      clearTimeout(wakeupWarningTimer);
     }
 
     const typeLabels = { csv: 'CSV', pdf: 'PDF' };
@@ -958,12 +1056,14 @@ async function doExport(type) {
         onLogout={handleLogout}
       />
 <div style={{ flex: 1, minWidth: 0, maxWidth: '100%', display: 'flex', flexDirection: 'column', overflowX: 'hidden', height: '100vh', overflowY: 'hidden' }}>      {/* Action bar */}
-      <div className="action-bar" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 25px', background: 'var(--panel-bg)', borderBottom: '1px solid var(--border-color)' }}>        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+<div className="action-bar" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 25px', background: 'var(--panel-bg)', borderBottom: '1px solid var(--border-color)' }}>        <div className="header-top-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--text-main)', fontWeight: 600, letterSpacing: '0.02em' }}>Complaint Records</h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: 500 }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+              {isLoading && (
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--nbi-blue, #3b82f6)', display: 'inline-block', animation: 'shimmerSweep 1s ease-in-out infinite alternate' }} />
+              )}
               {isConnected
                 ? (lastFetchTime ? `Last updated: ${lastFetchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Loading...')
                 : 'Connection lost — retrying...'}
@@ -971,35 +1071,37 @@ async function doExport(type) {
             </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <input type="text" className="form-input" placeholder="Search records..." style={{ width: 300 }}
-              value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-            {currentView === 'complaints' && (
-              <>
-                <select className="form-select" style={{ width: 160 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-                  <option value="">All Statuses</option>
-                  <option value="Waiting">Waiting</option>
-                  <option value="Serving">Serving</option>
-                  <option value="Served">Served</option>
-                  <option value="Skipped">Skipped</option>
-                  <option value="No-show">No-show</option>
-                </select>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-main)', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 500, marginLeft: 5 }}>
-                  <input type="checkbox" checked={filterPriority} onChange={e => setFilterPriority(e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--nbi-blue)' }} /> Priority Only
-                </label>
-              </>
-            )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div className="filter-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div className="search-filter-group" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+  <input type="text" className="form-input search-input" placeholder="Search records..." style={{ width: 300 }}
+    value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+  {currentView === 'complaints' && (
+    <>
+      <select className="form-select" style={{ width: 160 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+        <option value="">All Statuses</option>
+        <option value="Waiting">Waiting</option>
+        <option value="Serving">Serving</option>
+        <option value="Served">Served</option>
+        <option value="Skipped">Skipped</option>
+        <option value="No-show">No-show</option>
+      </select>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-main)', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 500, marginLeft: 5 }}>
+        <input type="checkbox" checked={filterPriority} onChange={e => setFilterPriority(e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--nbi-blue)' }} /> Priority Only
+      </label>
+    </>
+  )}
+</div>
+          <div className="action-buttons-group" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             {currentView === 'complaints' && (
               <button className="btn-formal btn-primary" onClick={openAddModal}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 4 }}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg> Add Record
               </button>
             )}
-            <button className="btn-formal" onClick={openExportModal}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 4 }}><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg> Export Records
-            </button>
+            {currentView === 'complaints' && (
+              <button className="btn-formal" onClick={openExportModal}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 4 }}><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" /></svg> Export Records
+              </button>
+            )}
             <button className="btn-formal" onClick={() => window.print()}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 4 }}><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" /></svg> Print
             </button>
@@ -1009,23 +1111,58 @@ async function doExport(type) {
 
       {/* Date navigation tabs */}
       {currentView === 'complaints' && (
-      <div className="sheet-tabs" style={{ position: 'relative', background: 'var(--bg-color)', borderBottom: '1px solid var(--border-color)', padding: '2px 20px 0 20px', display: 'flex' }}>          <div className="sheet-tab" id="dateHeader" title="Open Date from Calendar" onClick={openCalendar}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 6 }}><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" /></svg>
-            <span style={{ fontSize: '0.7em', marginLeft: 4 }}>▼</span>
+      <div className="sheet-tabs" style={{ position: 'relative', background: 'var(--bg-color)', borderBottom: '1px solid var(--border-color)', padding: '2px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', overflowX: 'auto', flex: 1, minWidth: 0 }}>
+            <div className="sheet-tab" id="dateHeader" title="Open Date from Calendar" onClick={openCalendar} style={{ flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 6 }}><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" /></svg>
+              <span style={{ fontSize: '0.7em', marginLeft: 4 }}>▼</span>
+            </div>
+            {openTabs.map(dateStr => {
+              const dObj = new Date(dateStr);
+              return (
+                <div key={dateStr} className={`sheet-tab ${dateStr === viewDateStr ? 'active' : ''}`} onClick={() => setViewDateObj(dObj)} style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  <span>{dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  <span
+                    onClick={e => { e.stopPropagation(); closeTab(dateStr); }}
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: 4, fontSize: '0.75rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-main)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    &times;
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          {openTabs.map(dateStr => {
-            const dObj = new Date(dateStr);
-            return (
-              <div key={dateStr} className={`sheet-tab ${dateStr === viewDateStr ? 'active' : ''}`} onClick={() => setViewDateObj(dObj)}>
-                <span>{dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              
-          
-              </div>
-            );
-          })}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+  {selectedRows.size > 0 && (
+    <>
+      <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
+        {selectedRows.size} selected
+      </span>
+      <button
+        onClick={() => setModalBulkDelete(true)}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          padding: '4px 10px', fontSize: '0.78rem', fontWeight: 500,
+          color: '#dc2626', background: '#fef2f2', border: '1px solid #fecaca',
+          borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap'
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+          <path d="M10 11v6" /><path d="M14 11v6" />
+          <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+        </svg>
+        Delete {selectedRows.size}
+      </button>
+    </>
+  )}
+</div>
         </div>
       )}
-
       {/* Calendar popover */}
       {calendarOpen && (
         <div id="calendarPopover" className="calendar-popover active" style={{ position: 'fixed', top: calendarPos.top, left: calendarPos.left }}>
@@ -1043,8 +1180,29 @@ async function doExport(type) {
       )}
 
       {/* Main table */}
-      <div className="grid-workspace" style={{ padding: '10px 20px', display: 'flex', flexDirection: 'column', minWidth: 0, maxWidth: '100%', flex: 1, minHeight: 0 }}>        <div style={{ flex: 1, minWidth: 0, maxWidth: '100%', display: 'flex', flexDirection: 'column', background: 'var(--panel-bg)', borderRadius: 8, border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+      <div className="grid-workspace" style={{ padding: '10px 20px', display: 'flex', flexDirection: 'column', minWidth: 0, maxWidth: '100%', flex: 1, minHeight: 0 }}>
+        
+        <div style={{ flex: 1, minWidth: 0, maxWidth: '100%', display: 'flex', flexDirection: 'column', background: 'var(--panel-bg)', borderRadius: 8, border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
           <style>{`
+            @keyframes shimmerSweep {
+              0% { background-position: -400px 0; }
+              100% { background-position: 400px 0; }
+            }
+            @keyframes skeletonFadeIn {
+              from { opacity: 0; transform: translateY(4px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            .skeleton-bar {
+              display: inline-block;
+              height: 14px;
+              border-radius: 5px;
+              background: linear-gradient(90deg, rgba(148,163,184,0.15) 25%, rgba(148,163,184,0.35) 37%, rgba(148,163,184,0.15) 63%);
+              background-size: 400px 100%;
+              animation: shimmerSweep 1.4s ease-in-out infinite;
+            }
+            .skeleton-row {
+              animation: skeletonFadeIn 0.35s ease-out both;
+            }
             .data-table th, .data-table td {
               padding: 4px 6px !important;
               font-size: 0.75rem !important;
@@ -1065,6 +1223,29 @@ async function doExport(type) {
             .data-table th:last-child, .data-table td:last-child {
               padding-right: 24px !important;
             }
+
+            @media (max-width: 768px) {
+              .header-top-row { flex-direction: column; align-items: flex-start !important; gap: 6px; }
+              .header-top-row h2 { font-size: 1.1rem !important; }
+              .filter-row { flex-direction: column; align-items: stretch !important; }
+              .search-filter-group { flex-direction: column; align-items: stretch !important; width: 100%; }
+              .search-input { width: 100% !important; }
+              .search-filter-group select.form-select { width: 100% !important; }
+              .action-buttons-group { width: 100%; flex-wrap: wrap; gap: 8px !important; }
+              .action-buttons-group .btn-formal { flex: 1; justify-content: center; white-space: nowrap; font-size: 0.8rem; padding: 8px 10px; }
+              .sheet-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+              .grid-workspace { padding: 8px !important; }
+              .modal { width: 95vw !important; max-width: 95vw !important; max-height: 88vh !important; overflow-y: auto !important; margin: 0 !important; }
+              .form-grid { grid-template-columns: 1fr !important; }
+              .pagination-bar { flex-direction: column; align-items: stretch !important; gap: 10px; text-align: center; }
+              .pagination-controls { justify-content: center !important; flex-wrap: wrap; }
+              .data-table th, .data-table td { font-size: 0.68rem !important; padding: 3px 4px !important; }
+            }
+
+            @media (max-width: 480px) {
+              .action-buttons-group .btn-formal svg { margin-right: 2px !important; }
+              .action-buttons-group .btn-formal { font-size: 0.72rem; padding: 7px 8px; }
+            }
           `}</style>
           
           <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', minWidth: 0 }}>
@@ -1072,6 +1253,14 @@ async function doExport(type) {
             <thead>
               {currentView === 'complaints' ? (
                 <tr className="column-titles">
+                  <th className="col-title" style={{ width: 32, textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={currentFilteredRecords.length > 0 && currentFilteredRecords.every(r => selectedRows.has(r.id))}
+                      onChange={toggleSelectAll}
+                      style={{ width: 15, height: 15, cursor: 'pointer' }}
+                    />
+                  </th>
                   <th className="col-title" onClick={() => handleSort('created_at')}>Date{sortIndicator('created_at')}</th>
                   <th className="col-title">Time</th>
                   <th className="col-title" onClick={() => handleSort('ccd_no')}>CCD No.{sortIndicator('ccd_no')}</th>
@@ -1100,8 +1289,22 @@ async function doExport(type) {
               )}
             </thead>
             <tbody>
-              {currentFilteredRecords.length === 0 ? (
-                <tr><td colSpan={12} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={'skel-' + i} className="skeleton-row" style={{ animationDelay: `${i * 60}ms` }}>
+                    {Array.from({ length: currentView === 'complaints' ? 13 : 9 }).map((__, c) => (
+                      <td key={c} style={{ textAlign: c === 0 ? 'center' : 'left' }}>
+                        {c === 0 ? (
+                          <span className="skeleton-bar" style={{ width: 15, height: 15, borderRadius: 3 }} />
+                        ) : (
+                          <span className="skeleton-bar" style={{ width: `${45 + ((c * 13 + i * 7) % 40)}%` }} />
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : currentFilteredRecords.length === 0 ? (
+                <tr><td colSpan={currentView === 'complaints' ? 13 : 9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                   {currentView === 'complaints' ? 'No records found.' : 'No feedbacks found.'}
                 </td></tr>
               ) : currentView === 'complaints' ? (
@@ -1111,6 +1314,14 @@ async function doExport(type) {
                   const timeStr = dateObj.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
                   return (
                     <tr key={r.id} className={r.is_priority ? 'priority-row' : ''}>
+                      <td style={{ textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.has(r.id)}
+                          onChange={() => toggleRowSelect(r.id)}
+                          style={{ width: 15, height: 15, cursor: 'pointer' }}
+                        />
+                      </td>
                       <td>{dateStr}</td>
                       <td>{timeStr}</td>
                       <td style={{ fontWeight: 500 }}>{r.ccd_no ? r.ccd_no.split('-').pop() : ''}</td>
@@ -1150,20 +1361,54 @@ async function doExport(type) {
                         <DurationInput defaultValue={r.serving_duration} field="serving_duration" recordId={r.id} updateCell={updateCell} showToast={showToast} />
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 4 }}></span>
                       </td>
-                     <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
-                          <button className="btn-icon" data-tooltip="View Details" onClick={() => viewDetails(r.id)} style={{ background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: '#1e3a5f', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', width: 19, height: 19, minWidth: 19, minHeight: 19 }}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                     <td style={{ textAlign: 'center', position: 'relative' }}>
+                        <div className="actions-menu-wrap" style={{ position: 'relative', display: 'inline-block' }}>
+                          <button
+                            className="btn-icon"
+                            data-tooltip="Actions"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setActionsMenuPos({ top: rect.bottom + 4, left: rect.right - 170 });
+                              setActionsMenuOpen(o => (o === r.id ? null : r.id));
+                            }}
+                            style={{ background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: '#1e3a5f', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
+                              <circle cx="12" cy="5" r="2" />
+                              <circle cx="12" cy="12" r="2" />
+                              <circle cx="12" cy="19" r="2" />
+                            </svg>
                           </button>
-                          <button className="btn-icon" data-tooltip="Agent Assessment" onClick={() => openRemarks(r.id)} style={{ background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: '#1e3a5f', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', width: 19, height: 19, minWidth: 19, minHeight: 19 }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
-                          </button>
-                          <button className="btn-icon" data-tooltip="Edit Record" onClick={() => openEditModal(r.id)} style={{ background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: '#1e3a5f', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', width: 19, height: 19, minWidth: 19, minHeight: 19 }}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                          </button>
-                          <button className="btn-icon delete" data-tooltip="Delete Record" onClick={() => confirmDeleteRecord(r.id)} style={{ background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: '#dc2626', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', width: 19, height: 19, minWidth: 19, minHeight: 19 }}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
-                          </button>
+
+                          {actionsMenuOpen === r.id && (
+                            <div
+                              className="actions-menu-wrap"
+                              style={{
+                                position: 'fixed', top: actionsMenuPos.top, left: actionsMenuPos.left, zIndex: 9999,
+                                background: 'var(--panel-bg)', border: '1px solid var(--border-color)',
+                                borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                minWidth: 190, padding: '6px 0', textAlign: 'left'
+                              }}
+                            >
+                              <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); viewDetails(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                View Details
+                              </button>
+                              <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); openRemarks(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                                Agent Assessment
+                              </button>
+                              <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); openEditModal(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                Edit Record
+                              </button>
+                              <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); confirmDeleteRecord(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: '#dc2626', fontSize: '0.85rem' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+                                Delete Record
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </td>
                       </tr>
@@ -1202,11 +1447,11 @@ async function doExport(type) {
           
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', background: 'var(--panel-bg)', color: 'var(--text-main)', fontSize: '0.9rem' }}>
-              <div>
+            <div className="pagination-bar" style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', background: 'var(--panel-bg)', color: 'var(--text-main)', fontSize: '0.9rem' }}>
+              <div className="pagination-info">
                 Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredRecords.length)} of {filteredRecords.length} entries
               </div>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div className="pagination-controls" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <button 
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
                   disabled={currentPage === 1}
@@ -1297,6 +1542,14 @@ async function doExport(type) {
                     <option value="Married">Married</option>
                     <option value="Widowed">Widowed</option>
                     <option value="Separated">Separated</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Region</label>
+                  <select className="form-select" required
+                    value={editForm.region} onChange={e => setEditForm(f => ({ ...f, region: e.target.value }))}>
+                    <option value="" disabled>Select region...</option>
+                    {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
                 <div className="form-group full-width">
@@ -1550,6 +1803,30 @@ async function doExport(type) {
       )}
 
 
+      {/* Daily reminder to export/backup records */}
+      {modalDailyReminder && (
+        <div className="modal-overlay" style={{ display: 'flex' }}>
+          <div className="modal" style={{ maxWidth: 450 }}>
+            <div className="modal-header">
+              <div className="modal-title">Daily Backup Reminder</div>
+              <button className="modal-close" onClick={() => dismissDailyReminder(false)}>&times;</button>
+            </div>
+            <div style={{ padding: '10px 0 20px', color: 'var(--text-main)', lineHeight: 1.6 }}>
+              <p style={{ marginBottom: 10 }}>
+                ⚠️ <strong>Reminder:</strong> Please export and download today's records before you sign off for the day.
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Note: the server may go to sleep after periods of inactivity, so exporting regularly helps make sure your data is always backed up and ready when you need it.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-formal" onClick={() => dismissDailyReminder(false)}>Remind Me Later</button>
+              <button className="btn-formal btn-primary" onClick={() => dismissDailyReminder(true)}>Export Now</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modalExport && (
         <div className="modal-overlay" style={{ display: 'flex' }}>
           <div className="modal" style={{ maxWidth: 450 }}>
@@ -1557,6 +1834,20 @@ async function doExport(type) {
               <div className="modal-title">Export Records</div>
               <button className="modal-close" onClick={() => setModalExport(false)}>&times;</button>
             </div>
+
+            <div style={{
+              marginBottom: 16,
+              padding: '10px 14px',
+              borderRadius: 6,
+              background: 'rgba(240,165,0,0.1)',
+              border: '1px solid rgba(240,165,0,0.3)',
+              fontSize: '0.8rem',
+              color: 'var(--text-main)',
+              lineHeight: 1.5
+            }}>
+              ⚠️ The server may be idle and could take 30–60 seconds to wake up before the export completes. Please don't close this window while it's loading.
+            </div>
+
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Start Date</label>
               <input type="date" className="form-input" value={exportRange.start} onChange={e => setExportRange(r => ({ ...r, start: e.target.value }))} />
@@ -1572,7 +1863,6 @@ async function doExport(type) {
           </div>
         </div>
       )}
-
       {downloadConfirm && (
         <div className="modal-overlay" style={{ display: 'flex' }}>
           <div className="modal" style={{ maxWidth: 450, textAlign: 'center' }}>
@@ -1608,6 +1898,24 @@ async function doExport(type) {
             <div className="modal-footer">
               <button className="btn-formal" onClick={() => setModalDelete(false)}>Cancel</button>
               <button className="btn-formal btn-danger" onClick={submitDelete}>Delete Record</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalBulkDelete && (
+        <div className="modal-overlay" style={{ display: 'flex' }}>
+          <div className="modal" style={{ maxWidth: 450 }}>
+            <div className="modal-header">
+              <div className="modal-title" style={{ color: 'var(--red)' }}>Delete {selectedRows.size} Record{selectedRows.size > 1 ? 's' : ''}</div>
+              <button className="modal-close" onClick={() => setModalBulkDelete(false)}>&times;</button>
+            </div>
+            <div style={{ lineHeight: 1.6, color: 'var(--text-main)', marginBottom: '2rem' }}>
+              Are you absolutely sure you want to permanently delete <strong>{selectedRows.size}</strong> selected record(s)? <strong>This action cannot be undone.</strong>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-formal" onClick={() => setModalBulkDelete(false)}>Cancel</button>
+              <button className="btn-formal btn-danger" onClick={submitBulkDelete}>Delete {selectedRows.size} Record{selectedRows.size > 1 ? 's' : ''}</button>
             </div>
           </div>
         </div>
