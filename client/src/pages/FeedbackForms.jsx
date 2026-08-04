@@ -393,8 +393,7 @@ export default function FeedbackForm() {
   if (!lang) {
     return (
       <div
-        className="w-full min-h-[640px] flex flex-col items-center justify-center p-4 sm:p-8"
-        style={{
+          className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-8"        style={{
           background: 'radial-gradient(circle at 50% 0%, #1a365d 0%, #050e1d 60%)',
           fontFamily: "'Inter', system-ui, sans-serif",
         }}
@@ -403,8 +402,8 @@ export default function FeedbackForm() {
           className="w-full max-w-md rounded-2xl overflow-hidden border border-white/10 shadow-2xl text-center px-8 py-10"
           style={{ background: 'rgba(11,29,58,0.4)', backdropFilter: 'blur(10px)' }}
         >
-          <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center font-black text-lg" style={{ background: GOLD, color: '#050e1d' }}>
-            NBI
+          <div className="mx-auto mb-4 w-16 h-16 rounded-full overflow-hidden flex items-center justify-center bg-white/5">
+            <img src="/assets/nbi.png" alt="NBI Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-xs tracking-[2px] uppercase font-semibold text-slate-400">National Bureau of Investigation</h1>
           <h2 className="text-xl font-extrabold my-1" style={{ color: GOLD }}>Cybercrime Division</h2>
@@ -452,8 +451,8 @@ export default function FeedbackForm() {
           >
             <ChevronLeft size={12} /> {t.langLabel === 'Tagalog' ? 'Back' : 'Bumalik'}
           </button>
-          <div className="mx-auto mb-2 w-16 h-16 rounded-full flex items-center justify-center font-black text-lg" style={{ background: GOLD, color: '#050e1d' }}>
-            NBI
+          <div className="mx-auto mb-2 w-16 h-16 rounded-full overflow-hidden flex items-center justify-center bg-white/5">
+            <img src="/assets/nbi.png" alt="NBI Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-xs tracking-[2px] uppercase font-semibold text-slate-400">{t.agency}</h1>
           <h2 className="text-xl font-extrabold my-1" style={{ color: GOLD }}>{t.division}</h2>

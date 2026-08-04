@@ -645,6 +645,22 @@ app.get('/api/feedbacks', async (req, res) => {
     }
 });
 
+app.delete('/api/feedbacks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error, count } = await supabase.from('feedbacks').delete({ count: 'exact' }).eq('id', id);
+        if (error) throw error;
+        if (count === 0) {
+            return res.status(404).json({ success: false, error: 'Record not found or already deleted.' });
+        }
+        auditLog('Delete Feedback', `Deleted feedback record ID ${id}`);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Feedback Delete Error:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // === Auth Middleware ===
 function verifyToken(req, res, next) {
     const authHeader = req.headers.authorization;

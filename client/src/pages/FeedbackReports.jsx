@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {Download, Printer, Search } from 'lucide-react';
+import { Download, Printer, Search } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
 
@@ -18,37 +18,20 @@ const SQD_SCORE = {
 };
 
 const COPY = {
-  en: {
-    dbName: 'English Feedback Database',
-    searchPh: 'Search records...',
-    export: 'Export Records',
-    print: 'Print',
-    refresh: 'Refresh',
-    lastUpdated: 'Last updated',
-    cols: ['DATE', 'CLIENT TYPE', 'AGE / SEX', 'REGION', 'SERVICE', 'CC1-3', 'SQD AVG', 'SUGGESTIONS', 'EMAIL'],
-    empty: 'No feedback records yet.',
-    emptySub: 'Submitted responses to the English form will appear here.',
-    loading: 'Loading records...',
-    errorLoad: 'Could not load records. Try refreshing.',
-    countLabel: (n) => `${n} record${n === 1 ? '' : 's'}`,
-    tabLabel: 'English',
-  },
-  tl: {
-    dbName: 'Tagalog Feedback Database',
-    searchPh: 'Maghanap ng record...',
-    export: 'I-export ang Records',
-    print: 'I-print',
-    refresh: 'I-refresh',
-    lastUpdated: 'Huling na-update',
-    cols: ['PETSA', 'URI NG KLIYENTE', 'EDAD / KASARIAN', 'REHIYON', 'SERBISYO', 'CC1-3', 'SQD AVG', 'SUHESTIYON', 'EMAIL'],
-    empty: 'Wala pang feedback records.',
-    emptySub: 'Ang mga isinumite sa Tagalog na form ay lalabas dito.',
-    loading: 'Naglo-load ng records...',
-    errorLoad: 'Hindi ma-load ang records. Subukang i-refresh.',
-    countLabel: (n) => `${n} record${n === 1 ? '' : ''}`,
-    tabLabel: 'Tagalog',
-  },
+  dbName: 'Feedback Database',
+  searchPh: 'Search records...',
+  export: 'Export Records',
+  print: 'Print',
+  lastUpdated: 'Last updated',
+  cols: ['DATE', 'LANGUAGE', 'CLIENT TYPE', 'AGE / SEX', 'REGION', 'SERVICE', 'CC1-3', 'SQD AVG', 'SUGGESTIONS', 'EMAIL'],
+  empty: 'No feedback records yet.',
+  emptySub: 'Submitted responses will appear here.',
+  loading: 'Loading records...',
+  errorLoad: 'Could not load records. Try refreshing.',
+  countLabel: (n) => `${n} record${n === 1 ? '' : 's'}`,
 };
+
+const LANG_LABELS = { en: 'English', tl: 'Tagalog' };
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -86,9 +69,9 @@ function todayStamp() {
   return new Date().toISOString().split('T')[0];
 }
 
-function downloadCsv(records, lang) {
+function downloadCsv(records, langLabel) {
   const headers = [
-    'date', 'client_type', 'age', 'sex', 'region', 'service_availed',
+    'date', 'language', 'client_type', 'age', 'sex', 'region', 'service_availed',
     'cc1', 'cc2', 'cc3', ...SQD_KEYS, 'sqd_avg', 'suggestions', 'email', 'submittedAt',
   ];
   const rows = records.map((r) => {
@@ -103,7 +86,7 @@ function downloadCsv(records, lang) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `feedback-${lang}-${todayStamp()}.csv`;
+  a.download = `feedback-${langLabel}-${todayStamp()}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -150,19 +133,18 @@ export default function FeedbackReports() {
     navigate('/login');
   };
 
-  const [lang, setLang] = useState('en');
+  const [langFilter, setLangFilter] = useState('all');
   const [recordsByLang, setRecordsByLang] = useState({ en: [], tl: [] });
   const [status, setStatus] = useState('loading');
   const [search, setSearch] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  const t = COPY[lang];
+  const t = COPY;
 
   const loadLang = useCallback(async (l) => {
     const res = await fetch(`/api/feedbacks?language=${l}`);
     if (!res.ok) throw new Error('Failed to fetch feedbacks');
     const data = await res.json();
-    // Server returns created_at (Supabase timestamp) but we want to use submittedAt for display and sorting
     return (Array.isArray(data) ? data : []).map((r) => ({ ...r, submittedAt: r.created_at }));
   }, []);
 
@@ -180,16 +162,23 @@ export default function FeedbackReports() {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  const records = recordsByLang[lang];
+  const allRecords = useMemo(() => [
+    ...recordsByLang.en.map((r) => ({ ...r, language: 'en' })),
+    ...recordsByLang.tl.map((r) => ({ ...r, language: 'tl' })),
+  ], [recordsByLang]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return records;
+    let list = allRecords;
+    if (langFilter !== 'all') list = list.filter((r) => r.language === langFilter);
     const q = search.trim().toLowerCase();
-    return records.filter((r) =>
-      [r.client_type, r.region, r.service_availed, r.suggestions, r.email, r.sex]
-        .some((f) => (f || '').toLowerCase().includes(q))
-    );
-  }, [records, search]);
+    if (q) {
+      list = list.filter((r) =>
+        [r.client_type, r.region, r.service_availed, r.suggestions, r.email, r.sex]
+          .some((f) => (f || '').toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [allRecords, langFilter, search]);
 
   const lastUpdatedLabel = lastUpdated
     ? lastUpdated.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
@@ -220,30 +209,9 @@ export default function FeedbackReports() {
             </div>
           </div>
 
+          {/* Search FIRST, then language filter (baligtad na order) */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              {/* Language tabs */}
-              <div style={{ display: 'flex', gap: 4 }}>
-                {['en', 'tl'].map((l) => (
-                  <button
-                    key={l}
-                    onClick={() => setLang(l)}
-                    style={{
-                      padding: '8px 16px',
-                      fontWeight: 600,
-                      fontSize: '0.9rem',
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                      background: lang === l ? '#1e3a8a' : 'transparent',
-                      color: lang === l ? '#ffffff' : 'var(--text-main)',
-                      border: lang === l ? '1px solid #1e3a8a' : '1px solid var(--border-color)',
-                    }}
-                  >
-                    {COPY[l].tabLabel} ({recordsByLang[l].length})
-                  </button>
-                ))}
-              </div>
-
               <div style={{ position: 'relative' }}>
                 <Search size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
@@ -255,10 +223,21 @@ export default function FeedbackReports() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+
+              <select
+                className="form-select"
+                value={langFilter}
+                onChange={(e) => setLangFilter(e.target.value)}
+                style={{ width: 170 }}
+              >
+                <option value="all">All Languages ({allRecords.length})</option>
+                <option value="en">English ({recordsByLang.en.length})</option>
+                <option value="tl">Tagalog ({recordsByLang.tl.length})</option>
+              </select>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <button className="btn-formal" onClick={() => downloadCsv(filtered, lang)} disabled={filtered.length === 0}>
+              <button className="btn-formal" onClick={() => downloadCsv(filtered, langFilter)} disabled={filtered.length === 0}>
                 <Download size={14} style={{ marginRight: 4, verticalAlign: -2 }} /> {t.export}
               </button>
               <button className="btn-formal" onClick={() => window.print()} disabled={filtered.length === 0}>
@@ -284,20 +263,21 @@ export default function FeedbackReports() {
                 }
               `}</style>
             <div style={{ flex: 1, overflow: 'auto' }}>
-              <table className="data-table" style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
+              <table className="data-table" style={{ width: '100%', minWidth: 900, tableLayout: 'fixed', borderCollapse: 'collapse' }}>
                 <colgroup>
                   <col style={{ width: '9%' }} />
-                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '8%' }} />
                   <col style={{ width: '9%' }} />
-                  <col style={{ width: '10%' }} />
-                  <col style={{ width: '14%' }} />
                   <col style={{ width: '8%' }} />
-                  <col style={{ width: '8%' }} />
-                  <col style={{ width: '19%' }} />
+                  <col style={{ width: '9%' }} />
+                  <col style={{ width: '13%' }} />
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '18%' }} />
                   <col style={{ width: '12%' }} />
                 </colgroup>
                 <thead>
-                      <tr className="column-titles">
+                  <tr className="column-titles">
                     {t.cols.map((c) => (
                       <th key={c} className="col-title">{c}</th>
                     ))}
@@ -305,35 +285,33 @@ export default function FeedbackReports() {
                 </thead>
                 <tbody>
                   {status === 'loading' && (
-                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>{t.loading}</td></tr>
+                    <tr><td colSpan={10} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>{t.loading}</td></tr>
                   )}
                   {status === 'error' && (
-                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--red)' }}>{t.errorLoad}</td></tr>
+                    <tr><td colSpan={10} style={{ textAlign: 'center', padding: '3rem', color: 'var(--red)' }}>{t.errorLoad}</td></tr>
                   )}
                   {status === 'ready' && filtered.length === 0 && (
                     <tr>
-                      <td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                      <td colSpan={10} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                         <div style={{ fontWeight: 600, marginBottom: 4 }}>{t.empty}</div>
                         <div style={{ fontSize: '0.85rem' }}>{t.emptySub}</div>
                       </td>
                     </tr>
                   )}
-                  {status === 'ready' && filtered.map((r, i) => {
-                    const dateObj = new Date(r.submittedAt || r.date);
-                    return (
-                      <tr key={r.submittedAt ? r.submittedAt + i : i}>
-                        <td>{formatDate(r.date)}</td>
-                        <td>{r.client_type || '—'}</td>
-                        <td>{r.age || '—'} / {r.sex || '—'}</td>
-                        <td>{r.region || '—'}</td>
-                        <td style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.service_availed}>{r.service_availed || '—'}</td>
-                        <td>{ccSummary(r)}</td>
-                        <td><ScorePill value={sqdAverage(r)} /></td>
-                        <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.suggestions}>{r.suggestions || '—'}</td>
-                        <td>{r.email || '—'}</td>
-                      </tr>
-                    );
-                  })}
+                  {status === 'ready' && filtered.map((r, i) => (
+                    <tr key={r.id || i}>
+                      <td>{formatDate(r.date)}</td>
+                      <td>{LANG_LABELS[r.language] || '—'}</td>
+                      <td>{r.client_type || '—'}</td>
+                      <td>{r.age || '—'} / {r.sex || '—'}</td>
+                      <td>{r.region || '—'}</td>
+                      <td style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.service_availed}>{r.service_availed || '—'}</td>
+                      <td>{ccSummary(r)}</td>
+                      <td><ScorePill value={sqdAverage(r)} /></td>
+                      <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.suggestions}>{r.suggestions || '—'}</td>
+                      <td>{r.email || '—'}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
