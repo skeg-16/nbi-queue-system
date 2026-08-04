@@ -120,6 +120,8 @@ export default function ManageUsers() {
   const toastIdRef = useRef(0);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 8;
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
 
   const [requests, setRequests] = useState([]);
   const [acceptingRequest, setAcceptingRequest] = useState(null);
@@ -167,13 +169,26 @@ export default function ManageUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sortedUsers = [...users].sort((a, b) => (b.is_locked ? 1 : 0) - (a.is_locked ? 1 : 0));
+ const filteredUsers = users.filter(u => {
+    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch = !q ||
+      (u.username || '').toLowerCase().includes(q) ||
+      (u.full_name || '').toLowerCase().includes(q) ||
+      (u.email || '').toLowerCase().includes(q);
+    return matchesRole && matchesSearch;
+  });
+  const sortedUsers = [...filteredUsers].sort((a, b) => (b.is_locked ? 1 : 0) - (a.is_locked ? 1 : 0));
   const totalPages = Math.ceil(sortedUsers.length / usersPerPage);
   const paginatedUsers = sortedUsers.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage);
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
   }, [totalPages, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter]);
   const openAcceptModal = (r) => {
     setAcceptingRequest(r);
     setAcceptEmail(r.users?.email || '');
@@ -641,7 +656,29 @@ export default function ManageUsers() {
             </div>
           )}
 
-          <div className="mu-table-wrap">
+          <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              className="mu-input"
+              placeholder="Search by username, full name, or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              maxLength={30}
+              style={{ flex: 1, minWidth: 200, color: 'var(--text-main)', background: 'var(--panel-bg)' }}
+            />
+            <select
+              className="mu-select"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              style={{ width: 140 }}
+            >
+              <option value="all">All Roles</option>
+              <option value="agent">Agent</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div className="mu-table-wrap" style={{ minHeight: 8 * 57 + 45 }}>
             <div className="mu-table-scroll">
               <table className="ur-table">
                 <thead>
@@ -657,8 +694,8 @@ export default function ManageUsers() {
                 <tbody>
                   {loading ? (
                     <tr><td colSpan={6} className="uc-empty">Loading...</td></tr>
-                  ) : users.length === 0 ? (
-                    <tr><td colSpan={6} className="uc-empty">No accounts yet.</td></tr>
+                  ) : sortedUsers.length === 0 ? (
+                    <tr><td colSpan={6} className="uc-empty">{users.length === 0 ? 'No accounts yet.' : 'No accounts match your search/filter.'}</td></tr>
                   ) : (
                     paginatedUsers.map(u => (
                       <UserRow key={u.id} u={u} onDeactivate={handleDeactivate} onReactivate={handleReactivate} onEdit={openEditModal} />
@@ -669,8 +706,8 @@ export default function ManageUsers() {
             </div>
           </div>
 
-          {!loading && totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20, minHeight: 44 }}>
+            {!loading && totalPages > 1 && (
               <div className="mu-page-nav">
                 <button
                   className="mu-page-arrow"
@@ -697,8 +734,8 @@ export default function ManageUsers() {
                   <ChevronRight size={16} />
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           </main>
       </div>
