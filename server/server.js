@@ -199,35 +199,6 @@ const emailTransporter = nodemailer.createTransport({
     }
 });
 
-// Function to send queue confirmation email
-async function sendQueueEmail(toEmail, displayName, shortNo) {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping email send');
-        return { success: false, error: 'Email not configured' };
-    }
-    if (!toEmail) {
-        return { success: false, error: 'No email provided' };
-    }
-
-    try {
-        const info = await emailTransporter.sendMail({
-            from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
-            to: toEmail,
-            subject: `Your Queue Number: ${shortNo}`,
-            text: `Hello, ${displayName}!\n\nYour queue number is ${shortNo}.\n\nPlease wait to be called. Thank you for registering with the NBI Cybercrime Division.`,
-            html: `<p>Hello, <strong>${displayName}</strong>!</p><p>Your queue number is <strong style="font-size: 1.5em; color: #F0A500;">${shortNo}</strong>.</p><p>Please wait to be called. Thank you for registering with the NBI Cybercrime Division.</p>`
-        });
-
-        console.log('[Email] ✓ Sent to', toEmail, '- message_id:', info.messageId);
-        return { success: true, info };
-    } catch (err) {
-        console.error('[Email] Exception:', err.message);
-        return { success: false, error: err.message };
-    }
-}
-
-// Scheduled Task will run below at 6:00 PM
-
 // Serve static files
 app.use(express.static(path.join(__dirname, '../client/dist'), {
     setHeaders: (res, path) => {
@@ -537,26 +508,77 @@ app.put('/api/records/:id/status', async (req, res) => {
     }
 });
 
+// POST /api/import
 app.post('/api/import', async (req, res) => {
-    try {
-        const records = req.body.records;
-        if (!records || !Array.isArray(records)) {
-            return res.status(400).json({ success: false, error: "Invalid data format" });
-        }
+  const { records } = req.body;
+  const record = records[0]; 
 
-        const { data, error } = await supabase
-            .from('registrations')
-            .insert(records);
-            
-        if (error) throw error;
-        
-        auditLog('Bulk Import', `Imported ${records.length} records`);
-        broadcastStaffUpdate();
-        res.json({ success: true, count: records.length });
+  const MAX_RETRIES = 5;
+  let attempt = 0;
+  let lastError = null;
+
+  while (attempt < MAX_RETRIES) {
+    try {
+      let ccdNo = record.ccd_no;
+
+      if (!ccdNo || !ccdNo.trim()) {
+        const dateForSeq = record.created_at
+          ? record.created_at.slice(0, 10)
+          : new Date().toISOString().slice(0, 10);
+
+        const { data: existing, error: fetchErr } = await supabase
+          .from('registrations')
+          .select('ccd_no')
+          .gte('created_at', `${dateForSeq}T00:00:00`)
+          .lte('created_at', `${dateForSeq}T23:59:59`);
+
+        if (fetchErr) throw fetchErr;
+
+        let maxSeq = 0;
+        (existing || []).forEach(r => {
+          if (r.ccd_no) {
+            const parts = r.ccd_no.split('-');
+            const seqNum = parseInt(parts[parts.length - 1], 10);
+            if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+          }
+        });
+
+        const seq = String(maxSeq + 1).padStart(4, '0');
+        ccdNo = `CCD-${dateForSeq}-${seq}`;
+      }
+
+      const { data: orderRows, error: orderErr } = await supabase
+        .from('registrations')
+        .select('queue_order')
+        .order('queue_order', { ascending: false })
+        .limit(1);
+
+      if (orderErr) throw orderErr;
+      const nextQueueOrder = orderRows?.[0]?.queue_order ? orderRows[0].queue_order + 1 : 1;
+
+      const { data: inserted, error: insertErr } = await supabase
+        .from('registrations')
+        .insert([{ ...record, ccd_no: ccdNo, queue_order: nextQueueOrder }])
+        .select();
+
+      if (insertErr) {
+        if (insertErr.code === '23505') {
+          attempt++;
+          lastError = insertErr;
+          continue;
+        }
+        throw insertErr;
+      }
+
+      return res.json({ success: true, data: inserted[0] });
     } catch (err) {
-        console.error("Import Error:", err);
-        res.status(500).json({ success: false, error: err.message });
+      lastError = err;
+      break;
     }
+  }
+
+  console.error('Insert failed after retries:', lastError);
+  return res.status(500).json({ success: false, error: lastError?.message || 'Failed to insert record' });
 });
 
 // Feedback Endpoints
@@ -675,6 +697,7 @@ function verifyToken(req, res, next) {
         return res.status(401).json({ success: false, error: 'Invalid or expired token' });
     }
 }
+
 
 function requireAdmin(req, res, next) {
     if (req.user.role !== 'admin') {
@@ -1346,9 +1369,35 @@ io.on('connection', async (socket) => {
                 state.dailyCounter = 0;
             }
 
-            state.dailyCounter++;
+            // Kunin ang pinakamataas na existing seq ngayong araw mula DB
+            // (hindi na umaasa sa in-memory dailyCounter, para consistent
+            // sa parehong logic ng /api/import at hindi nade-desync)
+            const { data: existingToday, error: existingErr } = await supabase
+                .from('registrations')
+                .select('ccd_no')
+                .like('ccd_no', `CCD-${todayStr}-%`);
+            if (existingErr) throw existingErr;
+
+            let maxSeq = 0;
+            (existingToday || []).forEach(r => {
+                if (r.ccd_no) {
+                    const parts = r.ccd_no.split('-');
+                    const seqNum = parseInt(parts[parts.length - 1], 10);
+                    if (!isNaN(seqNum) && seqNum > maxSeq) maxSeq = seqNum;
+                }
+            });
+            state.dailyCounter = maxSeq + 1;
             const ccdNo = `CCD-${todayStr}-${String(state.dailyCounter).padStart(4, '0')}`;
             const isPriority = formData.isPriority === true || formData.isPriority === 'true';
+
+            // Kunin ang pinakamataas na queue_order overall, +1 sa bago
+            const { data: orderRows, error: orderErr } = await supabase
+                .from('registrations')
+                .select('queue_order')
+                .order('queue_order', { ascending: false })
+                .limit(1);
+            if (orderErr) throw orderErr;
+            const nextQueueOrder = orderRows?.[0]?.queue_order ? orderRows[0].queue_order + 1 : 1;
 
             const { data, error } = await supabase
                 .from('registrations')
@@ -1368,7 +1417,8 @@ io.on('connection', async (socket) => {
                         is_priority: isPriority,
                         status: 'Waiting',
                         e_signature: formData.signature || null,
-                        registration_duration: formData.registrationDuration || null
+                        registration_duration: formData.registrationDuration || null,
+                        queue_order: nextQueueOrder
                     }
                 ])
                 .select();
@@ -1947,6 +1997,7 @@ async function sendOtpEmail(toEmail, displayName, otp) {
     }
 }
 
+// Function to send queue confirmation email
 async function sendQueueEmail(toEmail, displayName, shortNo) {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping email send');
@@ -1960,15 +2011,141 @@ async function sendQueueEmail(toEmail, displayName, shortNo) {
         const info = await emailTransporter.sendMail({
             from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
             to: toEmail,
-            subject: `Your Queue Number: ${shortNo}`,
-            text: `Hello, ${displayName}!\n\nYour queue number is ${shortNo}.\n\nPlease wait to be called. Thank you for registering with the NBI Cybercrime Division.`,
-            html: `<p>Hello, <strong>${displayName}</strong>!</p><p>Your queue number is <strong style="font-size: 1.5em; color: #F0A500;">${shortNo}</strong>.</p><p>Please wait to be called. Thank you for registering with the NBI Cybercrime Division.</p>`
+            subject: `NBI Cybercrime Division — Your Queue Number: ${shortNo}`,
+            text:
+                `Hello, ${displayName}!
+
+Thank you for registering with the NBI Cybercrime Division.
+
+YOUR QUEUE NUMBER: ${shortNo}
+
+IMPORTANT REMINDERS:
+- Please keep the printed/issued queue slip with you at all times while waiting.
+- Listen carefully for the speaker announcement calling your queue number. Numbers are called only once per turn, so please stay within hearing distance of the waiting area.
+- If you miss your number when called, please proceed to the counter immediately to check if you may still be accommodated, or coordinate with staff for reassignment.
+- Keep this email and your queue slip until your transaction is fully completed, as it may be requested for verification.
+
+We appreciate your patience and cooperation.
+
+NBI Cybercrime Division
+This is an automated message. Please do not reply to this email.`,
+            html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBI Cybercrime Division — Queue Confirmation</title>
+</head>
+<body style="margin:0; padding:0; background-color:#eef0f3; font-family: Georgia, 'Times New Roman', serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef0f3; padding: 24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius: 8px; overflow:hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); max-width:600px; width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0b1f4d 0%, #142d6e 100%); padding: 28px 32px; border-bottom: 4px solid #f0a500;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <p style="margin:0; color:#f0a500; font-size:11px; letter-spacing: 2px; font-family: Arial, sans-serif; font-weight:bold; text-transform:uppercase;">
+                      Republic of the Philippines
+                    </p>
+                    <p style="margin:4px 0 0 0; color:#ffffff; font-size:20px; font-weight:bold; font-family: Arial, sans-serif;">
+                      National Bureau of Investigation
+                    </p>
+                    <p style="margin:2px 0 0 0; color:#c9d4ec; font-size:13px; font-family: Arial, sans-serif; letter-spacing: 1px;">
+                      Cybercrime Division
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 36px 32px 12px 32px; font-family: Arial, sans-serif; color:#1a1a1a;">
+              <p style="font-size:16px; margin:0 0 16px 0;">Hello, <strong>${displayName}</strong>,</p>
+              <p style="font-size:14.5px; line-height:1.6; margin:0 0 24px 0; color:#333333;">
+                Thank you for registering with the <strong>NBI Cybercrime Division</strong>. Your queue number has been successfully generated and is provided below.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Queue Number Card -->
+          <tr>
+            <td style="padding: 0 32px 28px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0b1f4d; border-radius:8px; border: 2px solid #f0a500;">
+                <tr>
+                  <td align="center" style="padding: 22px 20px;">
+                    <p style="margin:0; color:#c9d4ec; font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family: Arial, sans-serif;">
+                      Your Queue Number
+                    </p>
+                    <p style="margin:8px 0 0 0; color:#f0a500; font-size:42px; font-weight:bold; font-family: Arial, sans-serif; letter-spacing: 2px;">
+                      ${shortNo}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Reminders -->
+          <tr>
+            <td style="padding: 0 32px 8px 32px; font-family: Arial, sans-serif;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#fdf6e8; border-left: 4px solid #f0a500; border-radius: 4px;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <p style="margin:0 0 10px 0; color:#8a1f1f; font-size:13px; font-weight:bold; letter-spacing:0.5px;">
+                      ⚠ IMPORTANT REMINDERS
+                    </p>
+                    <ul style="margin:0; padding-left:18px; color:#333333; font-size:13.5px; line-height:1.8;">
+                      <li><strong>Keep your queue slip safe.</strong> Please hold on to the printed/issued queue slip at all times while waiting.</li>
+                      <li><strong>Listen for the announcement.</strong> Our speaker system calls queue numbers aloud — please stay within hearing distance of the waiting area and pay close attention when numbers are called.</li>
+                      <li><strong>If you miss your call,</strong> proceed to the counter immediately so staff can assist you or reassign your slot.</li>
+                      <li><strong>Retain this email</strong> until your transaction is complete, as it may be requested for verification purposes.</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 20px 32px 32px 32px; font-family: Arial, sans-serif;">
+              <p style="font-size:13.5px; line-height:1.6; color:#333333; margin:0;">
+                We appreciate your patience and cooperation. Should you have any concerns while waiting, please approach our staff on duty for assistance.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#0b1f4d; padding: 20px 32px; border-top: 4px solid #8a1f1f;">
+              <p style="margin:0; color:#ffffff; font-size:13px; font-family: Arial, sans-serif; font-weight:bold;">
+                NBI Cybercrime Division
+              </p>
+              <p style="margin:6px 0 0 0; color:#c9d4ec; font-size:11.5px; font-family: Arial, sans-serif;">
+                This is an automated message. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`
         });
 
-        console.log('[Email] Sent to', toEmail, '- message_id:', info.messageId);
+        console.log('[Email] ✓ Sent to', toEmail, '- message_id:', info.messageId);
         return { success: true, info };
     } catch (err) {
-        console.error('[Email] Exception:', err);
+        console.error('[Email] Exception:', err.message);
         return { success: false, error: err.message };
     }
 }

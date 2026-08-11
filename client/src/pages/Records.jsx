@@ -145,11 +145,61 @@ function DurationInput({ defaultValue, field, recordId, updateCell, showToast })
       onChange={e => setVal(e.target.value.replace(/[^0-9:]/g, ''))}
       onKeyDown={handleKeyDown}
       onBlur={handleBlur}
-      placeholder="-"
+     placeholder="-"
       style={{ width: 50, textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: 4, padding: 4, background: 'transparent', color: 'var(--text-main)', fontFamily: 'monospace' }}
     />
   );
 }
+
+function CcdNoInput({ defaultValue, recordId, totalCount, onReorder, showToast }) {
+  const [val, setVal] = useState(defaultValue || '');
+
+  useEffect(() => {
+    setVal(defaultValue || '');
+  }, [defaultValue]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      const trimmed = val.trim();
+      const num = parseInt(trimmed, 10);
+      if (!trimmed || isNaN(num) || num < 1) {
+        showToast('Invalid position. Enter a number (e.g. 1, 2, 3...)', true);
+        setVal(defaultValue || '');
+        return;
+      }
+      const clamped = Math.min(num, totalCount);
+      if (String(clamped) === String(defaultValue)) {
+        e.target.blur();
+        return;
+      }
+      onReorder(recordId, clamped);
+      e.target.blur();
+    } else if (e.key === 'Escape') {
+      setVal(defaultValue || '');
+      e.target.blur();
+    }
+  };
+
+  const handleBlur = () => {
+    if (val.trim() !== (defaultValue || '').trim()) {
+      setVal(defaultValue || '');
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      value={val}
+      onChange={e => setVal(e.target.value.replace(/[^0-9]/g, ''))}
+      onKeyDown={handleKeyDown}
+      onBlur={handleBlur}
+      placeholder="-"
+      title="Type a position number and press Enter to move this record there"
+      style={{ width: 40, textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: 4, padding: 4, background: 'transparent', color: 'var(--text-main)', fontWeight: 500 }}
+    />
+  );
+}
+
 export default function Records() {
   useEffect(() => { document.title = "Complaint Registry | NBI QMS"; }, []);
   const socket = useSocket();
@@ -373,6 +423,11 @@ function dismissDailyReminder(openExport = false) {
 
     if (currentView === 'complaints') {
       list = [...list].sort((a, b) => {
+        if (sortColumn === 'created_at') {
+          const orderA = a.queue_order ?? 0;
+          const orderB = b.queue_order ?? 0;
+          if (orderA !== orderB) return orderA - orderB;
+        }
         let valA = a[sortColumn];
         let valB = b[sortColumn];
         if (sortColumn === 'age') {
@@ -522,6 +577,101 @@ function dismissDailyReminder(openExport = false) {
     }
   }
 
+// ---------- Queue order override ----------
+  async function applyReorder(dayRecordsReordered) {
+    const withNewOrder = dayRecordsReordered.map((r, i) => ({
+      ...r,
+      queue_order: (i + 1) * 1000
+    }));
+
+    const orderUpdates = [];
+    withNewOrder.forEach((r) => {
+      const original = allRecords.find(x => x.id === r.id);
+      if (!original) return;
+      if (original.queue_order !== r.queue_order) {
+        orderUpdates.push({ id: r.id, queue_order: r.queue_order });
+      }
+    });
+
+    const ccdUpdates = [];
+    withNewOrder.forEach((r, i) => {
+      const seq = String(i + 1).padStart(4, '0');
+      const newCcd = `CCD-${viewDateStr}-${seq}`;
+      if (r.ccd_no !== newCcd) {
+        ccdUpdates.push({ id: r.id, ccd_no: newCcd });
+      }
+    });
+
+    try {
+      await Promise.all(orderUpdates.map(u =>
+        fetch('/api/records/' + u.id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ queue_order: u.queue_order })
+        })
+      ));
+
+      for (const u of ccdUpdates) {
+        await fetch('/api/records/' + u.id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ccd_no: `TMP-${u.id}-${Date.now()}` })
+        });
+      }
+
+      for (const u of ccdUpdates) {
+        await fetch('/api/records/' + u.id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ccd_no: u.ccd_no })
+        });
+      }
+
+      setAllRecords(recs => recs.map(r => {
+        const orderUpdate = orderUpdates.find(u => u.id === r.id);
+        const ccdUpdate = ccdUpdates.find(u => u.id === r.id);
+        if (!orderUpdate && !ccdUpdate) return r;
+        return {
+          ...r,
+          ...(orderUpdate ? { queue_order: orderUpdate.queue_order } : {}),
+          ...(ccdUpdate ? { ccd_no: ccdUpdate.ccd_no } : {})
+        };
+      }));
+
+      showToast('Position updated', false, 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to update queue order.', true);
+      await fetchRecords(true);
+    }
+  }
+
+  async function moveQueueOrder(id, direction) {
+    const dayRecords = [...filteredRecords];
+    const idx = dayRecords.findIndex(r => r.id === id);
+    if (idx === -1) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= dayRecords.length) return;
+
+    const [moved] = dayRecords.splice(idx, 1);
+    dayRecords.splice(swapIdx, 0, moved);
+
+    await applyReorder(dayRecords);
+  }
+
+  async function updateCcdPosition(id, newPosition) {
+    const dayRecords = [...filteredRecords];
+    const idx = dayRecords.findIndex(r => r.id === id);
+    if (idx === -1) return;
+
+    const [moved] = dayRecords.splice(idx, 1);
+    const targetIdx = Math.min(Math.max(newPosition - 1, 0), dayRecords.length);
+    dayRecords.splice(targetIdx, 0, moved);
+
+    await applyReorder(dayRecords);
+  }
+
+
   // ---------- Sorting ----------
   function handleSort(col) {
     if (sortColumn === col) setSortAsc(a => !a);
@@ -558,6 +708,7 @@ function dismissDailyReminder(openExport = false) {
     setEditForm({
       id: '',
       created_at: localNow.toISOString().slice(0, 16),
+      ccd_no: '',
       full_name: '', age: '', contact: '', email: '',
       gender: 'Prefer not to say', civil_status: 'Single',
       region: '', address: '', purpose: 'File a Complaint', referred_by: '',
@@ -577,6 +728,7 @@ function dismissDailyReminder(openExport = false) {
     setEditForm({
       id: record.id,
       created_at: localDateTime,
+      ccd_no: record.ccd_no || '',
       full_name: record.full_name || '',
       age: record.age || '',
       contact: record.contact || '',
@@ -612,10 +764,20 @@ async function submitEdit(e) {
           body: JSON.stringify(payload)
         });
       } else {
-        const dateForSeq = created_at ? created_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
-        const sameDateCount = allRecords.filter(r => r.created_at && r.created_at.split('T')[0] === dateForSeq).length;
-        const seq = String(sameDateCount + 1).padStart(4, '0');
-        payload.ccd_no = `CCD-${dateForSeq}-${seq}`;
+        if (!payload.ccd_no || !payload.ccd_no.trim()) {
+          const dateForSeq = created_at ? created_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
+          const sameDateRecords = allRecords.filter(r => r.created_at && r.created_at.split('T')[0] === dateForSeq);
+          let maxSeq = 0;
+          sameDateRecords.forEach(r => {
+            if (r.ccd_no) {
+              const parts = r.ccd_no.split('-');
+              const currentSeq = parseInt(parts[parts.length - 1], 10);
+              if (!isNaN(currentSeq) && currentSeq > maxSeq) maxSeq = currentSeq;
+            }
+          });
+          const seq = String(maxSeq + 1).padStart(4, '0');
+          payload.ccd_no = `CCD-${dateForSeq}-${seq}`;
+        }
         payload.status = 'Waiting';
         res = await fetch('/api/import', {
           method: 'POST',
@@ -1246,6 +1408,25 @@ async function doExport(type) {
               .action-buttons-group .btn-formal svg { margin-right: 2px !important; }
               .action-buttons-group .btn-formal { font-size: 0.72rem; padding: 7px 8px; }
             }
+
+            @media print {
+              .sidebar, .action-bar, .sheet-tabs, .pagination-bar, .toast-container {
+                display: none !important;
+              }
+              body, .grid-workspace, div {
+                height: auto !important;
+                overflow: visible !important;
+                position: static !important;
+              }
+              .data-table {
+                width: 100% !important;
+                page-break-inside: auto;
+              }
+              tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+              }
+            }
           `}</style>
           
           <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', minWidth: 0 }}>
@@ -1308,10 +1489,11 @@ async function doExport(type) {
                   {currentView === 'complaints' ? 'No records found.' : 'No feedbacks found.'}
                 </td></tr>
               ) : currentView === 'complaints' ? (
-                currentFilteredRecords.map(r => {
+                currentFilteredRecords.map((r, idx) => {
                   const dateObj = new Date(r.created_at);
                   const dateStr = dateObj.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
                   const timeStr = dateObj.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
+                  const displayQueueNumber = (currentPage - 1) * itemsPerPage + idx + 1;
                   return (
                     <tr key={r.id} className={r.is_priority ? 'priority-row' : ''}>
                       <td style={{ textAlign: 'center' }}>
@@ -1322,10 +1504,18 @@ async function doExport(type) {
                           style={{ width: 15, height: 15, cursor: 'pointer' }}
                         />
                       </td>
-                      <td>{dateStr}</td>
+                     <td>{dateStr}</td>
                       <td>{timeStr}</td>
-                      <td style={{ fontWeight: 500 }}>{r.ccd_no ? r.ccd_no.split('-').pop() : ''}</td>
-                      <td>
+                        <td style={{ fontWeight: 500 }}>
+                          <CcdNoInput
+                            defaultValue={r.ccd_no ? String(parseInt(r.ccd_no.split('-').pop(), 10)) : ''}
+                            recordId={r.id}
+                            totalCount={filteredRecords.length}
+                            onReorder={updateCcdPosition}
+                            showToast={showToast}
+                          />
+                        </td>
+                        <td>
                         <div style={{ fontWeight: 500 }}>{r.full_name}</div>
                         {r.isActionable === 'yes' && <div style={{ fontSize: '0.75em', marginTop: 4, color: 'var(--gold)', fontWeight: 'bold' }}>Actionable: {r.caseType || 'N/A'}</div>}
                         {r.isActionable === 'no' && <div style={{ fontSize: '0.75em', marginTop: 4, color: 'var(--text-muted)' }}>Not Actionable</div>}
@@ -1362,6 +1552,12 @@ async function doExport(type) {
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 4 }}></span>
                       </td>
                      <td style={{ textAlign: 'center', position: 'relative' }}>
+                        {isAdmin && (
+                          <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginRight: 6, verticalAlign: 'middle', height: 19 }}>
+                            <button onClick={() => moveQueueOrder(r.id, 'up')} title="Move up" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1, padding: 0, fontSize: '0.7rem', height: 9, display: 'flex', alignItems: 'center' }}>▲</button>
+                            <button onClick={() => moveQueueOrder(r.id, 'down')} title="Move down" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1, padding: 0, fontSize: '0.7rem', height: 9, display: 'flex', alignItems: 'center' }}>▼</button>
+                          </span>
+                        )}
                         <div className="actions-menu-wrap" style={{ position: 'relative', display: 'inline-block' }}>
                           <button
                             className="btn-icon"
@@ -1505,6 +1701,11 @@ async function doExport(type) {
                   <label className="form-label">Date & Time</label>
                   <input type="datetime-local" className="form-input" required
                     value={editForm.created_at} onChange={e => setEditForm(f => ({ ...f, created_at: e.target.value }))} />
+                </div>
+                <div className="form-group full-width">
+                  <label className="form-label">CCD No.</label>
+                  <input type="text" className="form-input" placeholder="Auto-generated if left blank"
+                    value={editForm.ccd_no} onChange={e => setEditForm(f => ({ ...f, ccd_no: e.target.value }))} />
                 </div>
                 <div className="form-group full-width">
                   <label className="form-label">Full Name</label>
