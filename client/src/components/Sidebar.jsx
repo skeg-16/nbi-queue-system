@@ -56,7 +56,7 @@ const ADMIN_NAV_ITEMS = [
 // everyone uses regardless of role.
 const QUICK_ACCESS_ITEMS = [
   { icon: FileEdit, label: 'Register', path: '/register', external: true },
-  { icon: FileText, label: 'Feedback Forms', path: '/csat-f5w9/en', external: true },
+  { icon: FileText, label: 'Feedback Forms', path: '/forms', external: true },
   { icon: Tv, label: 'TV Display', path: '/display', external: true },
 ];
 

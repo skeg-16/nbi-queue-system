@@ -672,6 +672,7 @@ export default function ManageUsers() {
               onChange={(e) => setRoleFilter(e.target.value)}
               style={{ width: 140 }}
             >
+
               <option value="all">All Roles</option>
               <option value="agent">Agent</option>
               <option value="admin">Admin</option>
