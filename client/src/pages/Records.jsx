@@ -379,7 +379,7 @@ function dismissDailyReminder(openExport = false) {
     const term = searchTerm.toLowerCase();
 
     let list = allRecords.filter(r => {
-      if (!r.created_at || !r.created_at.startsWith(viewDateStr)) return false;
+  if (!r.created_at || getViewDateString(new Date(r.created_at)) !== viewDateStr) return false;
 
       if (currentView === 'complaints') {
         if (filterStatus && r.status !== filterStatus) return false;
@@ -455,8 +455,7 @@ function dismissDailyReminder(openExport = false) {
   useEffect(() => {
     if (currentView !== 'complaints') return;
     if (openTabs.length === 0 && allRecords.length > 0) {
-      const recordDates = Array.from(new Set(allRecords.filter(r => r.created_at).map(r => r.created_at.split('T')[0])))
-        .sort((a, b) => b.localeCompare(a));
+    const recordDates = Array.from(new Set(allRecords.filter(r => r.created_at).map(r => getViewDateString(new Date(r.created_at)))))        .sort((a, b) => b.localeCompare(a));
       setOpenTabs(recordDates.slice(0, 5));
     }
   }, [allRecords, currentView, openTabs.length]);
@@ -485,8 +484,7 @@ function dismissDailyReminder(openExport = false) {
     const daysInMonth = new Date(calDateObj.getFullYear(), calDateObj.getMonth() + 1, 0).getDate();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const recordDates = new Set(allRecords.filter(r => r.created_at).map(r => r.created_at.split('T')[0]));
-
+    const recordDates = new Set(allRecords.filter(r => r.created_at).map(r => getViewDateString(new Date(r.created_at))));
     const cells = [];
     for (let i = 0; i < firstDay; i++) {
       cells.push(<div key={'e' + i} className="cal-day empty" />);
@@ -766,8 +764,7 @@ async function submitEdit(e) {
       } else {
         if (!payload.ccd_no || !payload.ccd_no.trim()) {
           const dateForSeq = created_at ? created_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
-          const sameDateRecords = allRecords.filter(r => r.created_at && r.created_at.split('T')[0] === dateForSeq);
-          let maxSeq = 0;
+          const sameDateRecords = allRecords.filter(r => r.created_at && getViewDateString(new Date(r.created_at)) === dateForSeq);          let maxSeq = 0;
           sameDateRecords.forEach(r => {
             if (r.ccd_no) {
               const parts = r.ccd_no.split('-');
@@ -1000,10 +997,19 @@ async function openRemarks(id) {
     try {
       const response = await fetch(`/api/records/${deleteId}`, { method: 'DELETE' });
       const result = await response.json();
+      
       if (result.success) {
         showToast('Record deleted successfully', false, 'success');
         setModalDelete(false);
+        
+        const remainingRecords = filteredRecords.filter(x => x.id !== deleteId);
+        
         setAllRecords(recs => recs.filter(x => x.id !== deleteId));
+        
+        if (remainingRecords.length > 0) {
+          await applyReorder(remainingRecords);
+        }
+        
       } else {
         showToast('Failed to delete record. Please try again.', true);
       }
@@ -1035,8 +1041,16 @@ async function openRemarks(id) {
       const results = await Promise.all(ids.map(id => fetch(`/api/records/${id}`, { method: 'DELETE' })));
       const allOk = results.every(res => res.ok);
       setModalBulkDelete(false);
+      
+      const remainingRecords = filteredRecords.filter(r => !selectedRows.has(r.id));
+      
       setAllRecords(recs => recs.filter(r => !selectedRows.has(r.id)));
       setSelectedRows(new Set());
+      
+      if (remainingRecords.length > 0) {
+        await applyReorder(remainingRecords);
+      }
+      
       showToast(allOk ? `${ids.length} record(s) deleted successfully` : 'Some records failed to delete.', !allOk, allOk ? 'success' : 'error');
     } catch (err) {
       showToast('Server error. Bulk deletion failed.', true);
@@ -1052,8 +1066,7 @@ async function openRemarks(id) {
     const { start, end } = exportRange;
     if (!start || !end) return [];
     return allRecords
-      .filter(r => r.created_at && r.created_at.split('T')[0] >= start && r.created_at.split('T')[0] <= end)
-      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+.filter(r => r.created_at && getViewDateString(new Date(r.created_at)) >= start && getViewDateString(new Date(r.created_at)) <= end)      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   }
 
   async function fetchRemarksForExport(recordsList) {
