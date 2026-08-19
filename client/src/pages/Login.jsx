@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
-  const [mode, setMode] = useState('login'); // 'login' | 'forgot-request' | 'forgot-verify'
+  const [mode, setMode] = useState('login'); // 'login' | 'forgot-username' | 'forgot-email' | 'forgot-otp' | 'forgot-newpass'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,18 +15,29 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Forgot password (request) state
+  // Forgot password flow state
   const [fpUsername, setFpUsername] = useState('');
-
-  // Forgot password (verify code) state
-  const [vUsername, setVUsername] = useState('');
+  const [fpRole, setFpRole] = useState(null); // 'agent' | 'admin', detected after username step
+  const [fpEmail, setFpEmail] = useState('');
   const [otp, setOtp] = useState('');
+  const [otpSecondsLeft, setOtpSecondsLeft] = useState(0);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
 
   const resetMessages = () => { setError(''); setInfo(''); setLocked(false); };
 
+  useEffect(() => {
+    if (mode !== 'forgot-otp' || otpSecondsLeft <= 0) return;
+    const timer = setInterval(() => setOtpSecondsLeft(s => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(timer);
+  }, [mode, otpSecondsLeft]);
+
+  const formatOtpTimer = (secs) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     resetMessages();
@@ -61,13 +72,13 @@ export default function Login() {
     }
   };
 
-  const handleForgotRequest = async (e) => {
+  const handleForgotUsername = async (e) => {
     e.preventDefault();
     resetMessages();
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const res = await fetch('/api/auth/forgot-password/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: fpUsername })
@@ -75,12 +86,51 @@ export default function Login() {
       const data = await res.json();
 
       if (!data.success) {
-        setError(data.error || 'Unable to send request.');
+        setError(data.error || 'Username not found.');
         setLoading(false);
         return;
       }
 
-      setInfo(data.message || 'Your request has been sent to the administrator.');
+      setFpRole(data.role);
+      setLoading(false);
+
+      if (data.role === 'admin') {
+        // Admin: OTP is sent straight to the registered admin email
+        setInfo(data.message || 'A reset code has been sent to your registered email.');
+        setOtpSecondsLeft(180);
+        setMode('forgot-otp');
+      } else {
+        // Agent: ask for email first, OTP sent after that step
+        setMode('forgot-email');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleForgotEmail = async (e) => {
+    e.preventDefault();
+    resetMessages();
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/forgot-password/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: fpUsername, email: fpEmail })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setError(data.error || 'Unable to send code to that email.');
+        setLoading(false);
+        return;
+      }
+
+      setInfo(data.message || 'A reset code has been sent to your email.');
+      setOtpSecondsLeft(180);
+      setMode('forgot-otp');
       setLoading(false);
     } catch (err) {
       setError('Network error. Please try again.');
@@ -88,7 +138,64 @@ export default function Login() {
     }
   };
 
-  const handleForgotVerify = async (e) => {
+  const handleResendOtp = async () => {
+    resetMessages();
+    setLoading(true);
+    try {
+      const endpoint = fpRole === 'admin' ? '/api/auth/forgot-password/init' : '/api/auth/forgot-password/send-otp';
+      const body = fpRole === 'admin' ? { username: fpUsername } : { username: fpUsername, email: fpEmail };
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setError(data.error || 'Unable to resend code.');
+        setLoading(false);
+        return;
+      }
+
+      setOtp('');
+      setOtpSecondsLeft(180);
+      setInfo(data.message || 'A new code has been sent.');
+      setLoading(false);
+    } catch (err) {
+      setError('Network error. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    resetMessages();
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/forgot-password/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: fpUsername, otp })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setError(data.error || 'Invalid or expired code.');
+        setLoading(false);
+        return;
+      }
+
+      setMode('forgot-newpass');
+      setLoading(false);
+    } catch (err) {
+      setError('Network error. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
     e.preventDefault();
     resetMessages();
 
@@ -106,7 +213,7 @@ export default function Login() {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: vUsername, otp, newPassword })
+        body: JSON.stringify({ username: fpUsername, otp, newPassword })
       });
       const data = await res.json();
 
@@ -116,15 +223,9 @@ export default function Login() {
         return;
       }
 
-      setInfo('Password reset successfully. You may now log in.');
-      setMode('login');
-      setUsername(vUsername);
-      setPassword('');
-      setVUsername('');
-      setOtp('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setLoading(false);
+      // Auto-login straight to dashboard after a successful reset
+      login(data.token, data.user);
+      navigate('/dashboard');
     } catch (err) {
       setError('Network error. Please try again.');
       setLoading(false);
@@ -135,7 +236,8 @@ export default function Login() {
     resetMessages();
     setMode('login');
     setFpUsername('');
-    setVUsername('');
+    setFpRole(null);
+    setFpEmail('');
     setOtp('');
     setNewPassword('');
     setConfirmPassword('');
@@ -366,7 +468,7 @@ export default function Login() {
                   </label>
 
                   <div className="login-forgot-row">
-                    <button type="button" className="login-link-btn" onClick={() => { resetMessages(); setMode('forgot-request'); }}>
+                    <button type="button" className="login-link-btn" onClick={() => { resetMessages(); setMode('forgot-username'); }}>
                       Forgot Password?
                     </button>
                   </div>
@@ -375,62 +477,70 @@ export default function Login() {
                     {loading ? 'LOGGING IN...' : 'LOG IN'}
                   </button>
 
-                  <div className="login-text-link-center">
-                    <button type="button" className="login-underline-btn" onClick={() => { resetMessages(); setMode('forgot-verify'); }}>
-                      Already have a reset code?
-                    </button>
-                  </div>
-
                   <div className="login-divider"><span>Secure Access</span></div>
                 </form>
               </>
             )}
 
-            {/* ===== FORGOT PASSWORD — REQUEST ===== */}
-            {mode === 'forgot-request' && (
+            {/* ===== FORGOT PASSWORD — STEP 1: USERNAME ===== */}
+            {mode === 'forgot-username' && (
               <>
                 <div className="login-form-header">
                   <h2>Reset your password</h2>
-                  <p>Your request will be sent to an administrator. You'll be given a reset code once it's approved.</p>
+                  <p>Enter your username to continue.</p>
                 </div>
 
-                <form onSubmit={handleForgotRequest}>
-                  <label className="login-label">
+                <form onSubmit={handleForgotUsername}>
+                  <label className="login-label" style={{ marginBottom: 20 }}>
                     <span>USERNAME</span>
                     <input type="text" className="login-input" value={fpUsername} onChange={(e) => setFpUsername(e.target.value)} required autoFocus />
                   </label>
 
                   <button type="submit" className="login-submit-btn" disabled={loading}>
-                    {loading ? 'SENDING REQUEST...' : 'SEND REQUEST'}
+                    {loading ? 'CHECKING...' : 'CONTINUE'}
                   </button>
 
                   <button type="button" className="login-secondary-btn" onClick={backToLogin}>
                     Back to Login
                   </button>
-
-                  <div className="login-text-link-center">
-                    <button type="button" className="login-link-btn" onClick={() => { resetMessages(); setMode('forgot-verify'); }}>
-                      Already have a code? Enter it here
-                    </button>
-                  </div>
                 </form>
               </>
             )}
 
-            {/* ===== FORGOT PASSWORD — VERIFY CODE ===== */}
-            {mode === 'forgot-verify' && (
+            {/* ===== FORGOT PASSWORD — STEP 2 (AGENT ONLY): EMAIL ===== */}
+            {mode === 'forgot-email' && (
+              <>
+                <div className="login-form-header">
+                  <h2>Enter your email</h2>
+                  <p>We'll send a reset code to this email address.</p>
+                </div>
+
+                <form onSubmit={handleForgotEmail}>
+                  <label className="login-label" style={{ marginBottom: 20 }}>
+                    <span>EMAIL</span>
+                    <input type="email" className="login-input" value={fpEmail} onChange={(e) => setFpEmail(e.target.value)} required autoFocus />
+                  </label>
+
+                  <button type="submit" className="login-submit-btn" disabled={loading}>
+                    {loading ? 'SENDING CODE...' : 'SEND CODE'}
+                  </button>
+
+                  <button type="button" className="login-secondary-btn" onClick={backToLogin}>
+                    Back to Login
+                  </button>
+                </form>
+              </>
+            )}
+
+            {/* ===== FORGOT PASSWORD — STEP 3: VERIFY OTP ===== */}
+            {mode === 'forgot-otp' && (
               <>
                 <div className="login-form-header">
                   <h2>Enter reset code</h2>
-                  <p>Enter the code your administrator sent to your email.</p>
+                  <p>{fpRole === 'admin' ? 'Enter the code sent to your registered email.' : 'Enter the code sent to your email.'}</p>
                 </div>
 
-                <form onSubmit={handleForgotVerify}>
-                  <label className="login-label">
-                    <span>USERNAME</span>
-                    <input type="text" className="login-input" value={vUsername} onChange={(e) => setVUsername(e.target.value)} required autoFocus />
-                  </label>
-
+                <form onSubmit={handleVerifyOtp}>
                   <label className="login-label">
                     <span>RESET CODE</span>
                     <input
@@ -440,9 +550,58 @@ export default function Login() {
                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       required
                       maxLength={6}
+                      autoFocus
                     />
                   </label>
 
+                  <div style={{ textAlign: 'center', marginBottom: 20, fontSize: 12.5 }}>
+                    {otpSecondsLeft > 0 ? (
+                      <span style={{ color: 'var(--text-muted)' }}>
+                        Code expires in {formatOtpTimer(otpSecondsLeft)}
+                      </span>
+                    ) : (
+                      <span style={{ color: '#c23f3f' }}>Code expired</span>
+                    )}
+                    {' · '}
+                    <button
+                      type="button"
+                      className="login-link-btn"
+                      onClick={handleResendOtp}
+                      disabled={loading || otpSecondsLeft > 0}
+                      style={otpSecondsLeft > 0 ? { color: 'var(--text-muted)', cursor: 'default' } : undefined}
+                    >
+                      Resend code
+                    </button>
+                  </div>
+
+                  <button type="submit" className="login-submit-btn" disabled={loading}>
+                    {loading ? 'VERIFYING...' : 'VERIFY CODE'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="login-secondary-btn"
+                    onClick={() => { resetMessages(); setOtp(''); setMode(fpRole === 'admin' ? 'forgot-username' : 'forgot-email'); }}
+                  >
+                    Back
+                  </button>
+
+                  <button type="button" className="login-secondary-btn" onClick={backToLogin}>
+                    Back to Login
+                  </button>
+                </form>
+              </>
+            )}
+
+            {/* ===== FORGOT PASSWORD — STEP 4: NEW PASSWORD ===== */}
+            {mode === 'forgot-newpass' && (
+              <>
+                <div className="login-form-header">
+                  <h2>Create new password</h2>
+                  <p>Choose a new password for your account.</p>
+                </div>
+
+                <form onSubmit={handleResetPassword}>
                   <label className="login-label">
                     <span>NEW PASSWORD</span>
                     <div className="login-input-wrap">
@@ -454,6 +613,7 @@ export default function Login() {
                         onChange={(e) => setNewPassword(e.target.value)}
                         required
                         minLength={6}
+                        autoFocus
                       />
                       <button type="button" className="login-eye-btn" onClick={() => setShowNewPassword(s => !s)} tabIndex={-1}>
                         {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}

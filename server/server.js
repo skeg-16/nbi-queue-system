@@ -787,7 +787,9 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-app.post('/api/auth/forgot-password', async (req, res) => {
+// Step 1: check username, detect role. Admin gets OTP sent immediately to their
+// registered email. Agent proceeds to the email-entry step (no admin approval needed).
+app.post('/api/auth/forgot-password/init', async (req, res) => {
     try {
         const { username } = req.body;
         if (!username) {
@@ -796,32 +798,109 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
         const { data: user, error } = await supabase
             .from('users')
-            .select('id, email, full_name')
+            .select('id, email, full_name, role')
             .eq('username', username)
             .maybeSingle();
 
         if (error || !user) {
-            // Wag i-reveal kung existing ba yung username o wala
-            return res.json({ success: true, message: 'If this account exists, a request has been sent to the administrator.' });
+            return res.status(404).json({ success: false, error: 'Username not found' });
         }
 
-        const { data: existingReq } = await supabase
-            .from('account_requests')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('type', 'forgot_password')
-            .eq('status', 'pending')
+        if (user.role === 'admin') {
+            if (!user.email) {
+                return res.status(400).json({ success: false, error: 'No registered email on file for this account. Please contact system support.' });
+            }
+
+            const otp = generateOtp();
+            const expires = new Date(Date.now() + 3 * 60 * 1000).toISOString();
+
+            await supabase
+                .from('users')
+                .update({ reset_otp: otp, reset_otp_expires: expires })
+                .eq('id', user.id);
+
+            await sendOtpEmail(user.email, user.full_name, otp);
+            auditLog('Forgot Password', `OTP sent to registered email for admin ${username}`);
+
+            return res.json({ success: true, role: 'admin', message: `A reset code has been sent to ${maskEmail(user.email)}.` });
+        }
+
+        // Agent: role confirmed, frontend will ask for email next
+        res.json({ success: true, role: 'agent' });
+    } catch (err) {
+        console.error('Forgot password init error:', err);
+        res.status(500).json({ success: false, error: 'Failed to process request' });
+    }
+});
+
+// Step 2 (agent only): take the email they typed in, send OTP there, and save it
+// on the account for next time.
+app.post('/api/auth/forgot-password/send-otp', async (req, res) => {
+    try {
+        const { username, email } = req.body;
+        if (!username || !email) {
+            return res.status(400).json({ success: false, error: 'Username and email are required' });
+        }
+
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, full_name, role')
+            .eq('username', username)
             .maybeSingle();
 
-        if (!existingReq) {
-            await supabase.from('account_requests').insert([{ user_id: user.id, type: 'forgot_password', status: 'pending' }]);
-            auditLog('Forgot Password', `Password reset requested by ${username}, forwarded to admin`);
+        if (error || !user) {
+            return res.status(404).json({ success: false, error: 'Username not found' });
         }
 
-        res.json({ success: true, message: 'Your request has been sent to the administrator. You will be given a reset code once approved.' });
+        const otp = generateOtp();
+        const expires = new Date(Date.now() + 3 * 60 * 1000).toISOString();
+
+        await supabase
+            .from('users')
+            .update({ reset_otp: otp, reset_otp_expires: expires, email })
+            .eq('id', user.id);
+
+        await sendOtpEmail(email, user.full_name, otp);
+        auditLog('Forgot Password', `OTP sent to ${email} for agent ${username}`);
+
+        res.json({ success: true, message: 'A reset code has been sent to your email.' });
     } catch (err) {
-        console.error('Forgot password error:', err);
-        res.status(500).json({ success: false, error: 'Failed to process request' });
+        console.error('Forgot password send-otp error:', err);
+        res.status(500).json({ success: false, error: 'Failed to send code' });
+    }
+});
+
+// Step 3: verify the OTP without consuming it yet (final consumption happens on
+// the actual password reset below).
+app.post('/api/auth/forgot-password/verify-otp', async (req, res) => {
+    try {
+        const { username, otp } = req.body;
+        if (!username || !otp) {
+            return res.status(400).json({ success: false, error: 'Code is required' });
+        }
+
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, reset_otp, reset_otp_expires')
+            .eq('username', username)
+            .maybeSingle();
+
+        if (error || !user || !user.reset_otp) {
+            return res.status(400).json({ success: false, error: 'Invalid or expired code' });
+        }
+
+        if (user.reset_otp !== otp) {
+            return res.status(400).json({ success: false, error: 'Invalid or expired code' });
+        }
+
+        if (new Date(user.reset_otp_expires) < new Date()) {
+            return res.status(400).json({ success: false, error: 'Code has expired. Please request a new one.' });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Verify OTP error:', err);
+        res.status(500).json({ success: false, error: 'Failed to verify code' });
     }
 });
 
@@ -851,14 +930,35 @@ app.post('/api/auth/reset-password', async (req, res) => {
         }
 
         const hash = await bcrypt.hash(newPassword, 10);
-        const { error: updateErr } = await supabase
+        const { data: updatedUser, error: updateErr } = await supabase
             .from('users')
-            .update({ password_hash: hash, is_first_login: false, reset_otp: null, reset_otp_expires: null })
-            .eq('id', user.id);
+            .update({ password_hash: hash, is_first_login: false, reset_otp: null, reset_otp_expires: null, failed_login_attempts: 0, is_locked: false })
+            .eq('id', user.id)
+            .select()
+            .single();
         if (updateErr) throw updateErr;
 
         auditLog('Reset Password', `Password reset via OTP for username ${username}`);
-        res.json({ success: true });
+
+        const token = jwt.sign(
+            { id: updatedUser.id, username: updatedUser.username, role: updatedUser.role, full_name: updatedUser.full_name },
+            process.env.JWT_SECRET,
+            { expiresIn: '8h' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: updatedUser.id,
+                username: updatedUser.username,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                full_name: updatedUser.full_name,
+                is_first_login: updatedUser.is_first_login,
+                avatar_seed: updatedUser.avatar_seed
+            }
+        });
     } catch (err) {
         console.error('Reset password error:', err);
         res.status(500).json({ success: false, error: 'Failed to reset password' });
