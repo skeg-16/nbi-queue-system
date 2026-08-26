@@ -91,6 +91,10 @@ export default function StaffController() {
     socket.on('disconnect', onDisconnect);
     socket.on('staff_update', onStaffUpdate);
 
+    if (socket.connected) {
+      socket.emit('request_staff_update');
+    }
+
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);

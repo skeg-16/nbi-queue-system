@@ -1604,6 +1604,10 @@ io.on('connection', async (socket) => {
         }
     });
 
+    socket.on('request_staff_update', async () => {
+        await broadcastStaffUpdate(); // O kung anuman ang function mo na nagpapadala ng data
+    });
+
     // Handle "Next" logic with strict absolute priority algorithm
     socket.on('next', async () => {
         try {
