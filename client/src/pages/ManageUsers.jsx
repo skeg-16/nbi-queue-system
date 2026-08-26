@@ -230,7 +230,7 @@ export default function ManageUsers() {
     const newFieldErrors = {};
     if (!username.trim()) newFieldErrors.username = true;
     if (!fullName.trim()) newFieldErrors.fullName = true;
-    if (role === 'admin' && !email.trim()) newFieldErrors.email = true;
+    
     if (Object.keys(newFieldErrors).length > 0) {
       setFieldErrors(newFieldErrors);
       setError('Please fill in all required fields.');
@@ -265,14 +265,8 @@ export default function ManageUsers() {
         return;
       }
 
-      setCreatedInfo({ username: data.data.username, password: data.defaultPassword, emailSent: data.emailSent, role });
-      showToast(
-        data.emailSent
-          ? "Account created! Login credentials were sent to the user's email."
-          : role === 'admin'
-            ? 'Account created! Email could not be sent — check the credentials below.'
-            : 'Account created! Share these credentials with the agent directly.'
-      );
+      setCreatedInfo({ username: data.data.username, password: data.defaultPassword, role });
+      showToast('Account created! Share these credentials with the user directly.');
       setUsername('');
       setFullName('');
       setEmail('');
@@ -812,7 +806,7 @@ export default function ManageUsers() {
         </div>
       )}
       
-      {createdInfo && !createdInfo.emailSent && (
+      {createdInfo && (
         <div className="mu-modal-overlay" onClick={() => setCreatedInfo(null)}>
           <div className="mu-modal" onClick={e => e.stopPropagation()} style={{ width: 380 }}>
             <div className="mu-modal-header">
@@ -820,9 +814,7 @@ export default function ManageUsers() {
               <button className="mu-modal-close" onClick={() => setCreatedInfo(null)}><X size={18} /></button>
             </div>
             <p style={{ color: 'var(--text-main)', fontSize: 13, margin: '0 0 14px 0' }}>
-              {createdInfo.role === 'admin'
-                ? 'Email could not be sent — give these credentials to the user manually:'
-                : 'Give these credentials to the agent directly (no email needed):'}
+              Give these credentials to the user directly (no email needed):
             </p>
             <div className="mu-cred-box">
               Username: <strong>{createdInfo.username}</strong><br />
@@ -891,16 +883,9 @@ export default function ManageUsers() {
                   <input type="text" className={`mu-input ${fieldErrors.fullName ? 'error' : ''}`} value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={30} />
                   {fieldErrors.fullName && <p className="mu-field-error">Please enter a full name</p>}
                 </label>
-                {role === 'admin' && (
-                  <label>
-                    <span>Email *</span>
-                    <input type="email" className={`mu-input ${fieldErrors.email ? 'error' : ''}`} value={email} onChange={(e) => setEmail(e.target.value)} maxLength={50} />
-                    {fieldErrors.email && <p className="mu-field-error">Please enter a valid email</p>}
-                  </label>
-                )}
                 <label>
                   <span>Role *</span>
-                    <select className="mu-select" value={role} onChange={(e) => { setRole(e.target.value); if (e.target.value === 'agent') setEmail(''); }}>
+                  <select className="mu-select" value={role} onChange={(e) => setRole(e.target.value)}>
                     <option value="agent">Agent</option>
                     <option value="admin">Admin</option>
                   </select>
