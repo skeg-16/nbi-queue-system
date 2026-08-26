@@ -1248,16 +1248,16 @@ async function doExport(type) {
 
         <div className="filter-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div className="search-filter-group" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', flex: 1 }}>
-  <input type="text" className="form-input search-input" placeholder="Search records..." style={{ flex: 1, minWidth: '200px', maxWidth: '300px' }}
+  <input type="text" className="form-input search-input" placeholder="Search records..." style={{ flex: 1, minWidth: '200px', maxWidth: '300px', background: 'transparent', color: 'var(--text-main)' }}
     value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
   {currentView === 'complaints' && (
-    <select className="form-select" style={{ width: 160, flexShrink: 0 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-      <option value="">All Statuses</option>
-      <option value="Waiting">Waiting</option>
-      <option value="Serving">Serving</option>
-      <option value="Served">Served</option>
-      <option value="Skipped">Skipped</option>
-      <option value="No-show">No-show</option>
+    <select className="form-select" style={{ width: 160, flexShrink: 0, background: 'transparent', color: 'var(--text-main)' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+      <option value="" style={{ color: '#000' }}>All Statuses</option>
+      <option value="Waiting" style={{ color: '#000' }}>Waiting</option>
+      <option value="Serving" style={{ color: '#000' }}>Serving</option>
+      <option value="Served" style={{ color: '#000' }}>Served</option>
+      <option value="Skipped" style={{ color: '#000' }}>Skipped</option>
+      <option value="No-show" style={{ color: '#000' }}>No-show</option>
     </select>
   )}
 </div>
