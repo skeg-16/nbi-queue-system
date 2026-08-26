@@ -22,9 +22,7 @@ export default function StaffController() {
     logout();
     navigate('/login');
   };
-  // Load any cached queue state so switching tabs and coming back
-  // shows the last known data instantly instead of a blank screen
-  // while the socket reconnects and fetches fresh data.
+  
   const CACHE_KEY = 'nbi_staff_queue_cache';
   const cached = (() => {
     try {
@@ -47,9 +45,7 @@ export default function StaffController() {
   const [skipModalOpen, setSkipModalOpen] = useState(false);
   const [onBreak, setOnBreak] = useState(false);
   const [personToServeId, setPersonToServeId] = useState(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState({});
-
 
   useEffect(() => {
     if (!socket) return;
@@ -78,7 +74,6 @@ export default function StaffController() {
       setStats(nextStats);
       setCycleLabel(nextCycleLabel);
 
-      // Cache the latest snapshot so it survives a tab switch / socket reconnect
       try {
         sessionStorage.setItem(CACHE_KEY, JSON.stringify({
           currentlyServing: nextCurrentlyServing,
@@ -88,7 +83,7 @@ export default function StaffController() {
           cycleLabel: nextCycleLabel
         }));
       } catch {
-        // sessionStorage full or unavailable — ignore, caching is best-effort
+        // Handle cache failure silently
       }
     };
 
@@ -185,31 +180,40 @@ export default function StaffController() {
   const isQueueEmpty = waitingList.length === 0;
   const hasCurrentlyServing = !!currentlyServing;
 
-if (!user) return null;
+  if (!user) return null;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>      <Sidebar
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+      <Sidebar
         user={user}
         activePath={location.pathname}
         onNavigate={navigate}
         onLogout={handleLogout}
       />
-      <div className="staff-body" style={{ flex: 1, minWidth: 0 }}>
+      <div className="staff-body">
       <style>{`
-        html, body { background-color: var(--bg-color) !important; margin: 0; height: 100%; overflow: hidden; }
+        /* FORCES BROWSER WINDOW TO NEVER SCROLL - FIXES DOUBLE SCROLLBAR */
+        html, body, #root { 
+          background-color: var(--bg-color) !important; 
+          margin: 0; 
+          padding: 0;
+          height: 100%; 
+          width: 100%;
+          overflow: hidden !important; 
+        }
+
         .staff-body {
           background: var(--bg-color);
-          height: 100vh;
           margin: 0;
           padding: 0;
           display: flex;
           flex-direction: column;
           flex: 1;
-          width: 100%;
+          height: 100%;
           font-family: 'Inter', sans-serif;
           color: var(--text-main);
           box-sizing: border-box;
-          overflow: hidden;
+          overflow: hidden; /* Desktop view keeps it locked in */
         }
         .staff-body *, .staff-body *::before, .staff-body *::after { box-sizing: border-box; }
 
@@ -233,7 +237,7 @@ if (!user) return null;
         .dashboard-layout { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; gap: 1rem; align-items: stretch; flex: 1; min-height: 0; }
         .left-column { display: flex; flex-direction: column; gap: 0.7rem; min-height: 0; height: 100%; }
         .right-column { display: flex; flex-direction: column; height: 100%; gap: 0.7rem; min-height: 0; }
-
+        
         .dashboard-card {
           background: var(--panel-bg); border: 1px solid var(--border-color);
           border-radius: 16px; padding: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
@@ -295,7 +299,6 @@ if (!user) return null;
         .stat-served { color: #2ecc71 !important; }
         .stat-skipped { color: #e74c3c !important; }
 
-        .waiting-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 0.8rem; padding-right: 10px; min-height: 0; }
         .waiting-list::-webkit-scrollbar { width: 8px; }
         .waiting-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
         .waiting-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
@@ -346,33 +349,59 @@ if (!user) return null;
         .btn-confirm-danger { flex: 1; padding: 1rem; border-radius: 8px; border: none; background: #e74c3c; color: white; cursor: pointer; font-weight: 800; }
         .btn-confirm-success { background: #2ecc71 !important; }
 
-        .mobile-queue-toggle { display: none; background: rgba(243, 156, 18, 0.1); border: 1px solid rgba(243, 156, 18, 0.3); color: #f39c12; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; align-items: center; gap: 0.5rem; margin-right: auto; }
-        .mobile-queue-close { display: none; }
-
         @media (max-width: 1200px) {
           .staff-container { padding: 1.5rem; }
           .dashboard-layout { grid-template-columns: 55% 45%; gap: 1rem; }
           .status-number { font-size: 4rem; }
         }
 
+        /* ---- SCROLLABLE MOBILE FIX ---- */
         @media (max-width: 900px) {
-          .dashboard-layout { grid-template-columns: 1fr; grid-template-rows: auto; gap: 1.5rem; }
-          .left-column { height: auto; }
-          .serving-card, .call-buttons-row, .secondary-controls, .stats-row { flex: none; }
-          .right-column { height: auto; min-height: 400px; }
-          .waiting-card { flex: none; }
-          .skipped-card { flex: none; max-height: 320px; }
-          .waiting-list { max-height: 450px; }
-          .stats-row { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+          .staff-body { 
+            overflow-y: auto !important; /* Only this body is allowed to scroll */
+            overflow-x: hidden;
+            height: 100%; 
+          }
+          .staff-container { 
+            overflow: visible !important; 
+            height: auto; 
+            min-height: max-content; 
+            padding-bottom: 90px; /* Optional padding so bottom nav doesn't cover last item */
+          }
+          .dashboard-layout { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1.5rem; 
+            height: auto; 
+          }
+          .left-column, .right-column { 
+            height: auto; 
+            min-height: 0; 
+          }
+          .serving-card, .call-buttons-row, .secondary-controls, .stats-row { 
+            flex: none; 
+          }
+          /* Removed internal scrolls for cards in mobile so they rely on the main body scroll */
+          .waiting-card, .skipped-card { 
+            flex: none; 
+            height: auto; 
+            max-height: none !important; 
+            overflow: visible !important;
+          }
+          .waiting-card .waiting-list, .skipped-card .waiting-list { 
+            max-height: none !important;
+            overflow: visible !important;
+          }
+          .stats-row { 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 1rem; 
+          }
           .status-number { font-size: 4.5rem; }
-          .secondary-controls { gap: 0.8rem; }
         }
 
         @media (max-width: 640px) {
-          .staff-container { padding: 1.5rem 1rem; }
-          .dashboard-layout { grid-template-columns: 1fr; gap: 1.5rem; }
-          .left-column { gap: 1rem; }
-          .dashboard-card { padding: 1.5rem; }
+          .staff-container { padding: 1rem 0.8rem; padding-bottom: 90px; }
+          .dashboard-card { padding: 1.2rem; }
           .btn-next { min-height: 90px; padding: 1rem; }
           .secondary-controls { grid-template-columns: 1fr; gap: 0.8rem; }
           .btn-secondary { min-height: 56px; font-size: 1.1rem; padding: 1rem; }
@@ -385,17 +414,10 @@ if (!user) return null;
           .btn-serve-now { width: 100%; text-align: center; }
           .staff-nav { justify-content: flex-start; padding-left: 1rem; }
           .nav-links-container { justify-content: flex-start; gap: 1rem; }
-          .mobile-queue-toggle { display: flex; }
-          .right-column {
-            position: fixed; top: 0; right: ${mobileOpen ? "0" : "-100%"}; width: 100%; height: 100vh;
-            background: var(--bg-color); z-index: 1000; padding: 1.5rem; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-y: auto; box-shadow: -5px 0 30px rgba(0,0,0,0.4);
-          }
-          .mobile-queue-close { display: flex; align-self: flex-end; background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); font-size: 1.2rem; cursor: pointer; margin-bottom: 1rem; padding: 0.5rem; border-radius: 8px; width: 40px; height: 40px; align-items: center; justify-content: center; }
         }
 
         @media (max-width: 480px) {
-          .staff-container { padding: 1rem 0.5rem; }
+          .staff-container { padding: 1rem 0.5rem; padding-bottom: 90px; }
           .dashboard-card { padding: 1rem; }
           .status-number { font-size: 3.5rem; }
           .status-name { font-size: 1.5rem; }
@@ -405,10 +427,7 @@ if (!user) return null;
           .stat-value { font-size: 1.2rem; }
           .stat-card { padding: 0.6rem 0.4rem; }
           .staff-nav { padding: 0.5rem; }
-          .mobile-queue-toggle { font-size: 0.9rem; padding: 0.4rem 0.8rem; }
           .nav-links-container { gap: 0.5rem; }
-
-          /* Call Next / Call Skipped: i-stack patayo imbes na magkatabi, para hindi masikip */
           .call-buttons-row { flex-direction: column; }
           .btn-next .btn-next-label { font-size: 1.3rem !important; }
           .status-display .priority-badge { font-size: 0.75rem; padding: 0.25rem 0.7rem; }
@@ -416,7 +435,6 @@ if (!user) return null;
       `}</style>
 
       <div className="staff-nav">
-        <button className="mobile-queue-toggle" onClick={() => setMobileOpen(true)}>☰ Queue</button>
         <div className="nav-links-container" />
       </div>
 
@@ -480,8 +498,6 @@ if (!user) return null;
           </div>
 
           <div className="right-column">
-            <button className="mobile-queue-close" onClick={() => setMobileOpen(false)}>✕</button>
-
             <div className="dashboard-card waiting-card">
               <div className="card-label" style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.5rem" }}>
                 <span>Queue Preview</span>

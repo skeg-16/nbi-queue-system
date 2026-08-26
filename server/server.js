@@ -1552,8 +1552,7 @@ io.on('connection', async (socket) => {
                 .eq('status', 'Waiting')
                 .like('ccd_no', `CCD-${todayStr}-%`);
 
-            const sortedList = getSortedList(waitingList || [], state.priorityServedCount);
-
+            const sortedList = getSortedList(waitingList || [], state.regularServedCount);
             let position = -1;
             if (data && data.length > 0) {
                 position = sortedList.findIndex(r => r.id === data[0].id);
@@ -1945,7 +1944,7 @@ io.on('connection', async (socket) => {
 
         state.currentlyServing = null;
         state.recentServed = [];
-        state.priorityServedCount = 0;
+        state.regularServedCount = 0;
 
         await broadcastStaffUpdate();
         broadcastDisplayUpdate(false);
