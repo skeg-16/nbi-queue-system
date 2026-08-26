@@ -193,6 +193,9 @@ const emailTransporter = nodemailer.createTransport({
     port: 465,
     secure: true,
     family: 4,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -1148,7 +1151,10 @@ app.post('/api/users', verifyToken, requireAdmin, async (req, res) => {
 
         let emailSent = false;
         if (finalEmail) {
-            const emailResult = await sendAccountCredentialsEmail(finalEmail, full_name, username, defaultPassword, role);
+            const emailResult = await Promise.race([
+                sendAccountCredentialsEmail(finalEmail, full_name, username, defaultPassword, role),
+                new Promise((resolve) => setTimeout(() => resolve({ success: false, timedOut: true }), 8000))
+            ]);
             emailSent = emailResult.success;
         }
 

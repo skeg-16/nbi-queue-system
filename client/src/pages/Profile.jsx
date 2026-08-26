@@ -147,6 +147,7 @@ const [avatarStyles, setAvatarStyles] = useState([]);
       setLoading(false);
 
       if (user?.is_first_login) {
+        updateUser({ is_first_login: false });
         setTimeout(() => {
           navigate('/dashboard');
         }, 1200);
@@ -158,6 +159,155 @@ const [avatarStyles, setAvatarStyles] = useState([]);
   };
 
   if (!user) return null;
+
+  if (user.is_first_login) {
+    return (
+      <>
+        <style>{`
+          .fl-body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            padding: 20px;
+            font-family: 'Inter', Arial, sans-serif;
+          }
+          .fl-card {
+            width: 420px;
+            max-width: 100%;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 28px 26px;
+          }
+                    .fl-title { margin: 0 0 6px 0; color: var(--text-main); font-size: 19px; font-weight: 800; }
+          .fl-sub { margin: 0 0 18px 0; color: var(--text-muted); font-size: 12.5px; line-height: 1.5; }
+
+          .pf-alert-error {
+            background: rgba(220,38,38,0.1);
+            border: 1px solid rgba(220,38,38,0.4);
+            color: var(--red);
+            padding: 11px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+          }
+          .pf-alert-success {
+            background: rgba(30,142,90,0.12);
+            border: 1px solid rgba(30,142,90,0.4);
+            color: #1e8e5a;
+            padding: 11px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+          }
+          .pf-field { display: block; margin-bottom: 10px; }
+          .pf-field-label { display: block; color: var(--text-main); font-size: 12px; margin-bottom: 6px; letter-spacing: 0.4px; }
+          .pf-input-wrap { position: relative; }
+          .pf-input {
+            width: 100%;
+            padding: 10px 40px 10px 12px;
+            box-sizing: border-box;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 13.5px;
+            outline: none;
+          }
+          .pf-eye-btn {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px;
+            display: flex; align-items: center;
+          }
+          .pf-eye-btn:hover { color: var(--text-main); }
+          .pf-btn-primary {
+            width: 100%; padding: 11px; background: #F0A500; color: #0b1f4d;
+            border: none; border-radius: 8px; cursor: pointer; font-weight: 700;
+            font-size: 13.5px; margin-bottom: 12px;
+          }
+          .pf-btn-primary:hover { background: #ffb800; }
+          .pf-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+          .pf-btn-logout {
+            width: 100%; padding: 11px; background: transparent; color: var(--red);
+            border: 1px solid rgba(220,38,38,0.4); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13.5px;
+          }
+          .pf-btn-logout:hover { background: rgba(220,38,38,0.1); }
+        `}</style>
+        <div className="fl-body">
+          <div className="fl-card">
+            <h2 className="fl-title">Set a New Password</h2>
+            <p className="fl-sub">This is your first login. You must set a new password before you can access the system.</p>
+
+            {error && <div className="pf-alert-error">{error}</div>}
+            {success && <div className="pf-alert-success">{success}</div>}
+
+            <form onSubmit={handleChangePassword}>
+              <label className="pf-field">
+                <span className="pf-field-label">Current Password</span>
+                <div className="pf-input-wrap">
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    className="pf-input"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                  <button type="button" className="pf-eye-btn" onClick={() => setShowCurrentPassword(s => !s)} tabIndex={-1}>
+                    {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
+
+              <label className="pf-field">
+                <span className="pf-field-label">New Password</span>
+                <div className="pf-input-wrap">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    className="pf-input"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                  <button type="button" className="pf-eye-btn" onClick={() => setShowNewPassword(s => !s)} tabIndex={-1}>
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
+
+              <label className="pf-field">
+                <span className="pf-field-label">Confirm New Password</span>
+                <div className="pf-input-wrap">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    className="pf-input"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                  <button type="button" className="pf-eye-btn" onClick={() => setShowConfirmPassword(s => !s)} tabIndex={-1}>
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
+
+              <button type="submit" className="pf-btn-primary" disabled={loading} style={{ marginTop: 6 }}>
+                {loading ? 'Updating...' : 'Update Password'}
+              </button>
+            </form>
+
+            <button type="button" className="pf-btn-logout" onClick={handleLogout} style={{ marginTop: 0 }}>
+              Log Out
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
 return (
     <>
