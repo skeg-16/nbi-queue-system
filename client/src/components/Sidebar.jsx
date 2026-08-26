@@ -418,6 +418,7 @@ export default function Sidebar({
         <div className="sidebar-top">
           {collapsed ? (
             <button className="logo-toggle" onClick={() => setCollapsed(false)} title="Expand sidebar">
+                <img src="/assets/nbi.png" alt="NBI Logo" className="logo-default sidebar-logo" />
                 <span className="logo-hover-icon"><ChevronsRight size={16} /></span>
               </button>
           ) : (
@@ -487,7 +488,7 @@ export default function Sidebar({
         ))}
         <MobileTab
           icon={MoreHorizontal}
-          label="⋯"
+          label="More"
           active={isMoreActive}
           onClick={() => setMobileMoreOpen(true)}
         />
