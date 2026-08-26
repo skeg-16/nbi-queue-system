@@ -452,22 +452,22 @@ function dismissDailyReminder(openExport = false) {
   );
 
   // ---------- Sheet tabs ----------
-  useEffect(() => {
-    if (currentView !== 'complaints') return;
-    if (openTabs.length === 0 && allRecords.length > 0) {
-    const recordDates = Array.from(new Set(allRecords.filter(r => r.created_at).map(r => getViewDateString(new Date(r.created_at)))))        .sort((a, b) => b.localeCompare(a));
-      setOpenTabs(recordDates.slice(0, 5));
-    }
-  }, [allRecords, currentView, openTabs.length]);
+      useEffect(() => {
+        if (currentView !== 'complaints') return;
+        if (openTabs.length === 0 && allRecords.length > 0) {
+        const recordDates = Array.from(new Set(allRecords.filter(r => r.created_at).map(r => getViewDateString(new Date(r.created_at)))))        .sort((a, b) => b.localeCompare(a));
+          setOpenTabs(recordDates.slice(0, 3));
+        }
+      }, [allRecords, currentView, openTabs.length]);
 
-  useEffect(() => {
-    setOpenTabs(tabs =>
-      tabs.includes(viewDateStr)
-        ? tabs
-        : [...tabs, viewDateStr].sort((a, b) => b.localeCompare(a))
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewDateStr]);
+      useEffect(() => {
+        setOpenTabs(tabs => {
+          if (tabs.includes(viewDateStr)) return tabs;
+          const newTabs = [viewDateStr, ...tabs].slice(0, 3);
+          return newTabs.sort((a, b) => b.localeCompare(a));
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [viewDateStr]);
 
   function closeTab(dateStr) {
     const remaining = openTabs.filter(d => d !== dateStr);
@@ -1247,27 +1247,22 @@ async function doExport(type) {
         </div>
 
         <div className="filter-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-          <div className="search-filter-group" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-  <input type="text" className="form-input search-input" placeholder="Search records..." style={{ width: 300 }}
+          <div className="search-filter-group" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', flex: 1 }}>
+  <input type="text" className="form-input search-input" placeholder="Search records..." style={{ flex: 1, minWidth: '200px', maxWidth: '300px' }}
     value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
   {currentView === 'complaints' && (
-    <>
-      <select className="form-select" style={{ width: 160 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-        <option value="">All Statuses</option>
-        <option value="Waiting">Waiting</option>
-        <option value="Serving">Serving</option>
-        <option value="Served">Served</option>
-        <option value="Skipped">Skipped</option>
-        <option value="No-show">No-show</option>
-      </select>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-main)', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 500, marginLeft: 5 }}>
-        <input type="checkbox" checked={filterPriority} onChange={e => setFilterPriority(e.target.checked)} style={{ width: 16, height: 16, accentColor: 'var(--nbi-blue)' }} /> Priority Only
-      </label>
-    </>
+    <select className="form-select" style={{ width: 160, flexShrink: 0 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+      <option value="">All Statuses</option>
+      <option value="Waiting">Waiting</option>
+      <option value="Serving">Serving</option>
+      <option value="Served">Served</option>
+      <option value="Skipped">Skipped</option>
+      <option value="No-show">No-show</option>
+    </select>
   )}
 </div>
-          <div className="action-buttons-group" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            {currentView === 'complaints' && (
+          <div className="action-buttons-group" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>         
+  {currentView === 'complaints' && (
               <button className="btn-formal btn-primary" onClick={openAddModal}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 4 }}><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg> Add Record
               </button>
@@ -1310,7 +1305,12 @@ async function doExport(type) {
             })}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 15, flexShrink: 0 }}>
+  {currentView === 'complaints' && (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-main)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, borderRight: selectedRows.size > 0 ? '1px solid var(--border-color)' : 'none', paddingRight: selectedRows.size > 0 ? 10 : 0 }}>
+      <input type="checkbox" checked={filterPriority} onChange={e => setFilterPriority(e.target.checked)} style={{ width: 14, height: 14, accentColor: 'var(--nbi-blue)' }} /> Priority Only
+    </label>
+  )}
   {selectedRows.size > 0 && (
     <>
       <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
@@ -1564,60 +1564,66 @@ async function doExport(type) {
                         <DurationInput defaultValue={r.serving_duration} field="serving_duration" recordId={r.id} updateCell={updateCell} showToast={showToast} />
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 4 }}></span>
                       </td>
-                     <td style={{ textAlign: 'center', position: 'relative' }}>
-                        {isAdmin && (
-                          <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginRight: 6, verticalAlign: 'middle', height: 19 }}>
-                            <button onClick={() => moveQueueOrder(r.id, 'up')} title="Move up" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1, padding: 0, fontSize: '0.7rem', height: 9, display: 'flex', alignItems: 'center' }}>▲</button>
-                            <button onClick={() => moveQueueOrder(r.id, 'down')} title="Move down" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1, padding: 0, fontSize: '0.7rem', height: 9, display: 'flex', alignItems: 'center' }}>▼</button>
-                          </span>
-                        )}
-                        <div className="actions-menu-wrap" style={{ position: 'relative', display: 'inline-block' }}>
-                          <button
-                            className="btn-icon"
-                            data-tooltip="Actions"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setActionsMenuPos({ top: rect.bottom + 4, left: rect.right - 170 });
-                              setActionsMenuOpen(o => (o === r.id ? null : r.id));
-                            }}
-                            style={{ background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: '#1e3a5f', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                          >
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
-                              <circle cx="12" cy="5" r="2" />
-                              <circle cx="12" cy="12" r="2" />
-                              <circle cx="12" cy="19" r="2" />
-                            </svg>
-                          </button>
-
-                          {actionsMenuOpen === r.id && (
-                            <div
-                              className="actions-menu-wrap"
-                              style={{
-                                position: 'fixed', top: actionsMenuPos.top, left: actionsMenuPos.left, zIndex: 9999,
-                                background: 'var(--panel-bg)', border: '1px solid var(--border-color)',
-                                borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                minWidth: 190, padding: '6px 0', textAlign: 'left'
-                              }}
-                            >
-                              <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); viewDetails(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.85rem' }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                View Details
+                     <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                          {isAdmin && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1px' }}>
+                              <button onClick={() => moveQueueOrder(r.id, 'up')} title="Move up" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background='rgba(0,0,0,0.05)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                               </button>
-                              <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); openRemarks(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.85rem' }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
-                                Agent Assessment
-                              </button>
-                              <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); openEditModal(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.85rem' }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                Edit Record
-                              </button>
-                              <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); confirmDeleteRecord(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: '#dc2626', fontSize: '0.85rem' }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
-                                Delete Record
+                              <button onClick={() => moveQueueOrder(r.id, 'down')} title="Move down" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.background='rgba(0,0,0,0.05)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                               </button>
                             </div>
                           )}
+                          <div className="actions-menu-wrap" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                            <button
+                              className="btn-icon"
+                              data-tooltip="Actions"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setActionsMenuPos({ top: rect.bottom + 4, left: rect.right - 170 });
+                                setActionsMenuOpen(o => (o === r.id ? null : r.id));
+                              }}
+                              style={{ background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: '#1e3a5f', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                              <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}>
+                                <circle cx="12" cy="5" r="2" />
+                                <circle cx="12" cy="12" r="2" />
+                                <circle cx="12" cy="19" r="2" />
+                              </svg>
+                            </button>
+
+                            {actionsMenuOpen === r.id && (
+                              <div
+                                className="actions-menu-wrap"
+                                style={{
+                                  position: 'fixed', top: actionsMenuPos.top, left: actionsMenuPos.left, zIndex: 9999,
+                                  background: 'var(--panel-bg)', border: '1px solid var(--border-color)',
+                                  borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                  minWidth: 190, padding: '6px 0', textAlign: 'left'
+                                }}
+                              >
+                                <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); viewDetails(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  View Details
+                                </button>
+                                <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); openRemarks(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                                  Agent Assessment
+                                </button>
+                                <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); openEditModal(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.85rem' }}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                  Edit Record
+                                </button>
+                                <button className="dropdown-item" onClick={() => { setActionsMenuOpen(null); confirmDeleteRecord(r.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'transparent', border: 'none', padding: '8px 14px', textAlign: 'left', cursor: 'pointer', color: '#dc2626', fontSize: '0.85rem' }}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+                                  Delete Record
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                       </tr>
@@ -1664,9 +1670,10 @@ async function doExport(type) {
                 <button 
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
                   disabled={currentPage === 1}
-                  style={{ padding: '5px 15px', borderRadius: 4, background: currentPage === 1 ? 'transparent' : 'var(--accent-color)', color: currentPage === 1 ? 'var(--text-muted)' : 'white', border: '1px solid var(--border-color)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                  style={{ padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4, background: 'transparent', color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                  title="Previous Page"
                 >
-                  Previous
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                 </button>
                 <span style={{ padding: '5px 10px', background: 'var(--bg-color)', borderRadius: 4, border: '1px solid var(--border-color)' }}>
                   Page {currentPage} of {totalPages}
@@ -1674,9 +1681,10 @@ async function doExport(type) {
                 <button 
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
                   disabled={currentPage === totalPages}
-                  style={{ padding: '5px 15px', borderRadius: 4, background: currentPage === totalPages ? 'transparent' : 'var(--accent-color)', color: currentPage === totalPages ? 'var(--text-muted)' : 'white', border: '1px solid var(--border-color)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                  style={{ padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4, background: 'transparent', color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-main)', border: '1px solid var(--border-color)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                  title="Next Page"
                 >
-                  Next
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
               </div>
             </div>
