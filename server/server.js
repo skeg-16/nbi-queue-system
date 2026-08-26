@@ -967,10 +967,37 @@ app.post('/api/auth/reset-password', async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to reset password' });
     }
 });
+// --- Send OTP for Admin First Login Email Setup ---
+app.post('/api/auth/setup-email/send-otp', verifyToken, async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ success: false, error: 'Email is required' });
+
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, error: 'Only admins need email verification on setup.' });
+        }
+
+        const otp = generateOtp();
+        const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+        await supabase
+            .from('users')
+            .update({ reset_otp: otp, reset_otp_expires: expires })
+            .eq('id', req.user.id);
+
+        await sendOtpEmail(email, req.user.full_name, otp);
+        auditLog('Setup Email', `Verification OTP sent to ${email} for new admin ${req.user.username}`);
+
+        res.json({ success: true, message: 'Verification code sent to your email.' });
+    } catch (err) {
+        console.error('Setup email OTP error:', err);
+        res.status(500).json({ success: false, error: 'Failed to send verification code.' });
+    }
+});
 
 app.post('/api/auth/change-password', verifyToken, async (req, res) => {
     try {
-        const { currentPassword, newPassword } = req.body;
+        const { currentPassword, newPassword, email, otp } = req.body;
 
         if (!currentPassword) {
             return res.status(400).json({ success: false, error: 'Current password is required' });
@@ -978,12 +1005,27 @@ app.post('/api/auth/change-password', verifyToken, async (req, res) => {
 
         const { data: existingUser, error: fetchErr } = await supabase
             .from('users')
-            .select('password_hash')
+            .select('password_hash, role, is_first_login, reset_otp, reset_otp_expires')
             .eq('id', req.user.id)
             .single();
 
         if (fetchErr || !existingUser) {
             return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // REQUIRED EMAIL & OTP FOR ADMINS ON FIRST LOGIN
+        if (existingUser.role === 'admin' && existingUser.is_first_login) {
+            if (!email || !email.trim() || !otp || !otp.trim()) {
+                return res.status(400).json({ success: false, error: 'Email and verification code are required for admin accounts.' });
+            }
+
+            if (existingUser.reset_otp !== otp.trim()) {
+                return res.status(400).json({ success: false, error: 'Invalid verification code.' });
+            }
+
+            if (new Date(existingUser.reset_otp_expires) < new Date()) {
+                return res.status(400).json({ success: false, error: 'Verification code has expired. Please request a new one.' });
+            }
         }
 
         const match = await bcrypt.compare(currentPassword, existingUser.password_hash);
@@ -993,19 +1035,31 @@ app.post('/api/auth/change-password', verifyToken, async (req, res) => {
 
         const hash = await bcrypt.hash(newPassword, 10);
 
+        let updateData = { 
+            password_hash: hash, 
+            is_first_login: false,
+            reset_otp: null,
+            reset_otp_expires: null
+        };
+        
+        // I-save ang verified na email kapag admin ang nag-first login
+        if (existingUser.role === 'admin' && existingUser.is_first_login && email) {
+            updateData.email = email.trim();
+        }
+
         const { error } = await supabase
             .from('users')
-            .update({ password_hash: hash, is_first_login: false })
+            .update(updateData)
             .eq('id', req.user.id);
 
         if (error) throw error;
-        auditLog('Change Password', `${req.user.email} changed password`);
+        auditLog('Change Password', `${req.user.username} changed password and completed setup.`);
         res.json({ success: true });
     } catch (err) {
+        console.error('Change password error:', err);
         res.status(500).json({ success: false, error: 'Failed to change password' });
     }
 });
-
 app.post('/api/auth/avatar-seed', verifyToken, async (req, res) => {
     try {
         const { avatarSeed } = req.body;
@@ -1113,11 +1167,8 @@ app.post('/api/users', verifyToken, requireAdmin, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Username, full name, and role are required' });
         }
 
-        if (role === 'admin' && !email) {
-            return res.status(400).json({ success: false, error: 'Email is required for admin accounts' });
-        }
-
-        const finalEmail = role === 'admin' ? email : null;
+        // Hindi na required ang email sa paggawa ng account
+        const finalEmail = email && email.trim() !== '' ? email.trim() : null;
 
         const defaultPassword = 'NBIagent123';
         const hash = await bcrypt.hash(defaultPassword, 10);
