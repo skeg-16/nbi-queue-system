@@ -333,11 +333,11 @@ export default function Display() {
           letter-spacing: 0.8px;
           margin-top: 5px;
           background: linear-gradient(90deg,
-            #ff0000 0%,
+            #ffe55c 0%,
             #ffffff 25%,
-            #d4a017 50%,
+            #f9d423 50%,
             #ffffff 75%,
-            #ff0000 100%
+            #ffe55c 100%
           );
           background-size: 250% 100%;
           -webkit-background-clip: text;
@@ -345,14 +345,14 @@ export default function Display() {
           -webkit-text-fill-color: transparent;
           color: transparent;
           animation: poweredByShift 9s ease-in-out infinite;
-          text-shadow: 0 0 12px rgba(240,165,0,0.35);
+          text-shadow: 0 0 12px rgba(249, 212, 35, 0.4);
         }
 
         @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
           .powered-by-text {
             background: none;
-            -webkit-text-fill-color: #d4a017;
-            color: #d4a017;
+            -webkit-text-fill-color: #f9d423;
+            color: #f9d423;
           }
         }
           
