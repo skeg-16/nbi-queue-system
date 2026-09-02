@@ -189,16 +189,16 @@ async function markTodayAsServed() {
 
 // Email Configuration
 const emailTransporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    host: 'smtp.sendgrid.net',
+    port: 587,
+    secure: false,
     family: 4,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 10000,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: 'apikey',
+        pass: process.env.SENDGRID_API_KEY
     }
 });
 
