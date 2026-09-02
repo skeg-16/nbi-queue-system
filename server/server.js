@@ -1084,8 +1084,8 @@ app.post('/api/auth/avatar-seed', verifyToken, async (req, res) => {
 });
 
 async function sendAccountCredentialsEmail(toEmail, displayName, username, password, role) {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping account email');
+    if (!process.env.EMAIL_USER || !process.env.SENDGRID_API_KEY) {
+        console.warn('[Email] EMAIL_USER/SENDGRID_API_KEY not set — skipping account email');
         return { success: false, error: 'Email not configured' };
     }
     if (!toEmail) {
@@ -2106,8 +2106,8 @@ function generateOtp() {
 }
 
 async function sendOtpEmail(toEmail, displayName, otp) {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping OTP email');
+    if (!process.env.EMAIL_USER || !process.env.SENDGRID_API_KEY) {
+        console.warn('[Email] EMAIL_USER/SENDGRID_API_KEY not set — skipping OTP email');
         return { success: false, error: 'Email not configured' };
     }
 
@@ -2159,8 +2159,8 @@ async function sendOtpEmail(toEmail, displayName, otp) {
 
 // Function to send queue confirmation email
 async function sendQueueEmail(toEmail, displayName, shortNo) {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn('[Email] EMAIL_USER/EMAIL_PASS not set — skipping email send');
+    if (!process.env.EMAIL_USER || !process.env.SENDGRID_API_KEY) {
+        console.warn('[Email] EMAIL_USER/SENDGRID_API_KEY not set — skipping email send');
         return { success: false, error: 'Email not configured' };
     }
     if (!toEmail) {
