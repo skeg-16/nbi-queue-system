@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
-const nodemailer = require('nodemailer');
+"@sendgrid/mail": "^8.1.3"
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { runBackupAndCleanup } = require('./backupJob');
@@ -187,20 +187,11 @@ async function markTodayAsServed() {
     }
 }
 
-// Email Configuration
-const emailTransporter = nodemailer.createTransport({
-    host: 'smtp.sendgrid.net',
-    port: 587,
-    secure: false,
-    family: 4,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-    auth: {
-        user: 'apikey',
-        pass: process.env.SENDGRID_API_KEY
-    }
-});
+// Email Configuration (SendGrid HTTP API — bypasses SMTP port blocking on Render)
+const sgMail = require('@sendgrid/mail');
+if (process.env.SENDGRID_API_KEY) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../client/dist'), {
@@ -1093,8 +1084,8 @@ async function sendAccountCredentialsEmail(toEmail, displayName, username, passw
     }
 
     try {
-        const info = await emailTransporter.sendMail({
-            from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
+        const info = await sgMail.send({
+            from: { email: process.env.EMAIL_USER, name: 'NBI Cybercrime Division' },
             to: toEmail,
             subject: `NBI Cybercrime Division — Your Account Credentials`,
             text: `Hello, ${displayName}!\n\nAn account has been created for you on the NBI Cybercrime Division Queue System.\n\nRole: ${role}\nUsername: ${username}\nDefault Password: ${password}\n\nYou will be required to change this password on your first login.\n\nNBI Cybercrime Division\nThis is an automated message. Please do not reply to this email.`,
@@ -1136,13 +1127,26 @@ async function sendAccountCredentialsEmail(toEmail, displayName, username, passw
 </body>
 </html>`
         });
-        console.log('[Email] ✓ Account credentials sent to', toEmail, '- message_id:', info.messageId);
+async function sendAccountCredentialsEmail(toEmail, displayName, username, password, role) {
+    if (!process.env.EMAIL_USER || !process.env.SENDGRID_API_KEY) {
+        console.warn('[Email] EMAIL_USER/SENDGRID_API_KEY not set — skipping account email');
+        return { success: false, error: 'Email not configured' };
+    }
+    if (!toEmail) {
+        return { success: false, error: 'No email provided' };
+    }
+
+    try {
+        const info = await sgMail.send({
+            from: { email: process.env.EMAIL_USER, name: 'NBI Cybercrime Division' },
+            to: toEmail,        console.log('[Email] ✓ Account credentials sent to', toEmail);
         return { success: true };
     } catch (err) {
-        console.error('[Email] Account email exception:', err.message);
+        console.error('[Email] Account email exception:', err.response?.body || err.message);
         return { success: false, error: err.message };
     }
 }
+            subject: `NBI Cybercrime Division — Your Account Credentials`,
 
 // === User Management (Admin Only) ===
 app.get('/api/users', verifyToken, requireAdmin, async (req, res) => {
@@ -2112,8 +2116,8 @@ async function sendOtpEmail(toEmail, displayName, otp) {
     }
 
     try {
-        const info = await emailTransporter.sendMail({
-            from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
+        const info = await sgMail.send({
+            from: { email: process.env.EMAIL_USER, name: 'NBI Cybercrime Division' },
             to: toEmail,
             subject: `NBI Cybercrime Division — Password Reset Code: ${otp}`,
             text: `Hello, ${displayName}!\n\nYour password reset code is: ${otp}\n\nThis code will expire in 10 minutes. If you did not request this, please ignore this email or contact your administrator.\n\nNBI Cybercrime Division\nThis is an automated message. Please do not reply to this email.`,
@@ -2149,10 +2153,10 @@ async function sendOtpEmail(toEmail, displayName, otp) {
 </body>
 </html>`
         });
-        console.log('[Email] ✓ OTP sent to', toEmail, '- message_id:', info.messageId);
+        console.log('[Email] ✓ OTP sent to', toEmail);
         return { success: true };
     } catch (err) {
-        console.error('[Email] OTP send exception:', err.message);
+        console.error('[Email] OTP send exception:', err.response?.body || err.message);
         return { success: false, error: err.message };
     }
 }
@@ -2168,8 +2172,8 @@ async function sendQueueEmail(toEmail, displayName, shortNo) {
     }
 
     try {
-        const info = await emailTransporter.sendMail({
-            from: `"NBI Cybercrime Division" <${process.env.EMAIL_USER}>`,
+        const info = await sgMail.send({
+            from: { email: process.env.EMAIL_USER, name: 'NBI Cybercrime Division' },
             to: toEmail,
             subject: `NBI Cybercrime Division — Your Queue Number: ${shortNo}`,
             text:
@@ -2302,10 +2306,10 @@ This is an automated message. Please do not reply to this email.`,
 `
         });
 
-        console.log('[Email] ✓ Sent to', toEmail, '- message_id:', info.messageId);
+        console.log('[Email] ✓ Sent to', toEmail);
         return { success: true, info };
     } catch (err) {
-        console.error('[Email] Exception:', err.message);
+        console.error('[Email] Exception:', err.response?.body || err.message);
         return { success: false, error: err.message };
     }
 }
