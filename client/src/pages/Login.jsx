@@ -540,6 +540,10 @@ export default function Login() {
                   <p>{fpRole === 'admin' ? 'Enter the code sent to your registered email.' : 'Enter the code sent to your email.'}</p>
                 </div>
 
+                <div style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#b8860b', background: 'rgba(240,165,0,0.1)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '8px', padding: '8px 12px' }}>
+                  📩 Didn't receive it? Please check your <strong>Spam/Junk folder</strong> as well.
+                </div>
+
                 <form onSubmit={handleVerifyOtp}>
                   <label className="login-label">
                     <span>RESET CODE</span>

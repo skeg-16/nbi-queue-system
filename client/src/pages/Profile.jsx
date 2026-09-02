@@ -368,6 +368,9 @@ export default function Profile() {
                   <>
                     <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: 'var(--text-main)', fontWeight: 600 }}>Step 2: Enter Verification Code</p>
                     <p style={{ margin: '0 0 6px 0', fontSize: '11.5px', color: 'var(--text-muted)' }}>Code sent to <strong>{setupEmail}</strong></p>
+                    <p style={{ margin: '0 0 10px 0', fontSize: '11px', color: '#b8860b', background: 'rgba(240,165,0,0.1)', border: '1px solid rgba(240,165,0,0.3)', borderRadius: '6px', padding: '6px 10px' }}>
+                      📩 Didn't receive it? Please check your <strong>Spam/Junk folder</strong> as well.
+                    </p>
                     <label className="pf-field" style={{ marginBottom: 6 }}>
                       <span className="pf-field-label">Verification Code (OTP)</span>
                       <input
