@@ -7,7 +7,6 @@ const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
-"@sendgrid/mail": "^8.1.3"
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { runBackupAndCleanup } = require('./backupJob');
@@ -1127,26 +1126,13 @@ async function sendAccountCredentialsEmail(toEmail, displayName, username, passw
 </body>
 </html>`
         });
-async function sendAccountCredentialsEmail(toEmail, displayName, username, password, role) {
-    if (!process.env.EMAIL_USER || !process.env.SENDGRID_API_KEY) {
-        console.warn('[Email] EMAIL_USER/SENDGRID_API_KEY not set — skipping account email');
-        return { success: false, error: 'Email not configured' };
-    }
-    if (!toEmail) {
-        return { success: false, error: 'No email provided' };
-    }
-
-    try {
-        const info = await sgMail.send({
-            from: { email: process.env.EMAIL_USER, name: 'NBI Cybercrime Division' },
-            to: toEmail,        console.log('[Email] ✓ Account credentials sent to', toEmail);
+        console.log('[Email] ✓ Account credentials sent to', toEmail);
         return { success: true };
     } catch (err) {
         console.error('[Email] Account email exception:', err.response?.body || err.message);
         return { success: false, error: err.message };
     }
 }
-            subject: `NBI Cybercrime Division — Your Account Credentials`,
 
 // === User Management (Admin Only) ===
 app.get('/api/users', verifyToken, requireAdmin, async (req, res) => {
